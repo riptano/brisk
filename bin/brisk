@@ -17,6 +17,7 @@ fi
 
 if [ "x$1" = "xpig" ]; then
     shift
+    export PIG_OPTS=$PIG_OPTS" -Dudf.import.list=org.apache.cassandra.hadoop.pig"
     $PIG_HOME/bin/pig $*
     exit $?
 fi

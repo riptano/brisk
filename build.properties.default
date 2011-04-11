@@ -9,4 +9,5 @@ artifact.remoteRepository.datanucleus: http://www.datanucleus.org/downloads/mave
 
 hadoop.build.version:		       0.20.203.1-LATEST
 hive.build.version:		       0.7.0.1-LATEST
+pig.build.version:                 0.8.3
 cassandra.build.version:	       0.7.4

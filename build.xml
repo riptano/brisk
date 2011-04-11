@@ -56,6 +56,8 @@
     <property name="cassandra.dir.lib" value="${cassandra.dir}/lib"/>
     <property name="hive.dir" value="${basedir}/resources/hive"/>
     <property name="hive.dir.lib" value="${hive.dir}/lib"/>
+    <property name="pig.dir" value="${basedir}/resources/pig"/>
+    <property name="pig.dir.lib" value="${pig.dir}/lib"/>
 
     <property name="base.version" value="0.0.1"/>
     <condition property="version" value="${base.version}">
@@ -107,6 +109,9 @@
           <include name="**/*.jar" />
         </fileset>
 	<fileset dir="${hive.dir.lib}">
+          <include name="**/*.jar" />
+        </fileset>	   
+	<fileset dir="${pig.dir.lib}">
           <include name="**/*.jar" />
         </fileset>	   
     </path>
@@ -239,6 +244,15 @@
 	<remoteRepository refid="apache"/>
 	<remoteRepository refid="java.net2"/>
       </artifact:dependencies>
+
+      <artifact:dependencies filesetId="pig-jars"
+			     cacheDependencyRefs="true" 
+                             dependencyRefsBuildFile="${build.dir}/build-pig-dependencies.xml">
+	<dependency groupId="org.apache.pig" artifactId="pig" version="${pig.build.version}"/>
+	<remoteRepository refid="datastax"/>
+	<remoteRepository refid="apache"/>
+      </artifact:dependencies>
+
       
       <artifact:dependencies pathId="cobertura.classpath">
 	<dependency groupId="net.sourceforge.cobertura" artifactId="cobertura" version="${cobertura.version}"/>
@@ -284,6 +298,24 @@
 	    <mapper type="flatten"/>
 	  </mapper>
       </copy>      
+
+      <copy todir="${pig.dir}">
+	<restrict>
+          <fileset refid="pig-jars"/>
+	    <rsel:name name="*pig-*.jar"/>
+	</restrict>	
+	<mapper type="flatten"/>
+      </copy>
+
+      <copy todir="${pig.dir.lib}">
+	<restrict>
+          <fileset refid="pig-jars"/>
+	  <rsel:not>
+	    <rsel:name name="*slf4j*.jar"/>
+	  </rsel:not>
+	</restrict>	
+	<mapper type="flatten"/>
+      </copy>
     </target>
 
   <!-- Generate Eclipse project description files -->
@@ -516,6 +548,7 @@
           <include name="bin/*"/>
 	  <include name="resources/cassandra/bin/*"/>
 	  <include name="resources/hadoop/bin/*"/>
+	  <include name="resources/pig/bin/*"/>
 	  <include name="resources/hive/bin/*"/>
           <not>
                 <filename name="bin/*.in.sh" />
@@ -551,6 +584,7 @@
 	  <include name="resources/cassandra/bin/*"/>
 	  <include name="resources/hadoop/bin/*"/>
 	  <include name="resources/hive/bin/*"/>
+	  <include name="resources/pig/bin/*"/>
           <exclude name="bin/*.in.sh" />
           <exclude name="bin/*.bat" />
         </tarfileset>
