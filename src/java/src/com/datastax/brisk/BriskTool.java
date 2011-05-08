@@ -93,7 +93,7 @@ public class BriskTool
             System.err.println("Error when running command '" + cmd + "': " + e);
             System.exit(2);
         }
-        
+        System.exit(0);
     }
                 
     private void usage()
