@@ -534,7 +534,7 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
         try
         {
             List<KeySlice> keys = client.get_indexed_slices(inodeParent, new IndexClause(indexExpressions,
-                    ByteBufferUtil.EMPTY_BYTE_BUFFER, 100000), pathPredicate, consistencyLevelWrite);
+                    ByteBufferUtil.EMPTY_BYTE_BUFFER, 100000), pathPredicate, consistencyLevelRead);
 
             Set<Path> matches = new HashSet<Path>(keys.size());
 

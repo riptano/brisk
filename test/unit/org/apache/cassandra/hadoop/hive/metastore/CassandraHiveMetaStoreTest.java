@@ -166,8 +166,8 @@ public class CassandraHiveMetaStoreTest extends CleanupHelper {
         part.setDbName("alter_part_db");
         part.setTableName("table_name");
         List<String> partValues = new ArrayList<String>();
-        partValues.add("cassandra://localhost:9160/user/hive/warehouse/mydb.db/invites/ds=2008-08-08");
-        partValues.add("cassandra://localhost:9160/user/hive/warehouse/mydb.db/invites/ds=2008-08-15");
+        partValues.add("cfs://localhost:9160/user/hive/warehouse/mydb.db/invites/ds=2008-08-08");
+        partValues.add("cfs://localhost:9160/user/hive/warehouse/mydb.db/invites/ds=2008-08-15");
         part.setValues(partValues);
         metaStore.addPartition(part);
 

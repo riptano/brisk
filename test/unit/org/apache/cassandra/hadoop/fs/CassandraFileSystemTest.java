@@ -76,7 +76,7 @@ public class CassandraFileSystemTest extends CleanupHelper
     {
         CassandraFileSystem fs = new CassandraFileSystem();
 
-        fs.initialize(URI.create("cassandra://localhost:"+DatabaseDescriptor.getRpcPort()+"/"), new Configuration());
+        fs.initialize(URI.create("cfs://localhost:"+DatabaseDescriptor.getRpcPort()+"/"), new Configuration());
 
         fs.mkdirs(new Path("/mytestdir"));
         fs.mkdirs(new Path("/mytestdir/sub1"));
