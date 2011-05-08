@@ -27,6 +27,7 @@ import java.util.*;
 
 import com.datastax.brisk.BriskInternalServer;
 
+import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.hadoop.CassandraProxyClient;
 import org.apache.cassandra.hadoop.CassandraProxyClient.ConnectionStrategy;
 import org.apache.cassandra.hadoop.trackers.CassandraJobConf;
@@ -103,10 +104,10 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
         int port = uri.getPort();
 
         if (host == null || host.isEmpty() || host.equals("null"))
-            host = InetAddress.getLocalHost().getHostName();
+            host = FBUtilities.getLocalAddress().getHostName();
 
         if (port == -1)
-            port = 9160; // default
+            port = DatabaseDescriptor.getRpcPort(); // default
 
         // We could be running inside of cassandra...
         if (conf instanceof CassandraJobConf)
