@@ -1,6 +1,6 @@
 #!/bin/sh
 if [ -z "$BASH_VERSION" ]; then
-    bash $0 $*
+    bash $0 "$@"
     exit $?
 fi
 
@@ -49,15 +49,15 @@ case "$1" in
                     else
                         MAINCLASS=$3
                     fi
-                    $HADOOP_BIN/hadoop $HADOOP_CMD $HADOOP_JAR $MAINCLASS $HADOOP_JT ${*:4}
+                    $HADOOP_BIN/hadoop $HADOOP_CMD $HADOOP_JAR $MAINCLASS $HADOOP_JT "${@:4}"
                     exit $?
                 else
-                    $HADOOP_BIN/hadoop $HADOOP_CMD $HADOOP_JT ${*:2}
+                    $HADOOP_BIN/hadoop $HADOOP_CMD $HADOOP_JT "${@:2}"
                     exit $?
                 fi
             ;;
             *)
-                $HADOOP_BIN/hadoop $HADOOP_CMD ${*:2}
+                $HADOOP_BIN/hadoop $HADOOP_CMD "${@:2}"
                 exit $?
         esac
         ;;
@@ -78,7 +78,7 @@ case "$1" in
 
         export HIVE_OPTS="$HIVE_OPTS -hiveconf hive.log.dir=$BRISK_LOG_ROOT/hive -hiveconf brisk.home=$BRISK_HOME"
 
-        $HIVE_BIN/hive $*
+        $HIVE_BIN/hive "$@"
         exit $?
         ;;
     *)
