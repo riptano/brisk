@@ -21,7 +21,7 @@
 
 <property>
   <name>hive.metastore.warehouse.dir</name>
-  <value>cassandra:///user/hive/warehouse</value>
+  <value>cfs:///user/hive/warehouse</value>
   <description>
     location of default database for the warehouse
   </description>
