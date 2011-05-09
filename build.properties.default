@@ -7,12 +7,13 @@ artifact.remoteRepository.oauth:       http://oauth.googlecode.com/svn/code/mave
 artifact.remoteRepository.datanucleus: http://www.datanucleus.org/downloads/maven2
 artifact.remoteRepository.datastax-snapshot:    http://mvn.riptano.com/content/repositories/snapshots
 artifact.remoteRepository.datastax-deps:    http://mvn.riptano.com/content/repositories/public
+artifact.remoteRepository.datastax-release:    http://mvn.riptano.com/content/repositories/releases
 
-hadoop-core.build.version:		       0.20.203.1-SNAPSHOT
-hadoop.build.version:		       0.20.203.1-SNAPSHOT
-hive.build.version:		       0.7.0-SNAPSHOT
+hadoop-core.build.version:		       0.20.203.1-brisk1
+hadoop.build.version:		       0.20.203.1-brisk1
+hive.build.version:		       0.7.0-brisk1
 cassandra.build.version:	       0.8.0-beta2-SNAPSHOT
 cassandra-thrift.build.version:	       0.8.0-beta2-SNAPSHOT
-cassandra-cql.build.version:	       0.8.0-beta1-SNAPSHOT
+cassandra-cql.build.version:	       1.0.1-SNAPSHOT
 # change this to always for frequent checks
 snapshot.datastax.updatePolicy: daily

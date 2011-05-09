@@ -38,3 +38,59 @@ Using Brisk and Hive we can easily calculate this value for each portfolio and
 insert the result back into cassandra for users to see.  Now users have a much
 better understanding of the potential losses they would incur by holding onto
 their portfolio.
+
+Running The Demo
+================
+
+Starting the web-service
+------------------------
+
+First build and start brisk:
+
+ ant
+ ./bin/brisk cassandra -t
+
+Next, build the demo
+
+ cd demos/portfolio_manager
+ ant
+
+Next, add some data to the column families
+
+ ./bin/pricer -o INSERT_PRICES
+ ./bin/pricer -o UPDATE_PORTFOLIOS
+ ./bin/pricer -o INSERT_HISTORICAL_PRICES -n 100
+
+NOTE: if you are running on a cluster the first pricer call should be the
+following:
+
+./bin/pricer -o INSERT_PRICES
+             --replication-strategy="org.apache.cassandra.locator.NetworkTopologyStrategy" 
+             --strategy-properties="Brisk:1,Cassandra:1"
+
+Now, start the web-service:
+
+ cd website
+ java -jar start.jar
+
+At this You can point your webbrowser to http://localhost:8983/portfolio You
+should see some portfolios and some charts reflecting the portfolio holdings
+and the price chart.
+
+If you want you can update the portfolios or insert new prices using the above
+scripts the site will update in realtime.
+
+If you want to update the prices continuously you can run the following:
+
+while true; do ./bin/pricer; sleep 1; done
+
+Running Hive
+------------
+
+Now, to run a hive calculation do the following in another shell
+
+ ./bin/brisk hive -f demos/portfolio_manager/10_day_loss.q
+
+This will run for 5-10 minutes and calculate the worst 10 day period over the
+past 100 days for each portfolio. Once finished, when you reload the website,
+each portfolio should show its worst period and loss.

@@ -14,6 +14,15 @@
   </description>                                                                                                      
 </property>
 
+<property>
+  <name>mapred.child.java.opts</name>
+  <value>-Xmx256m</value>
+  <description>
+    Tune your mapred jvm arguments for best performance. 
+    Also see documentation from jvm vendor.
+  </description>
+</property>
+
 <!-- Enable Hue plugins -->
 <property>
   <name>mapred.jobtracker.plugins</name>

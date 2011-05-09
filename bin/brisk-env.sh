@@ -63,6 +63,14 @@ if [ -n "$HADOOP_NATIVE_ROOT" ]; then
     export JAVA_LIBRARY_PATH=$HADOOP_NATIVE_ROOT/lib/native/${JAVA_PLATFORM}/
 fi
 
+#needed for webapps
+CLASSPATH=$CLASSPATH:$HADOOP_HOME
+CLASSPATH=$CLASSPATH:$HADOOP_HOME/conf
+    
+for jar in $HADOOP_HOME/*.jar $HADOOP_HOME/lib/*.jar $HADOOP_HOME/lib/jsp-2.1/*.jar; do
+    CLASSPATH=$CLASSPATH:$jar
+done 
+
 export HADOOP_CLASSPATH=$CLASSPATH
 
 #export PIG_HOME=

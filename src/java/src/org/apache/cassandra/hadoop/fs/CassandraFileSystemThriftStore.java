@@ -33,6 +33,7 @@ import org.apache.cassandra.hadoop.CassandraProxyClient.ConnectionStrategy;
 import org.apache.cassandra.hadoop.trackers.CassandraJobConf;
 import org.apache.cassandra.io.util.FileUtils;
 import org.apache.cassandra.locator.BriskSimpleSnitch;
+import org.apache.cassandra.service.StorageService;
 import org.apache.cassandra.thrift.*;
 import org.apache.cassandra.utils.ByteBufferUtil;
 import org.apache.cassandra.utils.FBUtilities;
@@ -240,6 +241,7 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
                 .setCf_defs(cfs);
 
             client.system_add_keyspace(cfsKs);
+            waitForSchemaAgreement();
 
             return cfsKs;
         }
@@ -248,6 +250,26 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
             throw new IOException(e);
         }
 
+    }
+
+    private void waitForSchemaAgreement() throws InvalidRequestException, InterruptedException, TException {
+        int waited = 0;
+        int versions = 0;
+        while (versions != 1)
+        {
+            ArrayList<String> liveschemas = new ArrayList<String>();
+            Map <String, List<String>> schema = client.describe_schema_versions();
+            for (Map.Entry<String, List<String>> entry : schema.entrySet())
+            {
+                if (!entry.getKey().equals("UNREACHABLE"))
+                    liveschemas.add(entry.getKey());
+            }
+            versions = liveschemas.size();
+            Thread.sleep(1000);
+            waited += 1000;
+            if (waited > StorageService.RING_DELAY)
+                throw new RuntimeException("Could not reach schema agreement in " + StorageService.RING_DELAY + "ms");
+        }
     }
 
     public InputStream retrieveBlock(Block block, long byteRangeStart) throws IOException

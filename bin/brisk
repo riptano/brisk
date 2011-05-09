@@ -29,7 +29,7 @@ case "$1" in
         HADOOP_CMD=$1
 
         case "$HADOOP_CMD" in
-            job|queue|jar)
+            job|queue|jar|pipes|mradmin|historyserver)
                 JOBTRACKER=`$BIN/brisktool jobtracker`
                 if [ "x$JOBTRACKER" != "x" ]; then
                     if [ "x$HADOOP_CMD" != "x" ]; then
@@ -55,6 +55,10 @@ case "$1" in
                     $HADOOP_BIN/hadoop $HADOOP_CMD $HADOOP_JT "${@:2}"
                     exit $?
                 fi
+            ;;
+            namenode|secondarynamenode|datanode|dfsadmin|fsck|balancer|fetchdt|jobtracker|tasktracker)
+                echo "Brisk doesn't need to run 'hadoop $HADOOP_CMD'"
+                exit 2
             ;;
             *)
                 $HADOOP_BIN/hadoop $HADOOP_CMD "${@:2}"

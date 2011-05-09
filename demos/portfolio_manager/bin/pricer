@@ -16,25 +16,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [ "x$CLASSPATH" = "x" ]; then
-    # Cassandra class files.
-    if [ ! -d `dirname $0`/../../../build/classes ]; then
-        echo "Unable to locate cassandra class files" >&2
-        exit 1
-    fi
+BRISK_HOME=`dirname $0`/../../..
 
-    # Stress class files.
-    if [ ! -d `dirname $0`/../build/classes ]; then
-        echo "Unable to locate stress class files" >&2
-        exit 1
+for include in /etc/brisk/brisk-env.sh \
+               ~/.brisk-env.sh \
+               $BRISK_HOME/bin/brisk-env.sh; do
+    if [ -r $include ]; then
+        . $include
+	break
     fi
+done
 
-    CLASSPATH=`dirname $0`/../../../build/classes
-    CLASSPATH=$CLASSPATH:`dirname $0`/../build/classes
-    for jar in `dirname $0`/../../../resources/cassandra/lib/*.jar; do
-        CLASSPATH=$CLASSPATH:$jar
-    done
-fi
+CLASSPATH=$CLASSPATH:`dirname $0`/../portfolio.jar
 
 if [ -x $JAVA_HOME/bin/java ]; then
     JAVA=$JAVA_HOME/bin/java

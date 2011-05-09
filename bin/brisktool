@@ -13,4 +13,11 @@ elif [ -r $BRISK_ENV ]; then
     . $BRISK_ENV
 fi
 
+# Use JAVA_HOME if set, otherwise look for java in PATH
+if [ -x $JAVA_HOME/bin/java ]; then
+    JAVA=$JAVA_HOME/bin/java
+else
+    JAVA=`which java`
+fi
+
 $JAVA -cp $CLASSPATH -Dstorage-config=$CASSANDRA_CONF -Dlog4j.configuration=log4j-tools.properties com.datastax.brisk.BriskTool $*

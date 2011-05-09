@@ -1,0 +1,50 @@
+﻿Release Notes for Brisk 1.0 beta 1
+
+Introduction to Brisk:
+---------------------------------
+Brisk is an open-source Hadoop and Hive distribution developed by DataStax that utilizes Apache Cassandra for its core services and storage. Brisk provides Hadoop MapReduce capabilities using CassandraFS, an HDFS-compatible storage layer inside Cassandra. By replacing HDFS with CassandraFS, users are able to leverage their current MapReduce jobs on Cassandra’s peer-to-peer, fault-tolerant, and scalable architecture. Brisk is also able to support dual workloads, allowing you to use the same cluster of machines for both real-time applications and data analytics without having to move the data around between systems.
+Brisk is now available via Apache license v2.0. 
+The DataStax team welcomes your valued feedback.
+
+Major components of this release:
+----------------------------------
+	Yahoo/Apache Hadoop 0.20-security-203 
+	Apache Cassandra 0.8-beta2 
+	Apache Hive 0.7
+	Apache Thrift 0.6.0
+
+	Monitoring & Managing the cluster (optional):
+	DataStax OpsCenter v1.1
+
+Please see respective components for their release notes specific to the version.
+Known Issues
+--------------
+	BRISK-169 HiveSQL drop table hangs (infinite loop of queries in DEBUG) after performing lots of alters to a table or after inserting data into a table with an index
+	BRISK-172 Tests/Jobs that read mapred-site.xml directly will fail to find JobTracker
+	BRISK-173 AMI has intermittent issue with starting up raid devices
+	BRISK-175 NullPointerException running ALTER TABLE foo TOUCH
+	BRISK-176 Cleaner build for source download that connects major components modified on disk and remotely
+
+For the latest on these issues: https://datastax.jira.com/browse/BRISK
+
+Product Download & Documents Links 
+-----------------------------------
+Product downloads, updates in form of AMI, rpm, .deb are available from DataStax website.  
+         http://www.datastax.com/products/brisk 
+
+Sources & build directions are hosted on github -
+	https://github.com/riptano/brisk
+	https://github.com/riptano/hive
+	https://github.com/riptano/brisk-hadoop-common
+
+Getting Started documents, faqs and wikis are hosted at the DataStax developer center: 
+          http://www.datastax.com/dev/
+
+Feedback:
+----------------------------------
+Please join us for feedback and conversations on Brisk email lists: 
+	http://groups.google.com/group/brisk-users
+	http://groups.google.com/group/brisk-dev
+	http://groups.google.com/group/brisk-commit
+
+and on Internet Relay Chat (irc): #datastax-brisk
