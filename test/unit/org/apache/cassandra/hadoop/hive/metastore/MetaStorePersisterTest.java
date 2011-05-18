@@ -37,38 +37,29 @@ import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.thrift.transport.TTransportException;
 
-public class MetaStorePersisterTest extends CleanupHelper
+public class MetaStorePersisterTest extends MetaStoreTestBase
 {
 
     private MetaStorePersister metaStorePersister;
     private CassandraClientHolder clientHolder;
+    private CassandraHiveMetaStore metaStore;
     
-    @BeforeClass
-    public static void setup() throws TTransportException, IOException, InterruptedException, ConfigurationException
-    {
-        EmbeddedServer.startBrisk();                
-    }
     
-    @Before
     public void setupClient() throws Exception 
     {
         Configuration conf = buildConfiguration();
-        clientHolder = new CassandraClientHolder(conf);        
-        
-        CfDef cf = new CfDef(clientHolder.getKeyspaceName(), clientHolder.getColumnFamily());
-        
-        Map<String,String> stratOpts = new HashMap<String,String>();
-        stratOpts.put("replication_factor", "1");
-        KsDef ks = new KsDef(clientHolder.getKeyspaceName(), "org.apache.cassandra.locator.SimpleStrategy", Arrays.asList(cf)).setStrategy_options(stratOpts);
-        
-        clientHolder.getClient().system_add_keyspace(ks);        
-        
+        if ( metaStore == null ) 
+        {
+            metaStore = new CassandraHiveMetaStore();
+            metaStore.setConf(conf);        
+        }
         metaStorePersister = new MetaStorePersister(conf);
     }
     
     @Test
-    public void testBasicPersistMetaStoreEntity() 
+    public void testBasicPersistMetaStoreEntity() throws Exception 
     {
+        setupClient();
         Database database = new Database();
         database.setName("name");
         database.setDescription("description");
@@ -80,6 +71,7 @@ public class MetaStorePersisterTest extends CleanupHelper
     @Test(expected=NotFoundException.class)
     public void testEntityNotFound() throws Exception
     {
+        setupClient();
         Database database = new Database();
         database.setName("foo");
         metaStorePersister.load(database, "name");
@@ -88,6 +80,7 @@ public class MetaStorePersisterTest extends CleanupHelper
     @Test
     public void testBasicLoadMetaStoreEntity() throws Exception 
     {
+        setupClient();
         Database database = new Database();
         database.setName("name");
         database.setDescription("description");
@@ -101,8 +94,9 @@ public class MetaStorePersisterTest extends CleanupHelper
     }
     
     @Test
-    public void testFindMetaStoreEntities() 
+    public void testFindMetaStoreEntities() throws Exception  
     {
+        setupClient();
         Database database = new Database();
         database.setName("dbname");
         database.setDescription("description");
@@ -129,6 +123,7 @@ public class MetaStorePersisterTest extends CleanupHelper
     @Test
     public void testEntityDeletion() throws Exception 
     {
+        setupClient();
         Database database = new Database();
         database.setName("dbname");
         database.setDescription("description");
@@ -167,19 +162,5 @@ public class MetaStorePersisterTest extends CleanupHelper
         }
     }
     
-    @After
-    public void teardownClient() throws Exception 
-    {
-        clientHolder.getClient().system_drop_keyspace("HiveMetaStore");
-    }
-    
-    private Configuration buildConfiguration() 
-    {
-        Configuration conf = new Configuration();
-        conf.set(CassandraClientHolder.CONF_PARAM_HOST, "localhost");
-        conf.setInt(CassandraClientHolder.CONF_PARAM_PORT, DatabaseDescriptor.getRpcPort());
-        conf.setBoolean(CassandraClientHolder.CONF_PARAM_FRAMED, true);
-        //conf.setBoolean(CassandraClientHolder.CONF_PARAM_CONNECTION_STRATEGY, true);
-        return conf;
-    }
+
 }

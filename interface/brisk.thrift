@@ -32,6 +32,11 @@ exception UnavailableException {
 exception TimedOutException {
 }
 
+/** Identifies what type of storage to use */
+enum StorageType {
+  CFS_REGULAR, CFS_ARCHIVE
+}
+
 
 struct LocalBlock
 {
@@ -60,7 +65,7 @@ service Brisk extends cassandra.Cassandra
    * This is a great optimization because it avoids any actual data transfer.
    * 
    */
-   LocalOrRemoteBlock get_cfs_sblock(1:required string caller_host_name, 2:required binary block_id, 3:required binary sblock_id, 4:i32 offset=0)
+   LocalOrRemoteBlock get_cfs_sblock(1:required string caller_host_name, 2:required binary block_id, 3:required binary sblock_id, 4:i32 offset=0, 5:required StorageType storageType)
     throws (1:InvalidRequestException ire, 2:UnavailableException ue, 3:TimedOutException te, 4:NotFoundException nfe),
 
 

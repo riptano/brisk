@@ -67,21 +67,35 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
     private final static Logger         logger        = Logger.getLogger(CassandraFileSystemThriftStore.class);
 
     private static final String         keySpace      = "cfs";
-    private static final String         inodeCf       = "inode";
-    private static final String         sblockCf       = "sblocks";
+    
+    // Cfs for normal use. They can be overridden if the archive mode is set.
+    private static String         inodeDefaultCf       = "inode";
+    private static String         sblockDefaultCf       = "sblocks";
+    
+    // Cfs for archive kind of storage
+    private static final String         inodeArchiveCf       = "inode_archive";
+    private static final String         sblockArchiveCf       = "sblocks_archive";
 
     private static final ByteBuffer     dataCol       = ByteBufferUtil.bytes("data");
     private static final ByteBuffer     pathCol       = ByteBufferUtil.bytes("path");
     private static final ByteBuffer     sentCol       = ByteBufferUtil.bytes("sentinel");
+    
+    private String         inodeCfInUse       = null;
+    private String         sblockCfInUse       = null;
 
-    private static final ColumnPath     sblockPath     = new ColumnPath(sblockCf);
-    private static final ColumnParent   sblockParent   = new ColumnParent(sblockCf);
+    // This values can be overridden if the archive mode is set.
+    private ColumnPath     sblockPath     = null;
+    private ColumnParent   sblockParent   = null;
 
-    private static final ColumnPath     inodePath     = new ColumnPath(inodeCf);
-    private static final ColumnParent   inodeParent   = new ColumnParent(inodeCf);
+    // This values can be overridden if the archive mode is set.
+    private ColumnPath     inodePath     = null;
+    private ColumnParent   inodeParent   = null;
 
-    private static final ColumnPath     inodeDataPath = new ColumnPath(inodeCf).setColumn(dataCol);
-    private static final ColumnPath     sblockDataPath = new ColumnPath(sblockCf).setColumn(dataCol);
+    // This values can be overridden if the archive mode is set.
+    private ColumnPath     inodeDataPath = null;
+    private ColumnPath     sblockDataPath = null;
+    
+    private StorageType storageTypeInUse  = StorageType.CFS_REGULAR;
 
     private static final SlicePredicate pathPredicate = new SlicePredicate().setColumn_names(Arrays.asList(pathCol));
 
@@ -122,6 +136,7 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
             ks = createKeySpace();
 
         initConsistencyLevels(ks, conf);
+        initCFNames(uri);
 
         try
         {
@@ -134,6 +149,44 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
     }
 
     /**
+     * Set to different set of Column Families is the archive location is selected.
+     */
+    private void initCFNames(URI uri) {
+    	logger.info("Using storage:" + uri.getScheme());
+    	
+		if (isArchive(uri)) {
+			// cfs-archive:///
+			inodeCfInUse = inodeArchiveCf;
+			sblockCfInUse = sblockArchiveCf;
+			
+			storageTypeInUse = StorageType.CFS_ARCHIVE;
+		} else {
+			// cfs:///
+			inodeCfInUse = inodeDefaultCf;
+			sblockCfInUse = sblockDefaultCf;
+		}
+		
+		// Create the remaining paths and parents base on the CfInUse.
+		
+		sblockPath     = new ColumnPath(sblockCfInUse);
+		sblockParent   = new ColumnParent(sblockCfInUse);
+		
+		inodePath     = new ColumnPath(inodeCfInUse);
+		inodeParent   = new ColumnParent(inodeCfInUse);
+		
+		inodeDataPath = new ColumnPath(inodeCfInUse).setColumn(dataCol);
+		sblockDataPath = new ColumnPath(sblockCfInUse).setColumn(dataCol);
+		
+	}
+
+    /**
+     * Returns TRUE is the <code>uri</code> correspond to an archive location.
+     */
+	private boolean isArchive(URI uri) {
+		return uri.getScheme().startsWith("cfs-archive");
+	}
+
+	/**
      * Initialize the consistency levels for reads and writes.
      * 
      * @param ks
@@ -195,7 +248,7 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
             List<CfDef> cfs = new ArrayList<CfDef>();
 
             CfDef cf = new CfDef();
-            cf.setName(inodeCf);
+            cf.setName(inodeDefaultCf);
             cf.setComparator_type("BytesType");
             cf.setKey_cache_size(1000000);
             cf.setRow_cache_size(0);
@@ -215,7 +268,7 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
             cfs.add(cf);
 
             cf = new CfDef();
-            cf.setName(sblockCf);
+            cf.setName(sblockDefaultCf);
             cf.setComparator_type("BytesType");
             cf.setKey_cache_size(1000000);
             cf.setRow_cache_size(0);
@@ -227,6 +280,44 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
             cf.setMemtable_throughput_in_mb(128);
             cf.setMin_compaction_threshold(16);
             cf.setMax_compaction_threshold(64);
+            
+            cfs.add(cf);
+            
+            // CFs for archive
+            cf = new CfDef();
+            cf.setName(inodeArchiveCf);
+            cf.setComparator_type("BytesType");
+            cf.setKey_cache_size(1000000);
+            cf.setRow_cache_size(0);
+            cf.setGc_grace_seconds(60);
+            cf.setComment("Stores file meta data");
+            cf.setKeyspace(keySpace);
+
+            // this is a workaround until 
+            // http://issues.apache.org/jira/browse/CASSANDRA-1278
+            cf.setMemtable_flush_after_mins(1);
+            cf.setMemtable_throughput_in_mb(128);
+            
+            cf.setColumn_metadata(Arrays.asList(new ColumnDef(pathCol, "BytesType").setIndex_type(IndexType.KEYS)
+                    .setIndex_name("path"), new ColumnDef(sentCol, "BytesType").setIndex_type(IndexType.KEYS)
+                    .setIndex_name("sentinel")));
+
+            cfs.add(cf);
+
+            cf = new CfDef();
+            cf.setName(sblockArchiveCf);
+            cf.setComparator_type("BytesType");
+            cf.setKey_cache_size(1000000);
+            cf.setRow_cache_size(0);
+            cf.setGc_grace_seconds(60);
+            cf.setComment("Stores blocks of information associated with a inode");
+            cf.setKeyspace(keySpace);
+
+            // Optimization for 128 MB blocks.
+            cf.setMemtable_throughput_in_mb(128);
+            // Disable compaction for archive.
+            cf.setMin_compaction_threshold(0);
+            cf.setMax_compaction_threshold(0);
             
             cfs.add(cf);
             
@@ -287,7 +378,7 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
         try
         {
             blockData = ((Brisk.Iface) client).get_cfs_sblock(FBUtilities.getLocalAddress().getHostName(), 
-            		blockId, subBlockId, (int) byteRangeStart);
+            		blockId, subBlockId, (int) byteRangeStart, storageTypeInUse);
         }
         catch (Exception e)
         {
@@ -306,7 +397,7 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
         return is;
     }
 
-    private InputStream readLocalBlock(LocalBlock blockInfo)
+	private InputStream readLocalBlock(LocalBlock blockInfo)
     {
 
         if (blockInfo.file == null)
@@ -437,7 +528,7 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
         List<Mutation> mutations = new ArrayList<Mutation>();
 
         // setup mutation map
-        pathMutations.put(inodeCf, mutations);
+        pathMutations.put(inodeCfInUse, mutations);
         mutationMap.put(pathKey, pathMutations);
 
         long ts = System.currentTimeMillis();

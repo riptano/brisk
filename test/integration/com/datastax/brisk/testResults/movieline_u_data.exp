@@ -1,0 +1,5 @@
+-- Statement: DROP TABLE IF EXISTS u_data
+-- Statement: DROP TABLE IF EXISTS u_data_new
+-- Statement: CREATE TABLE u_data (userid INT, movieid INT, rating INT, unixtime STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t' STORED AS TEXTFILE
+-- Statement: LOAD DATA LOCAL INPATH '[[DATA_DIR]]/u.data' OVERWRITE INTO TABLE u_data
+-- Statement: CREATE TABLE u_data_new (userid INT, movieid INT, rating INT, weekday INT) ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'

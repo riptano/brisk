@@ -46,8 +46,9 @@ public class Brisk {
      * @param block_id
      * @param sblock_id
      * @param offset
+     * @param storageType
      */
-    public LocalOrRemoteBlock get_cfs_sblock(String caller_host_name, ByteBuffer block_id, ByteBuffer sblock_id, int offset) throws InvalidRequestException, UnavailableException, TimedOutException, NotFoundException, org.apache.thrift.TException;
+    public LocalOrRemoteBlock get_cfs_sblock(String caller_host_name, ByteBuffer block_id, ByteBuffer sblock_id, int offset, StorageType storageType) throws InvalidRequestException, UnavailableException, TimedOutException, NotFoundException, org.apache.thrift.TException;
 
     /**
      * returns the hostname:port of the jobtracker control port
@@ -61,7 +62,7 @@ public class Brisk {
 
     public void describe_keys(String keyspace, List<ByteBuffer> keys, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.describe_keys_call> resultHandler) throws org.apache.thrift.TException;
 
-    public void get_cfs_sblock(String caller_host_name, ByteBuffer block_id, ByteBuffer sblock_id, int offset, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.get_cfs_sblock_call> resultHandler) throws org.apache.thrift.TException;
+    public void get_cfs_sblock(String caller_host_name, ByteBuffer block_id, ByteBuffer sblock_id, int offset, StorageType storageType, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.get_cfs_sblock_call> resultHandler) throws org.apache.thrift.TException;
 
     public void get_jobtracker_address(org.apache.thrift.async.AsyncMethodCallback<AsyncClient.get_jobtracker_address_call> resultHandler) throws org.apache.thrift.TException;
 
@@ -134,13 +135,13 @@ public class Brisk {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "describe_keys failed: unknown result");
     }
 
-    public LocalOrRemoteBlock get_cfs_sblock(String caller_host_name, ByteBuffer block_id, ByteBuffer sblock_id, int offset) throws InvalidRequestException, UnavailableException, TimedOutException, NotFoundException, org.apache.thrift.TException
+    public LocalOrRemoteBlock get_cfs_sblock(String caller_host_name, ByteBuffer block_id, ByteBuffer sblock_id, int offset, StorageType storageType) throws InvalidRequestException, UnavailableException, TimedOutException, NotFoundException, org.apache.thrift.TException
     {
-      send_get_cfs_sblock(caller_host_name, block_id, sblock_id, offset);
+      send_get_cfs_sblock(caller_host_name, block_id, sblock_id, offset, storageType);
       return recv_get_cfs_sblock();
     }
 
-    public void send_get_cfs_sblock(String caller_host_name, ByteBuffer block_id, ByteBuffer sblock_id, int offset) throws org.apache.thrift.TException
+    public void send_get_cfs_sblock(String caller_host_name, ByteBuffer block_id, ByteBuffer sblock_id, int offset, StorageType storageType) throws org.apache.thrift.TException
     {
       oprot_.writeMessageBegin(new org.apache.thrift.protocol.TMessage("get_cfs_sblock", org.apache.thrift.protocol.TMessageType.CALL, ++seqid_));
       get_cfs_sblock_args args = new get_cfs_sblock_args();
@@ -148,6 +149,7 @@ public class Brisk {
       args.setBlock_id(block_id);
       args.setSblock_id(sblock_id);
       args.setOffset(offset);
+      args.setStorageType(storageType);
       args.write(oprot_);
       oprot_.writeMessageEnd();
       oprot_.getTransport().flush();
@@ -276,9 +278,9 @@ public class Brisk {
       }
     }
 
-    public void get_cfs_sblock(String caller_host_name, ByteBuffer block_id, ByteBuffer sblock_id, int offset, org.apache.thrift.async.AsyncMethodCallback<get_cfs_sblock_call> resultHandler) throws org.apache.thrift.TException {
+    public void get_cfs_sblock(String caller_host_name, ByteBuffer block_id, ByteBuffer sblock_id, int offset, StorageType storageType, org.apache.thrift.async.AsyncMethodCallback<get_cfs_sblock_call> resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      get_cfs_sblock_call method_call = new get_cfs_sblock_call(caller_host_name, block_id, sblock_id, offset, resultHandler, this, protocolFactory, transport);
+      get_cfs_sblock_call method_call = new get_cfs_sblock_call(caller_host_name, block_id, sblock_id, offset, storageType, resultHandler, this, protocolFactory, transport);
       this.currentMethod = method_call;
       manager.call(method_call);
     }
@@ -288,12 +290,14 @@ public class Brisk {
       private ByteBuffer block_id;
       private ByteBuffer sblock_id;
       private int offset;
-      public get_cfs_sblock_call(String caller_host_name, ByteBuffer block_id, ByteBuffer sblock_id, int offset, org.apache.thrift.async.AsyncMethodCallback<get_cfs_sblock_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      private StorageType storageType;
+      public get_cfs_sblock_call(String caller_host_name, ByteBuffer block_id, ByteBuffer sblock_id, int offset, StorageType storageType, org.apache.thrift.async.AsyncMethodCallback<get_cfs_sblock_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.caller_host_name = caller_host_name;
         this.block_id = block_id;
         this.sblock_id = sblock_id;
         this.offset = offset;
+        this.storageType = storageType;
       }
 
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
@@ -303,6 +307,7 @@ public class Brisk {
         args.setBlock_id(block_id);
         args.setSblock_id(sblock_id);
         args.setOffset(offset);
+        args.setStorageType(storageType);
         args.write(prot);
         prot.writeMessageEnd();
       }
@@ -439,7 +444,7 @@ public class Brisk {
         iprot.readMessageEnd();
         get_cfs_sblock_result result = new get_cfs_sblock_result();
         try {
-          result.success = iface_.get_cfs_sblock(args.caller_host_name, args.block_id, args.sblock_id, args.offset);
+          result.success = iface_.get_cfs_sblock(args.caller_host_name, args.block_id, args.sblock_id, args.offset, args.storageType);
         } catch (InvalidRequestException ire) {
           result.ire = ire;
         } catch (UnavailableException ue) {
@@ -927,6 +932,22 @@ public class Brisk {
       }
       if (keys == null) {
         throw new org.apache.thrift.protocol.TProtocolException("Required field 'keys' was not present! Struct: " + toString());
+      }
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
       }
     }
 
@@ -1558,6 +1579,22 @@ public class Brisk {
       // check for required fields
     }
 
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
   }
 
   public static class get_cfs_sblock_args implements org.apache.thrift.TBase<get_cfs_sblock_args, get_cfs_sblock_args._Fields>, java.io.Serializable, Cloneable   {
@@ -1567,18 +1604,29 @@ public class Brisk {
     private static final org.apache.thrift.protocol.TField BLOCK_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("block_id", org.apache.thrift.protocol.TType.STRING, (short)2);
     private static final org.apache.thrift.protocol.TField SBLOCK_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("sblock_id", org.apache.thrift.protocol.TType.STRING, (short)3);
     private static final org.apache.thrift.protocol.TField OFFSET_FIELD_DESC = new org.apache.thrift.protocol.TField("offset", org.apache.thrift.protocol.TType.I32, (short)4);
+    private static final org.apache.thrift.protocol.TField STORAGE_TYPE_FIELD_DESC = new org.apache.thrift.protocol.TField("storageType", org.apache.thrift.protocol.TType.I32, (short)5);
 
     public String caller_host_name;
     public ByteBuffer block_id;
     public ByteBuffer sblock_id;
     public int offset;
+    /**
+     * 
+     * @see StorageType
+     */
+    public StorageType storageType;
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
       CALLER_HOST_NAME((short)1, "caller_host_name"),
       BLOCK_ID((short)2, "block_id"),
       SBLOCK_ID((short)3, "sblock_id"),
-      OFFSET((short)4, "offset");
+      OFFSET((short)4, "offset"),
+      /**
+       * 
+       * @see StorageType
+       */
+      STORAGE_TYPE((short)5, "storageType");
 
       private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -1601,6 +1649,8 @@ public class Brisk {
             return SBLOCK_ID;
           case 4: // OFFSET
             return OFFSET;
+          case 5: // STORAGE_TYPE
+            return STORAGE_TYPE;
           default:
             return null;
         }
@@ -1655,6 +1705,8 @@ public class Brisk {
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING          , true)));
       tmpMap.put(_Fields.OFFSET, new org.apache.thrift.meta_data.FieldMetaData("offset", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
+      tmpMap.put(_Fields.STORAGE_TYPE, new org.apache.thrift.meta_data.FieldMetaData("storageType", org.apache.thrift.TFieldRequirementType.REQUIRED, 
+          new org.apache.thrift.meta_data.EnumMetaData(org.apache.thrift.protocol.TType.ENUM, StorageType.class)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(get_cfs_sblock_args.class, metaDataMap);
     }
@@ -1668,7 +1720,8 @@ public class Brisk {
       String caller_host_name,
       ByteBuffer block_id,
       ByteBuffer sblock_id,
-      int offset)
+      int offset,
+      StorageType storageType)
     {
       this();
       this.caller_host_name = caller_host_name;
@@ -1676,6 +1729,7 @@ public class Brisk {
       this.sblock_id = sblock_id;
       this.offset = offset;
       setOffsetIsSet(true);
+      this.storageType = storageType;
     }
 
     /**
@@ -1696,6 +1750,9 @@ public class Brisk {
 ;
       }
       this.offset = other.offset;
+      if (other.isSetStorageType()) {
+        this.storageType = other.storageType;
+      }
     }
 
     public get_cfs_sblock_args deepCopy() {
@@ -1709,6 +1766,7 @@ public class Brisk {
       this.sblock_id = null;
       this.offset = 0;
 
+      this.storageType = null;
     }
 
     public String getCaller_host_name() {
@@ -1826,6 +1884,38 @@ public class Brisk {
       __isset_bit_vector.set(__OFFSET_ISSET_ID, value);
     }
 
+    /**
+     * 
+     * @see StorageType
+     */
+    public StorageType getStorageType() {
+      return this.storageType;
+    }
+
+    /**
+     * 
+     * @see StorageType
+     */
+    public get_cfs_sblock_args setStorageType(StorageType storageType) {
+      this.storageType = storageType;
+      return this;
+    }
+
+    public void unsetStorageType() {
+      this.storageType = null;
+    }
+
+    /** Returns true if field storageType is set (has been assigned a value) and false otherwise */
+    public boolean isSetStorageType() {
+      return this.storageType != null;
+    }
+
+    public void setStorageTypeIsSet(boolean value) {
+      if (!value) {
+        this.storageType = null;
+      }
+    }
+
     public void setFieldValue(_Fields field, Object value) {
       switch (field) {
       case CALLER_HOST_NAME:
@@ -1860,6 +1950,14 @@ public class Brisk {
         }
         break;
 
+      case STORAGE_TYPE:
+        if (value == null) {
+          unsetStorageType();
+        } else {
+          setStorageType((StorageType)value);
+        }
+        break;
+
       }
     }
 
@@ -1876,6 +1974,9 @@ public class Brisk {
 
       case OFFSET:
         return new Integer(getOffset());
+
+      case STORAGE_TYPE:
+        return getStorageType();
 
       }
       throw new IllegalStateException();
@@ -1896,6 +1997,8 @@ public class Brisk {
         return isSetSblock_id();
       case OFFSET:
         return isSetOffset();
+      case STORAGE_TYPE:
+        return isSetStorageType();
       }
       throw new IllegalStateException();
     }
@@ -1949,6 +2052,15 @@ public class Brisk {
           return false;
       }
 
+      boolean this_present_storageType = true && this.isSetStorageType();
+      boolean that_present_storageType = true && that.isSetStorageType();
+      if (this_present_storageType || that_present_storageType) {
+        if (!(this_present_storageType && that_present_storageType))
+          return false;
+        if (!this.storageType.equals(that.storageType))
+          return false;
+      }
+
       return true;
     }
 
@@ -1975,6 +2087,11 @@ public class Brisk {
       builder.append(present_offset);
       if (present_offset)
         builder.append(offset);
+
+      boolean present_storageType = true && (isSetStorageType());
+      builder.append(present_storageType);
+      if (present_storageType)
+        builder.append(storageType.getValue());
 
       return builder.toHashCode();
     }
@@ -2027,6 +2144,16 @@ public class Brisk {
           return lastComparison;
         }
       }
+      lastComparison = Boolean.valueOf(isSetStorageType()).compareTo(typedOther.isSetStorageType());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetStorageType()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.storageType, typedOther.storageType);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
       return 0;
     }
 
@@ -2073,6 +2200,13 @@ public class Brisk {
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
             }
             break;
+          case 5: // STORAGE_TYPE
+            if (field.type == org.apache.thrift.protocol.TType.I32) {
+              this.storageType = StorageType.findByValue(iprot.readI32());
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
         }
@@ -2106,6 +2240,11 @@ public class Brisk {
       oprot.writeFieldBegin(OFFSET_FIELD_DESC);
       oprot.writeI32(this.offset);
       oprot.writeFieldEnd();
+      if (this.storageType != null) {
+        oprot.writeFieldBegin(STORAGE_TYPE_FIELD_DESC);
+        oprot.writeI32(this.storageType.getValue());
+        oprot.writeFieldEnd();
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -2142,6 +2281,14 @@ public class Brisk {
       sb.append("offset:");
       sb.append(this.offset);
       first = false;
+      if (!first) sb.append(", ");
+      sb.append("storageType:");
+      if (this.storageType == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.storageType);
+      }
+      first = false;
       sb.append(")");
       return sb.toString();
     }
@@ -2156,6 +2303,25 @@ public class Brisk {
       }
       if (sblock_id == null) {
         throw new org.apache.thrift.protocol.TProtocolException("Required field 'sblock_id' was not present! Struct: " + toString());
+      }
+      if (storageType == null) {
+        throw new org.apache.thrift.protocol.TProtocolException("Required field 'storageType' was not present! Struct: " + toString());
+      }
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
       }
     }
 
@@ -2823,6 +2989,22 @@ public class Brisk {
       // check for required fields
     }
 
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
   }
 
   public static class get_jobtracker_address_args implements org.apache.thrift.TBase<get_jobtracker_address_args, get_jobtracker_address_args._Fields>, java.io.Serializable, Cloneable   {
@@ -3009,6 +3191,22 @@ public class Brisk {
 
     public void validate() throws org.apache.thrift.TException {
       // check for required fields
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
     }
 
   }
@@ -3390,6 +3588,22 @@ public class Brisk {
 
     public void validate() throws org.apache.thrift.TException {
       // check for required fields
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
     }
 
   }

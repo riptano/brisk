@@ -23,14 +23,7 @@ import org.apache.thrift.transport.TTransportException;
  * 
  * @author zznate
  */
-public class CassandraHiveMetaStoreTest extends CleanupHelper {
-
-
-    @BeforeClass
-    public static void setup() throws TTransportException, IOException, InterruptedException, ConfigurationException
-    {
-        EmbeddedServer.startBrisk();                
-    }
+public class CassandraHiveMetaStoreTest extends MetaStoreTestBase {
 
     @Test
     public void testSetConf() 
@@ -229,14 +222,5 @@ public class CassandraHiveMetaStoreTest extends CleanupHelper {
         
     }
     
-    
-    private Configuration buildConfiguration() 
-    {
-        Configuration conf = new Configuration();
-        conf.set(CassandraClientHolder.CONF_PARAM_HOST, "localhost");
-        conf.setInt(CassandraClientHolder.CONF_PARAM_PORT, DatabaseDescriptor.getRpcPort());
-        conf.setBoolean(CassandraClientHolder.CONF_PARAM_FRAMED, true);
-        conf.set(CassandraClientHolder.CONF_PARAM_CONNECTION_STRATEGY, "STICKY");
-        return conf;
-    }
+   
 }

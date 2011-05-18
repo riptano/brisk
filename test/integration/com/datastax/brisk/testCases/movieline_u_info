@@ -1,0 +1,14 @@
+DROP TABLE IF EXISTS u_info;
+
+CREATE TABLE u_info (users INT, items INT, ratings INT)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY '\t'
+STORED AS TEXTFILE;
+
+-- TODO: transfor the key/values into a single row to insert.
+-- LOAD DATA LOCAL INPATH '[[DATA_DIR]]/u.info' OVERWRITE INTO TABLE u_info;
+
+-- File Contents:
+-- 943 users
+-- 1682 items
+-- 100000 ratings

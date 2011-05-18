@@ -5,4 +5,5 @@ etc/sysctl.d
 var/lib/cassandra
 var/log/cassandra
 var/log/hadoop
+var/log/hive
 usr/share/cassandra

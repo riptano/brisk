@@ -3,7 +3,7 @@
 CASSANDRA_CONF=/etc/brisk/cassandra
 
 # The java classpath (required)
-CLASSPATH=$CASSANDRA_CONF
+CLASSPATH=$CLASSPATH:$CASSANDRA_CONF
 
 for jar in /usr/share/brisk/cassandra/lib/*.jar; do
     CLASSPATH=$CLASSPATH:$jar

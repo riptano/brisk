@@ -1,0 +1,19 @@
+1) This suite runs HiveJDBC tests.  These tests assume the following:
+* The Brisk Server is started: brisk cassandra -t -f
+* The HiveServer is started:  brisk hive --service hiveserver
+* This script runs on the HiveServer.  The jdbc connection is hard-coded as localhost
+
+2) To invoke a test, run: ant test-integration
+
+3) The test structure is:
+*Test.java contains test case declarations, using @Test notation
+
+* testCases: contain HiveQL files.
+** These files can contain comments, specifed as '--'
+** All SQL statements must end in a semi-colon
+** To specify input files in the 'testData' directory, test cases can reference [[DATA_DIR]]
+** To specify input files in the 'resources/hive/examples/files' directory, test cases can reference [[EXAMPLES]]
+
+* testResults:  contains *.exp files which are checked into source.  *.out files are generated for a diff using FileAssert.
+
+* testData: contains input data used for load commands.  

@@ -1,0 +1,13 @@
+DROP TABLE IF EXISTS clike_target_table;
+DROP TABLE IF EXISTS clike_source_table;
+
+CREATE TABLE clike_source_table (foo INT, bar STRING) COMMENT 'Source Table for Create Like' PARTITIONED BY (ds STRING) STORED AS TEXTFILE;  
+LOAD DATA LOCAL INPATH '[[EXAMPLES]]/kv1.txt' OVERWRITE INTO TABLE clike_source_table PARTITION (ds='2008-08-08');
+SELECT COUNT(*) FROM clike_source_table;
+
+CREATE TABLE clike_target_table LIKE clike_source_table;
+LOAD DATA LOCAL INPATH '[[EXAMPLES]]/kv2.txt' OVERWRITE INTO TABLE clike_target_table PARTITION (ds='2008-08-15');
+SELECT ds, COUNT(*) FROM clike_target_table group by ds;
+
+DROP TABLE clike_target_table;
+DROP TABLE clike_source_table;

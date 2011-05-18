@@ -42,7 +42,7 @@
 
 <property>
   <name>hadoop.bin.path</name>
-  <value>${brisk.home}/bin/brisk hadoop</value>
+  <value>${brisk.bin}/brisk hadoop</value>
 </property>
 
 

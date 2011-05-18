@@ -69,7 +69,13 @@ case "$1" in
         shift
 
         #we need to remove the conflicting antlr jar
-        export CLASSPATH=`echo $CLASSPATH | sed -E "s/antlr|slf4j/dne/g"`
+        case `uname` in
+            Darwin)
+                export CLASSPATH=`echo $CLASSPATH | sed -E "s/antlr|slf4j/dne/g"`
+            ;;
+            *)
+                export CLASSPATH=`echo $CLASSPATH | sed -r "s/antlr|slf4j/dne/g"`
+        esac
         export HADOOP_CLASSPATH=$CLASSPATH
 
         JOBTRACKER=`$BIN/brisktool jobtracker`;
@@ -80,7 +86,7 @@ case "$1" in
             exit 2
         fi
 
-        export HIVE_OPTS="$HIVE_OPTS -hiveconf hive.log.dir=$BRISK_LOG_ROOT/hive -hiveconf brisk.home=$BRISK_HOME"
+        export HIVE_OPTS="$HIVE_OPTS -hiveconf hive.log.dir=$HIVE_LOG_ROOT/hive -hiveconf brisk.bin=$BIN"
 
         $HIVE_BIN/hive "$@"
         exit $?

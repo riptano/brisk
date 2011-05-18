@@ -4,13 +4,26 @@
 <!-- Put site-specific property overrides in this file. -->
 
 <configuration>
+ 
   <property>
     <name>fs.default.name</name>
     <value>cfs:///</value>
   </property>
+ 
+  <!--
+  <property>
+    <name>fs.default.name</name>
+    <value>cfs-archive:///</value>
+  </property>
+  -->
 
  <property>
     <name>fs.cfs.impl</name>
+    <value>org.apache.cassandra.hadoop.fs.CassandraFileSystem</value>
+ </property>
+ 
+  <property>
+    <name>fs.cfs-archive.impl</name>
     <value>org.apache.cassandra.hadoop.fs.CassandraFileSystem</value>
  </property>
 

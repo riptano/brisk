@@ -11,7 +11,7 @@
 
 export JAVA_HOME=/usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0/
 export CASSANDRA_HOME=/usr/share/brisk/cassandra/
-export CASSANDRA_INCLUDE=/usr/share/brisk/cassandra/cassandra.in.sh
+export CASSANDRA_INCLUDE=/usr/share/cassandra/cassandra.in.sh
 export CASSANDRA_CONF=/etc/brisk/cassandra
 export CASSANDRA_OWNR=cassandra
 NAME="cassandra"
@@ -41,7 +41,7 @@ case "$1" in
 			[ -e /etc/brisk/brisk-env.sh ] || exit 0
 			# Read Brisk environment file.
 			. /etc/brisk/brisk-env.sh			
-			EXTRA_FLAGS="$EXTRA_FLAGS -t"			   		
+			EXTRA_FLAGS="$EXTRA_FLAGS -t -Djava.library.path=$JAVA_LIBRARY_PATH"			   		
     		echo "Brisk daemon starting with Hadoop enabled (edit /etc/default/brisk to disable)"
 		fi
         

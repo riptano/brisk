@@ -206,8 +206,6 @@ public class MetaStorePersister
         {
             colName.append(((Index)base).getOrigTableName())
             .append(COL_NAME_SEP)
-            .append(((Index)base).getIndexTableName())
-            .append(COL_NAME_SEP)
             .append(((Index)base).getIndexName());
         } else if ( base instanceof Partition ) 
         {

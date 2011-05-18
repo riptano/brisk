@@ -125,7 +125,7 @@ do_start()
     if [ "$HADOOP_ENABLED" = "0" ]; then
         echo "$DESC starting with Hadoop disabled (edit /etc/default/brisk to enable)"
     else
-        EXTRA_FLAGS="$EXTRA_FLAGS -Dhadoop-trackers=true -Dhadoop.log.dir=$HADOOP_LOG_DIR"
+        EXTRA_FLAGS="$EXTRA_FLAGS -Dhadoop-trackers=true -Dhadoop.log.dir=$HADOOP_LOG_DIR -Djava.library.path=$JAVA_LIBRARY_PATH"
         echo "$DESC starting with Hadoop enabled (edit /etc/default/brisk to disable)"
     fi
 

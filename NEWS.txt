@@ -19,20 +19,24 @@ Major components of this release:
 Please see respective components for their release notes specific to the version.
 Known Issues
 --------------
-	BRISK-169 HiveSQL drop table hangs (infinite loop of queries in DEBUG) after performing lots of alters to a table or after inserting data into a table with an index
+	BRISK-169 HiveSQL drop table hangs when trying to drop a table with an index
 	BRISK-172 Tests/Jobs that read mapred-site.xml directly will fail to find JobTracker
 	BRISK-173 AMI has intermittent issue with starting up raid devices
-	BRISK-175 NullPointerException running ALTER TABLE foo TOUCH
 	BRISK-176 Cleaner build for source download that connects major components modified on disk and remotely
 
 For the latest on these issues: https://datastax.jira.com/browse/BRISK
 
 Product Download & Documents Links 
 -----------------------------------
-Product downloads, updates in form of AMI, rpm, .deb are available from DataStax website.  
-         http://www.datastax.com/products/brisk 
+Product downloads, updates in form of AMI, Source and Binary Archives, .deb are available from DataStax website.  
 
-Sources & build directions are hosted on github -
+	archive https://github.com/riptano/brisk/archives/brisk1
+	debian  debian.datastax.com
+	rpm     rpm.datastax.com
+        
+	http://www.datastax.com/products/brisk 
+
+Sources & build directions are hosted on github - We welcome your participation and pull requests!
 	https://github.com/riptano/brisk
 	https://github.com/riptano/hive
 	https://github.com/riptano/brisk-hadoop-common
@@ -45,6 +49,4 @@ Feedback:
 Please join us for feedback and conversations on Brisk email lists: 
 	http://groups.google.com/group/brisk-users
 	http://groups.google.com/group/brisk-dev
-	http://groups.google.com/group/brisk-commit
-
 and on Internet Relay Chat (irc): #datastax-brisk

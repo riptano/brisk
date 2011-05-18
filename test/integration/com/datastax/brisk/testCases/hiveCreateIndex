@@ -1,0 +1,31 @@
+DROP TABLE IF EXISTS index_test_table;
+
+-- Create Table and load before adding index
+CREATE TABLE index_test_table (foo INT, bar STRING) COMMENT 'table to test DDL ops' PARTITIONED BY (ds STRING) STORED AS TEXTFILE;  
+LOAD DATA LOCAL INPATH '[[EXAMPLES]]/kv1.txt' OVERWRITE INTO TABLE index_test_table PARTITION (ds='2008-08-15');
+
+-- Create Index and then Load
+CREATE INDEX foo_idx ON TABLE index_test_table(foo) AS 'org.apache.hadoop.hive.ql.index.compact.CompactIndexHandler' WITH DEFERRED REBUILD IN TABLE index_test_table_foo_idx;
+LOAD DATA LOCAL INPATH '[[EXAMPLES]]/kv2.txt' OVERWRITE INTO TABLE index_test_table PARTITION (ds='2008-08-08');
+
+ALTER TABLE index_test_table TOUCH;
+SHOW FORMATTED INDEXES ON index_test_table;
+SHOW PARTITIONS index_test_table;    
+SELECT ds, COUNT(*) FROM index_test_table GROUP BY ds;
+
+-- Rebuild and Load
+ALTER INDEX bar_idx ON index_test_table_ctas REBUILD;
+LOAD DATA LOCAL INPATH '[[EXAMPLES]]/kv3.txt' OVERWRITE INTO TABLE index_test_table_renamed PARTITION (ds='2008-08-22');
+
+-- Drop Partition andReload
+ALTER TABLE  index_test_table drop partition (ds='2008-08-15');
+LOAD DATA LOCAL INPATH '../resources/hive/examples/files/kv2.txt' OVERWRITE INTO TABLE index_test_table PARTITION (ds='2008-08-15');
+SHOW PARTITIONS index_test_table;    
+SELECT ds, COUNT(*) FROM index_test_table GROUP BY ds;
+
+-- Rebuild  Index and Re-query
+ALTER INDEX bar_idx ON index_test_table_ctas REBUILD;
+SELECT ds, COUNT(*) FROM index_test_table GROUP BY ds;
+
+-- Cleanup
+DROP TABLE index_test_table;

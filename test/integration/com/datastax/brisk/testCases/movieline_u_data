@@ -1,0 +1,15 @@
+DROP TABLE IF EXISTS u_data;
+DROP TABLE IF EXISTS u_data_new;
+
+-- Create Source Table
+CREATE TABLE u_data (userid INT, movieid INT, rating INT, unixtime STRING)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY '\t'
+STORED AS TEXTFILE;
+
+LOAD DATA LOCAL INPATH '[[DATA_DIR]]/u.data' OVERWRITE INTO TABLE u_data;
+
+-- Create Target Table
+CREATE TABLE u_data_new (userid INT, movieid INT, rating INT, weekday INT)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY '\t';

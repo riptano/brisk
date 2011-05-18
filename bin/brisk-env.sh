@@ -5,6 +5,7 @@ if [ -x $JAVA_HOME/bin/java ]; then
     JAVA=$JAVA_HOME/bin/java
 else
     JAVA=`which java`
+    export JAVA_HOME=$(readlink -f $JAVA | sed "s:bin/java::")
 fi
 
 if [ -z $BRISK_HOME ]; then
@@ -82,4 +83,5 @@ export HADOOP_CLASSPATH=$CLASSPATH
 #
 export HIVE_HOME=$BRISK_HOME/resources/hive
 export HIVE_BIN=$HIVE_HOME/bin
+export HIVE_LOG_ROOT=$BRISK_LOG_ROOT/hive
 

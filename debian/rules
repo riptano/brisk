@@ -36,7 +36,6 @@ install: build
 	dh_link usr/share/brisk/brisk-$(VERSION).jar \
 		usr/share/brisk/brisk.jar
 
-
 # Build architecture-independent files here.
 binary-indep: build install
 	dh_testdir

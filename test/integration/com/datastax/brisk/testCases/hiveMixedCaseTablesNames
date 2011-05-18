@@ -1,0 +1,49 @@
+-- Drop tables in case test failed
+DROP TABLE IF EXISTS mixedCaSE;
+DROP TABLE IF EXISTS mixedCaSE_renamed;
+DROP TABLE IF EXISTS mixedCaSE_clike;
+DROP TABLE IF EXISTS mixedCaSE_ctas;
+
+-- Create Table and Load Data
+CREATE TABLE mixedCaSE (foo INT, bar STRING) COMMENT 'table to test DDL ops' PARTITIONED BY (ds STRING) STORED AS TEXTFILE;
+-- LOAD DATA LOCAL INPATH '[[EXAMPLES]]/kv1.txt' OVERWRITE INTO TABLE mixedCaSE PARTITION (ds='2008-08-08');
+
+-- CTAS and CREATE LIKE
+CREATE TABLE mixedCaSE_clike LIKE mixedCaSE;
+DESCRIBE mixedCaSE_clike;
+
+CREATE TABLE mixedCaSE_ctas as SELECT * FROM mixedCaSE;
+DESCRIBE mixedCaSE;
+
+-- Create Add Columns and Insert Data
+ALTER TABLE mixedCaSE ADD COLUMNS (new_col1 INT);
+INSERT OVERWRITE TABLE mixedCaSE PARTITION (ds='2008-08-15') SELECT foo, bar, 333333333 FROM mixedCaSE_ctas WHERE ds='2008-08-08';
+
+ALTER TABLE mixedCaSE ADD COLUMNS (new_col2 STRING, new_col3 STRING COMMENT 'a comment');
+INSERT OVERWRITE TABLE mixedCaSE PARTITION (ds='2008-08-18') SELECT foo, bar, 12345678, 'new string to insert', '2011-05-07' FROM mixedCaSE WHERE ds='2008-08-18';
+
+-- Replace Column MetaData
+ALTER TABLE mixedCaSE CHANGE new_col1 new_col1a STRING after new_col2;
+ALTER TABLE mixedCaSE CHANGE bar bar STRING FIRST;
+ALTER TABLE mixedCaSE CHANGE foo foo INT FIRST;
+-- LOAD DATA LOCAL INPATH '[[EXAMPLES]]/kv3.txt' OVERWRITE INTO TABLE mixedCaSE PARTITION (ds='2008-08-22');
+
+-- Check MetaData
+SHOW PARTITIONS mixedCaSE;
+DESCRIBE mixedCaSE;
+SELECT count(*), ds FROM mixedCaSE GROUP BY ds;
+
+-- Rename Table and Load Data
+ALTER TABLE mixedCaSE RENAME TO mixedCaSE_renamed;
+DESCRIBE mixedCaSE_renamed;
+-- LOAD DATA LOCAL INPATH '[[EXAMPLES]]/kv3.txt' OVERWRITE INTO TABLE mixedCaSE_renamed PARTITION (ds='2008-08-22');
+
+-- Check MetaData
+SHOW PARTITIONS mixedCaSE_renamed;
+DESCRIBE mixedCaSE_renamed;
+SELECT ds, COUNT(*) FROM mixedCaSE_renamed GROUP BY ds;
+
+-- Cleanup
+DROP TABLE mixedCaSE_renamed;
+DROP TABLE mixedCaSE_clike;
+DROP TABLE mixedCaSE_ctas;

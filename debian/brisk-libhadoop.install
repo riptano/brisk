@@ -1,4 +1,5 @@
 resources/hadoop/*.jar usr/share/brisk/hadoop/lib
 resources/hadoop/lib/*.jar usr/share/brisk/hadoop/lib
+resources/hadoop/bin/* usr/share/brisk/hadoop/bin
+resources/hadoop/webapps/* usr/share/brisk/hadoop/webapps
 resources/hadoop/conf/* etc/brisk/hadoop
-resources/hadoop/bin/hadoop usr/bin

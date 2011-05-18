@@ -4,3 +4,4 @@ demos/portfolio_manager/resources usr/share/brisk-demos/portfolio_manager
 demos/portfolio_manager/thrift usr/share/brisk-demos/portfolio_manager
 demos/portfolio_manager/website usr/share/brisk-demos/portfolio_manager
 demos/portfolio_manager/README.txt usr/share/brisk-demos/portfolio_manager
+demos/portfolio_manager/10_day_loss.q usr/share/brisk-demos/portfolio_manager

@@ -50,7 +50,7 @@ public class CassandraHiveMetaStore implements RawStore {
     private static final Logger log = LoggerFactory.getLogger(CassandraHiveMetaStore.class);
     private Configuration configuration;
     private MetaStorePersister metaStorePersister;
-    private CassandraClientHolder cassandraClientHolder;
+    private CassandraClientHolder cassandraClientHolder;    
     
     public CassandraHiveMetaStore()
     {
@@ -62,9 +62,9 @@ public class CassandraHiveMetaStore implements RawStore {
     {
         configuration = conf;
         cassandraClientHolder = new CassandraClientHolder(configuration);
-        
-        Cassandra.Iface client = cassandraClientHolder.getClient();        
-        createSchemaIfNeeded(client, conf);                        
+        SchemaManagerService schemaManagerService = 
+            new SchemaManagerService(this, configuration);
+        schemaManagerService.createMetaStoreIfNeeded();                
         metaStorePersister = new MetaStorePersister(configuration);
     }
     
@@ -73,56 +73,6 @@ public class CassandraHiveMetaStore implements RawStore {
         return configuration;
     }    
     
-    private void createSchemaIfNeeded(Cassandra.Iface client, Configuration conf) 
-    {
-        // Database_entities : {[name].name=name}
-        // FIXME add these params to configuration
-        // databaseName=metastore_db;create=true
-        try {
-            client.set_keyspace(cassandraClientHolder.getKeyspaceName());
-            return;
-        } catch (InvalidRequestException ire) {
-            log.info("HiveMetaStore keyspace did not exist. Creating.");
-        } catch (Exception e) {
-            throw new CassandraHiveMetaStoreException("Could not create or validate existing schema", e);
-        }
-        
-        
-        //Sleep a random amount of time to stagger ks creations on many nodes
-        try
-        {
-            Thread.sleep(new Random().nextInt(5000));
-        }
-        catch (InterruptedException e1)
-        {
-          
-        }
-        
-        //check again...
-        try {
-            client.set_keyspace(cassandraClientHolder.getKeyspaceName());
-            return;
-        } catch (InvalidRequestException ire) {
-           
-        } catch (Exception e) {
-            throw new CassandraHiveMetaStoreException("Could not create or validate existing schema", e);
-        }
-        
-        CfDef cf = new CfDef(cassandraClientHolder.getKeyspaceName(), 
-                cassandraClientHolder.getColumnFamily());
-        cf.setKey_validation_class("UTF8Type");
-        cf.setComparator_type("UTF8Type");
-        KsDef ks = new KsDef(cassandraClientHolder.getKeyspaceName(), 
-                "org.apache.cassandra.locator.SimpleStrategy",  
-                Arrays.asList(cf));
-        ks.setStrategy_options(KSMetaData.optsWithRF(conf.getInt(CassandraClientHolder.CONF_PARAM_REPLICATION_FACTOR, 1)));
-        try {
-            client.system_add_keyspace(ks);
-        } catch (Exception e) {
-            throw new CassandraHiveMetaStoreException("Could not create Hive MetaStore database: " + e.getMessage(), e);
-        }
-    }
-
     
     public void createDatabase(Database database) throws InvalidObjectException, MetaException
     {
@@ -365,6 +315,9 @@ public class CassandraHiveMetaStore implements RawStore {
     public Index getIndex(String databaseName, String tableName, String indexName)
             throws MetaException
     {
+        if ( log.isDebugEnabled() )
+            log.debug("in getIndex with databaseName: {}, tableName: {} indexName: {}",
+                    new String[]{databaseName, tableName, indexName});        
         Index index = new Index();
         index.setDbName(databaseName);
         index.setIndexName(indexName);

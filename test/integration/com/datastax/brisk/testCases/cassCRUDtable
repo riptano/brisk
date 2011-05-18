@@ -1,0 +1,21 @@
+DROP TABLE IF EXISTS HistLoss;
+DROP TABLE IF EXISTS Stocks;
+
+CREATE EXTERNAL TABLE Stocks
+      (row_key string, column_name string,  value string)
+      STORED BY 'org.apache.hadoop.hive.cassandra.CassandraStorageHandler';
+
+SELECT COUNT(*) from Stocks;
+
+CREATE EXTERNAL TABLE HistLoss
+      (row_key string, worst_date string, loss string)
+      STORED BY 'org.apache.hadoop.hive.cassandra.CassandraStorageHandler';
+
+SELECT COUNT(*) from HistLoss;
+
+-- INSERT OVERWRITE TABLE HistLoss SELECT a.portfolio, rdate, cast(minp as string) FROM (SELECT portfolio, MIN(preturn) as minp FROM portfolio_returns GROUP BY portfolio ) a JOIN portfolio_returns b ON (a.portfolio = b.portfolio and a.minp = b.preturn);
+
+-- SELECT COUNT(*) from HistLoss;
+     
+DROP TABLE HistLoss;
+DROP TABLE Stocks;

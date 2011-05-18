@@ -1,0 +1,23 @@
+-- Statement: DROP TABLE IF EXISTS pokes
+-- Statement: CREATE TABLE pokes (foo INT, bar STRING) PARTITIONED BY (ds STRING)
+-- Statement: LOAD DATA LOCAL INPATH '[[EXAMPLES]]/kv2.txt' OVERWRITE INTO TABLE pokes PARTITION (ds='2008-08-15')
+-- Statement: LOAD DATA LOCAL INPATH '[[EXAMPLES]]/kv3.txt' OVERWRITE INTO TABLE pokes PARTITION (ds='2008-08-08')
+-- Statement: SHOW PARTITIONS pokes
+cfs://null/user/hive/warehouse/pokes/ds=2008-08-08, 
+cfs://null/user/hive/warehouse/pokes/ds=2008-08-15, 
+-- Statement: SELECT ds, count(*) FROM pokes group by ds
+2008-08-08, 25, 
+2008-08-15, 500, 
+-- Statement: alter table pokes drop partition (ds='2008-08-08')
+-- Statement: SHOW PARTITIONS pokes
+cfs://null/user/hive/warehouse/pokes/ds=2008-08-15, 
+-- Statement: SELECT ds, count(*) FROM pokes group by ds
+2008-08-15, 500, 
+-- Statement: LOAD DATA LOCAL INPATH '[[EXAMPLES]]/kv3.txt' OVERWRITE INTO TABLE pokes PARTITION (ds='2008-08-08')
+-- Statement: SHOW PARTITIONS pokes
+cfs://null/user/hive/warehouse/pokes/ds=2008-08-08, 
+cfs://null/user/hive/warehouse/pokes/ds=2008-08-15, 
+-- Statement: SELECT ds, count(*) FROM pokes group by ds
+2008-08-08, 25, 
+2008-08-15, 500, 
+-- Statement: DROP TABLE pokes

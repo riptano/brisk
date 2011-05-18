@@ -272,7 +272,8 @@ public class BriskErrorServer implements Brisk.Iface
         
     }
 
-    public LocalOrRemoteBlock get_cfs_sblock(String callerHostName, ByteBuffer blockId, ByteBuffer sblockId, int offset)
+    public LocalOrRemoteBlock get_cfs_sblock(String callerHostName, ByteBuffer blockId, ByteBuffer sblockId, int offset,
+    		StorageType storageType)
             throws InvalidRequestException, UnavailableException, TimedOutException, NotFoundException, TException
     {
         // TODO Auto-generated method stub
@@ -284,5 +285,7 @@ public class BriskErrorServer implements Brisk.Iface
         // TODO Auto-generated method stub
         return null;
     }
+
+
 
 }

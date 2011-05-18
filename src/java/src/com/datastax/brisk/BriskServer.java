@@ -53,17 +53,43 @@ public class BriskServer extends CassandraServer implements Brisk.Iface
 {
     
     static final Logger     logger         = Logger.getLogger(BriskServer.class);
-
-    static final String     cfsKeyspace    = "cfs";
-    static final String     cfsInodeFamily = "inode";
-    static final String     cfsSubBlockFamily = "sblocks";
     
     static final ByteBuffer dataCol        = ByteBufferUtil.bytes("data");
-    static final ColumnParent subBlockDataPath= new ColumnParent(cfsSubBlockFamily);
-    static final QueryPath    inodeQueryPath =  new QueryPath(cfsInodeFamily, null, dataCol);
 
-    public LocalOrRemoteBlock get_cfs_sblock(String callerHostName, ByteBuffer blockId,
-    		ByteBuffer sblockId, int offset) throws TException, TimedOutException, UnavailableException, InvalidRequestException, NotFoundException
+    static final String     cfsKeyspace    = "cfs";
+    
+    // CFs for regular storage
+    static final String     cfsInodeDefaultFamily = "inode";
+    static final String     cfsSubBlockDefaultFamily = "sblocks";
+
+    static final QueryPath    inodeDefaultQueryPath =  new QueryPath(cfsInodeDefaultFamily, null, dataCol);
+    static final ColumnParent subBlockDefaultDataPath= new ColumnParent(cfsSubBlockDefaultFamily);
+
+    // CFs for archive kind of storage
+    private static final String         cfsInodeArchiveFamily       = "inode_archive";
+    private static final String         cfsSubBlockArchiveFamily       = "sblocks_archive";
+
+    static final QueryPath    inodeArchiveQueryPath =  new QueryPath(cfsInodeArchiveFamily, null, dataCol);
+    static final ColumnParent subBlockArchiveDataPath= new ColumnParent(cfsSubBlockArchiveFamily);
+
+
+	@Override
+	public LocalOrRemoteBlock get_cfs_sblock(String callerHostName, ByteBuffer blockId, ByteBuffer sblockId, int offset,
+			StorageType storageType) throws InvalidRequestException, UnavailableException, TimedOutException, NotFoundException,
+			TException {
+		
+		if (storageType == StorageType.CFS_REGULAR)
+		{
+			return get_cfs_sblock(callerHostName, cfsSubBlockDefaultFamily, blockId, sblockId, offset, subBlockDefaultDataPath);
+		} else 
+		{
+			return get_cfs_sblock(callerHostName, cfsSubBlockArchiveFamily, blockId, sblockId, offset, subBlockArchiveDataPath);
+		}
+		
+	}
+
+    private LocalOrRemoteBlock get_cfs_sblock(String callerHostName, String subBlockCFName, ByteBuffer blockId,
+    		ByteBuffer sblockId, int offset, ColumnParent subBlockDataPath) throws TException, TimedOutException, UnavailableException, InvalidRequestException, NotFoundException
     {
 
         // This logic is only used on mmap spec machines
@@ -93,7 +119,7 @@ public class BriskServer extends CassandraServer implements Brisk.Iface
                 if(logger.isDebugEnabled())
                     logger.debug("Local block should be on this node "+blockId);
                 
-                LocalBlock localBlock = getLocalSubBlock(blockId, sblockId, offset);
+                LocalBlock localBlock = getLocalSubBlock(subBlockCFName, blockId, sblockId, offset);
                 
                 if(localBlock != null)
                 {
@@ -109,11 +135,12 @@ public class BriskServer extends CassandraServer implements Brisk.Iface
             logger.debug("Checking for remote block: "+blockId);
        
         //Fallback to storageProxy
-        return getRemoteSubBlock(blockId, sblockId, offset);
+        return getRemoteSubBlock(blockId, sblockId, offset, subBlockDataPath);
         
     }
+    
 
-    public List<List<String>> describe_keys(String keyspace, List<ByteBuffer> keys) throws TException
+	public List<List<String>> describe_keys(String keyspace, List<ByteBuffer> keys) throws TException
     {
         List<List<String>> keyEndpoints = new ArrayList<List<String>>(keys.size());
 
@@ -149,16 +176,12 @@ public class BriskServer extends CassandraServer implements Brisk.Iface
      * @return a local sublock
      * @throws TException
      */
-    private LocalBlock getLocalSubBlock(ByteBuffer blockId, ByteBuffer sblockId, int offset) throws TException
+    private LocalBlock getLocalSubBlock(String subBlockCFName, ByteBuffer blockId, ByteBuffer sblockId, int offset) throws TException
     {
-
-    	// TODO (use sblockId as Column name to look up the Sub Column.
-    	
-        DecoratedKey<Token<?>> decoratedKey = new DecoratedKey<Token<?>>(StorageService.getPartitioner().getToken(
-                blockId), blockId);
+        DecoratedKey<Token<?>> decoratedKey = new DecoratedKey<Token<?>>(StorageService.getPartitioner().getToken(blockId), blockId);
 
         Table table = Table.open(cfsKeyspace);
-        ColumnFamilyStore sblockStore = table.getColumnFamilyStore(cfsSubBlockFamily);
+        ColumnFamilyStore sblockStore = table.getColumnFamilyStore(subBlockCFName);
 
         Collection<SSTableReader> sstables = sblockStore.getSSTables();
 
@@ -177,7 +200,6 @@ public class BriskServer extends CassandraServer implements Brisk.Iface
             MappedFileDataInput file = null;
             try
             {
-                
                 raf = new RandomAccessFile(filename, "r");
                 assert position < raf.length();
                 
@@ -363,7 +385,8 @@ public class BriskServer extends CassandraServer implements Brisk.Iface
         return null;
     }
 
-    private LocalOrRemoteBlock getRemoteSubBlock(ByteBuffer blockId, ByteBuffer sblockId, int offset) throws TimedOutException, UnavailableException, InvalidRequestException, NotFoundException
+    private LocalOrRemoteBlock getRemoteSubBlock(ByteBuffer blockId, ByteBuffer sblockId, int offset, ColumnParent subBlockDataPath) 
+    	throws TimedOutException, UnavailableException, InvalidRequestException, NotFoundException
     {
         // The column name is the SubBlock id (UUID)
         ReadCommand rc = new SliceByNamesReadCommand(cfsKeyspace, blockId, subBlockDataPath, Arrays.asList(sblockId));

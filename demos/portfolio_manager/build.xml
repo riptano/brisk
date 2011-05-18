@@ -1,56 +1,58 @@
 <project name="portfoliomgr" default="war" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
 
-	<description>Portfolio Manager</description>
+    <description>Portfolio Manager</description>
 
-	<property name="src" location="src" />
-	<property name="test" location="test" />
-	<property name="config" location="config" />
-	<property name="build" location="build" />
-	<property name="build.classes" location="${build}/classes" />
-	<property name="build.test.classes" location="${build}/test-classes" />
-	
-	<property name="brisk.base" location="../.." />
-	<property name="resources" location="resources" />
+    <property name="src" location="src" />
+    <property name="test" location="test" />
+    <property name="config" location="config" />
+    <property name="build" location="build" />
+    <property name="build.classes" location="${build}/classes" />
+    <property name="build.test.classes" location="${build}/test-classes" />
 
-	<property name="autogen.thrift.dir" location="${basedir}/thrift" />
+    <property name="brisk.base" location="../.." />
+    <property name="resources" location="resources" />
 
-	<target name="init">
-	  <tstamp />
-	  <mkdir dir="${build}" />
-	  <mkdir dir="${build}/output" />
-	  <mkdir dir="${build.classes}" />
-	  <mkdir dir="${build.test.classes}" />
-	</target>
+    <property name="autogen.thrift.dir" location="${basedir}/thrift" />
 
-	<path id="portfolio.classpath">
-	  <pathelement location="${build.classes}" />
-	  <pathelement location="${build.test.classes}" />
-	  
-	  <fileset dir="${brisk.base}">
-	    <include name="**/*.jar" />
-	  </fileset>
-	</path>
+    <target name="init">
+      <tstamp />
+      <mkdir dir="${build}" />
+      <mkdir dir="${basedir}/website/webapps" />
+      <mkdir dir="${build}/output" />
+      <mkdir dir="${build.classes}" />
+      <mkdir dir="${build.test.classes}" />
+    </target>
 
-	<target name="compile" depends="init">
-	  <javac debug="true" destdir="${build.classes}">
-	    <src path="${src}" />
-	  	<src path="${autogen.thrift.dir}/gen-java"/>
-	    <classpath refid="portfolio.classpath" />
-	  </javac>
-	</target>
+    <path id="portfolio.classpath">
+      <pathelement location="${build.classes}" />
+      <pathelement location="${build.test.classes}" />
 
-	<target name="portfolio.jar" depends="compile">
-	  <jar jarfile="portfolio.jar" basedir="${build.classes}" />		
-	</target>
+      <fileset dir="${brisk.base}">
+        <include name="**/*.jar" />
+      </fileset>
+    </path>
 
-	<target name="clean">
-		<delete dir="${build}" />
-		<delete dir="${lib}" />
-		<delete dir="${app}" />
-		<delete dir="${autogen}" />
-		<delete file="portfolio.jar" />
-		<delete file="portfolio.war" />
-	</target>
+    <target name="compile" depends="init">
+      <javac debug="true" destdir="${build.classes}">
+        <src path="${src}" />
+        <src path="${autogen.thrift.dir}/gen-java"/>
+        <classpath refid="portfolio.classpath" />
+      </javac>
+    </target>
+
+    <target name="portfolio.jar" depends="compile">
+      <jar jarfile="portfolio.jar" basedir="${build.classes}" />
+    </target>
+
+    <target name="clean">
+        <delete dir="${build}" />
+        <delete dir="${basedir}/website/webapps" />
+        <delete dir="${lib}" />
+        <delete dir="${app}" />
+        <delete dir="${autogen}" />
+        <delete file="portfolio.jar" />
+        <delete file="portfolio.war" />
+    </target>
 
         <!-- ============================= -->
         <target name="war" depends="portfolio.jar">
@@ -60,26 +62,26 @@
               <exclude name="servlet-api*.jar" />
               <exclude name="easymock.jar" />
             </lib>
-	    <lib dir="${brisk.base}/build">
+        <lib dir="${brisk.base}/build">
               <include name="*.jar" />
             </lib>
-	    <fileset dir="${autogen.thrift.dir}/gen-js">
-	      <include name="**/*.js" />	       
-	    </fileset>
-	    <fileset dir="resources">
-	      <include name="**/*" />	       
-	    </fileset>
+        <fileset dir="${autogen.thrift.dir}/gen-js">
+          <include name="**/*.js" />
+        </fileset>
+        <fileset dir="resources">
+          <include name="**/*" />
+        </fileset>
             <lib file="portfolio.jar"/>
           </war>
         </target>
 
-	 <!-- Generate thrift code.-->
+     <!-- Generate thrift code.-->
         <target name="gen-thrift-java" description="Generate Thrift Java artifacts">
                 <echo>Generating Thrift Java code from ${basedir}/thrift/portfolio.thrift ....</echo>
             <exec executable="thrift" dir="${basedir}/thrift" failonerror="true">
                 <arg line="--gen java:hashcode --gen js" />
                 <arg line="-o ${autogen.thrift.dir}" />
                 <arg line="portfolio.thrift" />
-	    </exec>        
+        </exec>
         </target>
 </project>

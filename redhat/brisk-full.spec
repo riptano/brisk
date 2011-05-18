@@ -42,10 +42,16 @@ Homepage: http://www.datastax.com/products/brisk
 %build
 
 %install
-mkdir -p %{buildroot}/etc/brisk/default.conf
 mkdir -p %{buildroot}/usr/bin/
+mkdir -p %{buildroot}/etc/brisk
+mkdir -p %{buildroot}/etc/init.d/
+mkdir -p %{buildroot}/etc/default/
+mkdir -p %{buildroot}/usr/share/brisk
 
-cp -p packaging-common/brisk-env.sh %{buildroot}/etc/brisk/default.conf
+cp -p packaging-common/brisk-env.sh %{buildroot}/etc/brisk/
+cp -p packaging-common/brisk.in.sh %{buildroot}/usr/share/brisk/
+cp -p packaging-common/brisk.default %{buildroot}/etc/default/brisk
+cp -p redhat/brisk %{buildroot}/etc/init.d/
 cp -p bin/brisk %{buildroot}/usr/bin/
 cp -p bin/brisktool %{buildroot}/usr/bin/
 
@@ -54,17 +60,10 @@ cp -p bin/brisktool %{buildroot}/usr/bin/
 
 %files
 %defattr(-,root,root,0755)
+%attr(755,root,root) %config /etc/brisk
+%attr(755,root,root) %config /etc/default/brisk
+%attr(755,root,root) /etc/init.d/brisk
 %attr(755,root,root) %{_bindir}/brisk
 %attr(755,root,root) %{_bindir}/brisktool
-%attr(755,%{username},%{username}) %config(noreplace) /%{_sysconfdir}/brisk
 
-%post
-alternatives --install /etc/%{briskname} brisk /etc/%{briskname}/default.conf/ 0
-exit 0
-
-%postun
-# only delete alternative on removal, not upgrade
-if [ "$1" = "0" ]; then
-    alternatives --remove brisk /etc/%{briskname}/default.conf/
-fi
-exit 0
+%attr(755,%{username},%{username}) /usr/share/brisk/brisk.in.sh

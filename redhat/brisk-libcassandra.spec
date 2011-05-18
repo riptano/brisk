@@ -8,7 +8,7 @@
 
 Name:           brisk-libcassandra
 Version:        0.8.0
-Release:        beta1
+Release:        beta2
 Summary:        Cassandra is a highly scalable, eventually consistent, distributed, structured key-value store.
 
 Group:          Development/Libraries
@@ -61,25 +61,22 @@ ant clean jar -Drelease=true
 
 %install
 %{__rm} -rf %{buildroot}
-mkdir -p %{buildroot}%{_sysconfdir}/%{username}/
+mkdir -p %{buildroot}/usr/share/%{username}
 mkdir -p %{buildroot}/usr/share/%{briskname}/%{username}
 mkdir -p %{buildroot}/usr/share/%{briskname}/%{username}/lib
-mkdir -p %{buildroot}/usr/share/%{briskname}/%{username}/default.conf
-mkdir -p %{buildroot}/etc/%{briskname}/%{username}/default.conf
-mkdir -p %{buildroot}/etc/rc.d/init.d/
 mkdir -p %{buildroot}/etc/security/limits.d/
 mkdir -p %{buildroot}/etc/default
+mkdir -p %{buildroot}/etc/brisk/cassandra
 mkdir -p %{buildroot}/usr/sbin
 mkdir -p %{buildroot}/usr/bin
 
 # copy over configurations and env setup
-cp -p resources/%{username}/conf/* %{buildroot}/etc/%{briskname}/%{username}/default.conf
+cp -p resources/%{username}/conf/* %{buildroot}/etc/%{briskname}/%{username}/
 cp -p resources/%{username}/lib/*.jar %{buildroot}/usr/share/%{briskname}/%{username}/lib
 cp -p build/%{briskrel}.jar %{buildroot}/usr/share/%{briskname}/brisk.jar
-cp -p redhat/%{username} %{buildroot}/etc/rc.d/init.d/
 cp -p packaging-common/brisk.default %{buildroot}/etc/default/brisk
 cp -p packaging-common/%{username}.conf %{buildroot}/etc/security/limits.d/
-cp -p packaging-common/%{username}.in.sh %{buildroot}/usr/share/%{briskname}/%{username}
+cp -p packaging-common/%{username}.in.sh %{buildroot}/usr/share/%{username}/
 
 # move cassandra to /usr/sbin
 mv resources/%{username}/bin/cassandra %{buildroot}/usr/sbin
@@ -120,27 +117,14 @@ fi
 %defattr(-,root,root,0755)
 # is the following needed for ASF compliance?
 #%doc CHANGES.txt LICENSE.txt README.txt NEWS.txt NOTICE.txt
-%attr(755,root,root) %{_bindir}/*
-%attr(755,root,root) %{_sbindir}/cassandra
-%attr(755,root,root) /etc/rc.d/init.d/cassandra
-%attr(755,root,root) /etc/default/brisk
+%attr(755,root,root) /usr/bin
+%attr(755,root,root) /usr/sbin
+%attr(755,root,root) %config(noreplace) /etc/default/brisk
+%attr(755,root,root) %config(noreplace) /etc/brisk/cassandra
 %attr(755,root,root) /etc/security/limits.d/%{username}.conf
 # chown on brisk as cassandra is our only user for now
 %attr(755,%{username},%{username}) /usr/share/%{briskname}*
-%attr(755,%{username},%{username}) %config(noreplace) /%{_sysconfdir}/brisk/%{username}
+%attr(755,%{username},%{username}) /usr/share/%{username}
 %attr(755,%{username},%{username}) %config(noreplace) /var/lib/%{username}/*
 %attr(755,%{username},%{username}) /var/log/%{username}*
 %attr(755,%{username},%{username}) /var/run/%{username}*
-
-%post
-alternatives --install /etc/%{briskname}/%{username} %{username} /etc/%{briskname}/%{username}/default.conf/ 0
-exit 0
-
-%postun
-# only delete alternative on removal, not upgrade
-if [ "$1" = "0" ]; then
-    alternatives --remove %{username} /etc/%{briskname}/%{username}/default.conf/
-fi
-exit 0
-
-

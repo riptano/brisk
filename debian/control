@@ -2,84 +2,81 @@ Source: brisk
 Section: misc
 Priority: extra
 Maintainer: Brandon Williams <brandon@datastax.com>
-Build-Depends: debhelper (>= 5), sun-java6-jdk, ant (>= 1.7)
+Build-Depends: debhelper (>= 5), sun-java6-jdk, ant (>= 1.7), ant-optional
 Standards-Version: 3.8.3
 
 Package: brisk
 Architecture: all
-Depends: sun-java6-jre (>= 6.24-1~squeeze1), jsvc (>= 1.0), libcommons-daemon-java (>= 1.0), adduser, brisk-libhadoop (=${Source-Version}), brisk-libcassandra (=${Source-Version})
-Conflicts: apache-cassandra
-Recommends: libjna-java
+Depends: sun-java6-jre | java6-runtime-headless, jsvc (>= 1.0), libcommons-daemon-java (>= 1.0), adduser, brisk-libhadoop (= ${binary:Version}), brisk-libcassandra (=${binary:Version}), lsb-base (>= 3.0-6), awk, procps
+Conflicts: apache-cassandra, cassandra
+Recommends: libjna-java, sun-java6-jre (>= 6.24-1~squeeze1)
+Homepage: http://www.datastax.com/products/brisk
 Description: realtime analytics and distributed database (basic files)
  Brisk is a realtime analytics system marrying the distributed database
  Cassandra and the mapreduce system Hadoop together.
  .
  This package contains the Brisk daemon.
- .
-  Homepage: http://www.datastax.com/products/brisk
 
 Package: brisk-libhadoop
 Architecture: all
-Depends: sun-java6-jre (>= 6.24-1~squeeze1)
+Depends: sun-java6-jre | java6-runtime-headless
+Recommends: sun-java6-jre (>= 6.24-1~squeeze1)
+Homepage: http://www.datastax.com/products/brisk
 Description: realtime analytics and distributed database (hadoop libraries)
  Brisk is a realtime analytics system marrying the distributed database
  Cassandra and the mapreduce system Hadoop together.
  .
  This package contains the Brisk Hadoop libraries.
- .
-  Homepage: http://www.datastax.com/products/brisk
 
 Package: brisk-libcassandra
 Architecture: all
-Depends: sun-java6-jre (>= 6.24-1~squeeze1)
+Depends: sun-java6-jre | java6-runtime-headless
+Recommends: sun-java6-jre (>= 6.24-1~squeeze1)
+Homepage: http://www.datastax.com/products/brisk
 Description: realtime analytics and distributed database (cassandra libraries)
  Brisk is a realtime analytics system marrying the distributed database
  Cassandra and the mapreduce system Hadoop together.
  .
  This package contains the Brisk Cassandra libraries.
- .
-  Homepage: http://www.datastax.com/products/brisk
 
 Package: brisk-hive
 Architecture: all
-Depends: sun-java6-jre (>= 6.24-1~squeeze1), brisk (=${Source-Version}), brisk-libhive (=${Source-Version})
+Depends: sun-java6-jre | java6-runtime-headless, brisk (=${binary:Version}), brisk-libhive (=${binary:Version})
+Recommends: sun-java6-jre (>= 6.24-1~squeeze1)
+Homepage: http://www.datastax.com/products/brisk
 Description: realtime analytics and distributed database (hive)
  Brisk is a realtime analytics system marrying the distributed database
  Cassandra and the mapreduce system Hadoop together.
  .
  This package contains the Brisk Hive application.
- .
-  Homepage: http://www.datastax.com/products/brisk
 
 Package: brisk-libhive
 Architecture: all
-Depends: sun-java6-jre (>= 6.24-1~squeeze1)
+Depends: sun-java6-jre | java6-runtime-headless
+Recommends: sun-java6-jre (>= 6.24-1~squeeze1)
+Homepage: http://www.datastax.com/products/brisk
 Description: realtime analytics and distributed database (cassandra libraries)
  Brisk is a realtime analytics system marrying the distributed database
  Cassandra and the mapreduce system Hadoop together.
  .
  This package contains the Brisk Hive libraries.
- .
-  Homepage: http://www.datastax.com/products/brisk
 
 Package: brisk-demos
 Architecture: all
-Depends: brisk-hive (=${Source-Version})
+Depends: brisk-hive (=${binary:Version})
+Homepage: http://www.datastax.com/products/brisk
 Description: realtime analytics and distributed database (cassandra libraries)
  Brisk is a realtime analytics system marrying the distributed database
  Cassandra and the mapreduce system Hadoop together.
  .
  This package contains the Brisk demo applications.
- .
-  Homepage: http://www.datastax.com/products/brisk
 
 Package: brisk-full
 Architecture: all
-Depends: brisk (=${Source-Version}), brisk-hive (=${Source-Version}), brisk-demos (=${Source-Version})
+Depends: brisk (=${binary:Version}), brisk-hive (=${binary:Version}), brisk-demos (=${binary:Version})
+Homepage: http://www.datastax.com/products/brisk
 Description: realtime analytics and distributed database (cassandra libraries)
  Brisk is a realtime analytics system marrying the distributed database
  Cassandra and the mapreduce system Hadoop together.
  .
  This package contains the full Brisk distribution.
- .
-  Homepage: http://www.datastax.com/products/brisk

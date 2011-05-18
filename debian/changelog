@@ -1,3 +1,24 @@
+brisk (1.0~beta1.2) stable; urgency=low
+
+  * Switch to debian-native package numbering, since we ship packaging stuff
+    in orig.tar.gz
+  * Relax java dependency to allow openjdk use with lib packages, if people
+    really really want to do so. We strongly recommend sticking with the sun
+    jvm.
+  * Still recommend at least version 6.24-1~squeeze1 of the sun jvm
+  * add dependencies for awk, procps, and lsb-base to brisk
+  * add Conflicts: with cassandra as well as apache-cassandra.
+  * Build-Depends on thrift-compiler, ant-optional
+
+ -- paul cannon <paul@datastax.com>  Mon, 09 May 2011 16:24:14 -0500
+
+brisk (1.0~beta1-2) stable; urgency=low
+
+  * Recommend but don't force the Sun jre.
+  * Fix hive execution.
+
+ -- Brandon Williams <brandon@datastax.com>  Mon, 09 May 2011 15:33:52 -0500
+
 brisk (1.0~beta1-1) stable; urgency=low
 
   * Initial release.

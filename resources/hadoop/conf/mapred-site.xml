@@ -34,5 +34,19 @@
   <name>jobtracker.thrift.address</name>
   <value>0.0.0.0:9290</value>
 </property>
-
+<!-- FairScheduler is included. Uncomment to enable. -->
+<!-- 
+<property> 
+  <name>mapred.jobtracker.taskScheduler</name> 
+  <value>org.apache.hadoop.mapred.FairScheduler</value> 
+</property>
+<property> 
+  <name>mapred.fairscheduler.poolnameproperty</name> 
+  <value>mapred.job.queue.name</value> 
+</property>
+<property> 
+  <name>mapred.fairscheduler.allocation.file</name> 
+  <value>resources/hadoop/conf/fairscheduler-allocations.xml</value> 
+</property>
+ -->
 </configuration>
