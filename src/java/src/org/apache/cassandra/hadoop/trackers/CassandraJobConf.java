@@ -32,7 +32,7 @@ public class CassandraJobConf extends org.apache.hadoop.mapred.JobConf
     
     public String get(String name, String defaultValue)
     {  
-        if (name.equals("mapred.job.tracker") || name.equals("mapreduce.jobtracker.address"))     
+        if (name.equals("mapred.job.tracker") || name.equals("mapreduce.jobtracker.address") || name.equals("mapreduce.history.server.http.address"))
         {
             String address = getJobTrackerNode().getHostName()+":8012";
                         
@@ -44,7 +44,7 @@ public class CassandraJobConf extends org.apache.hadoop.mapred.JobConf
 
     public String get(String name)
     {        
-        if (name.equals("mapred.job.tracker") || name.equals("mapreduce.jobtracker.address"))
+        if (name.equals("mapred.job.tracker") || name.equals("mapreduce.jobtracker.address") || name.equals("mapreduce.history.server.http.address"))
             return getJobTrackerNode().getHostName()+":8012";
         
         return super.get(name);
