@@ -28,6 +28,7 @@ public abstract class MetaStoreTestBase extends CleanupHelper
         conf.setInt(CassandraClientHolder.CONF_PARAM_PORT, DatabaseDescriptor.getRpcPort());
         conf.setBoolean(CassandraClientHolder.CONF_PARAM_FRAMED, true);
         conf.set(CassandraClientHolder.CONF_PARAM_CONNECTION_STRATEGY, "STICKY");
+        conf.set("hive.metastore.warehouse.dir", "cfs:///user/hive/warehouse");
         return conf;
     }
 }

@@ -25,7 +25,6 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.cassandra.config.KSMetaData;
 import org.apache.cassandra.thrift.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.metastore.RawStore;
@@ -57,14 +56,23 @@ public class CassandraHiveMetaStore implements RawStore {
         log.debug("Creating CassandraHiveMetaStore");
     }
     
-
+    /**
+     * Starts the underlying Cassandra.Client as well as creating
+     * the meta store schema if it does not already exist and
+     * creating schemas for keyspaces found if 'cassandra.autoCreateSchema'
+     * is set to true.
+     */
     public void setConf(Configuration conf)
     {
         configuration = conf;
         cassandraClientHolder = new CassandraClientHolder(configuration);
         SchemaManagerService schemaManagerService = 
             new SchemaManagerService(this, configuration);
-        schemaManagerService.createMetaStoreIfNeeded();                
+        // create the meta store if it does not exist
+        schemaManagerService.createMetaStoreIfNeeded();
+        // create schemas for Keyspaces if configured for such
+        schemaManagerService.createKeyspaceSchemasIfNeeded();
+            
         metaStorePersister = new MetaStorePersister(configuration);
     }
     

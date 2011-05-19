@@ -10,8 +10,15 @@ import org.apache.cassandra.thrift.CfDef;
 import org.apache.cassandra.thrift.KsDef;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.metastore.TableType;
+import org.apache.hadoop.hive.metastore.Warehouse;
 import org.apache.hadoop.hive.metastore.api.Database;
+import org.apache.hadoop.hive.metastore.api.InvalidObjectException;
+import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
+import org.apache.hadoop.hive.metastore.api.SerDeInfo;
+import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
+import org.apache.hadoop.hive.metastore.api.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,12 +36,18 @@ public class SchemaManagerService
     private CassandraClientHolder cassandraClientHolder;
     private Configuration configuration;
     private CassandraHiveMetaStore cassandraHiveMetaStore;
+    private Warehouse warehouse;
     
-    public SchemaManagerService(CassandraHiveMetaStore cassandraHiveMetaStore, Configuration configuration)
+    public SchemaManagerService(CassandraHiveMetaStore cassandraHiveMetaStore, Configuration conf)
     {
         this.cassandraHiveMetaStore = cassandraHiveMetaStore;
-        this.configuration = configuration;
-        this.cassandraClientHolder = new CassandraClientHolder(this.configuration);
+        this.configuration = conf;
+        this.cassandraClientHolder = new CassandraClientHolder(configuration);
+        try {
+            this.warehouse = new Warehouse(configuration);
+        } catch (MetaException me) {
+            throw new CassandraHiveMetaStoreException("Could not start schemaManagerService.", me);
+        }
     }
     
     /**
@@ -46,9 +59,8 @@ public class SchemaManagerService
      */
     public boolean createMetaStoreIfNeeded() 
     {
-        // Database_entities : {[name].name=name}
-        // FIXME add these params to configuration
-        // databaseName=metastore_db;create=true
+        if ( configuration.getBoolean("cassandra.skipMetaStoreCreate", false) )
+            return false;
         try 
         {
             cassandraClientHolder.applyKeyspace();
@@ -62,7 +74,7 @@ public class SchemaManagerService
         //Sleep a random amount of time to stagger ks creations on many nodes       
         try
         {
-            Thread.sleep(new Random().nextInt(5000));
+            Thread.sleep(5000);
         }
         catch (InterruptedException e1)
         {
@@ -148,12 +160,103 @@ public class SchemaManagerService
         }        
     }
     
+    /**
+     * Creates the database based on the Keyspace's name. The tables
+     * are created similarly based off the names of the column families.
+     * Column family meta data will be used to define the table's fields.
+     *  
+     * @param ksDef
+     */
     public void createKeyspaceSchema(KsDef ksDef)
     {
-        // table.setParameters: "EXTERNAL"="TRUE"
+        try 
+        {
+            cassandraHiveMetaStore.createDatabase(buildDatabase(ksDef));
+            for (CfDef cfDef : ksDef.cf_defs)
+            {
+                cassandraHiveMetaStore.createTable(buildTable(cfDef));
+            }
+
+        } 
+        catch (InvalidObjectException ioe) 
+        {
+            throw new CassandraHiveMetaStoreException("Could not create keyspace schema.", ioe);
+        }
+        catch (MetaException me)
+        {
+            throw new CassandraHiveMetaStoreException("Problem persisting metadata", me);
+        }
+        // Full set of parameters for a CFS table:
+        /*
+        table.setParameters: 
+        EXTERNAL=TRUE, 
+        cassandra.ks.name=default, 
+        cassandra.cf.name=cassandra_hive_table, 
+        transient_lastDdlTime=1305668140, 
+        storage_handler=org.apache.hadoop.hive.cassandra.CassandraStorageHandler
+        
+        serdeInfo:
+           (
+            name:null, 
+            serializationLib:org.apache.hadoop.hive.cassandra.serde.StandardColumnSerDe, 
+            parameters:
+             {
+              serialization.format=1
+             }
+            )
+        
+        inputFormat:org.apache.hadoop.hive.cassandra.input.HiveCassandraStandardColumnInputFormat,  
+        outputFormat:org.apache.hadoop.hive.cassandra.output.HiveCassandraOutputFormat,
+        tableType:EXTERNAL_TABLE, 
+        */
     }
     
+    public void createKeyspaceSchemasIfNeeded()
+    {
+        if ( configuration.getBoolean("cassandra.autoCreateSchema", false) )
+        {
+            List<KsDef> keyspaces = findUnmappedKeyspaces();
+            for (KsDef ksDef : keyspaces)
+            {
+                createKeyspaceSchema(ksDef);
+            }
+        }
+    }
     
+    private Database buildDatabase(KsDef ksDef)
+    {
+        Database database = new Database();
+        database.setName(ksDef.name);
+        return database;
+    }
+    
+    private Table buildTable(CfDef cfDef)
+    {
+        Table table = new Table();
+        table.setDbName(cfDef.keyspace);
+        table.setTableName(cfDef.name);
+        table.setTableType(TableType.EXTERNAL_TABLE.toString());
+        table.putToParameters("EXTERNAL", "TRUE");
+        table.putToParameters("cassandra.ks.name", cfDef.keyspace);
+        table.putToParameters("cassandra.cf.name", cfDef.name);
+        table.putToParameters("storage_handler", "org.apache.hadoop.hive.cassandra.CassandraStorageHandler");
+        
+        StorageDescriptor sd = new StorageDescriptor();
+        sd.setInputFormat("org.apache.hadoop.hive.cassandra.input.HiveCassandraStandardColumnInputFormat");
+        sd.setOutputFormat("org.apache.hadoop.hive.cassandra.output.HiveCassandraOutputFormat");
+        try {
+            sd.setLocation(warehouse.getDefaultTablePath(cfDef.keyspace, cfDef.name).toString());
+        } catch (MetaException me) {
+            log.error("could not build path information correctly",me);
+        }
+        SerDeInfo serde = new SerDeInfo();
+        serde.setSerializationLib("org.apache.hadoop.hive.cassandra.serde.StandardColumnSerDe");
+        serde.putToParameters("serialization.format", "1");
+        sd.setSerdeInfo(serde);
+        table.setSd(sd);
+        //table.setFieldValue(field, value)
+        return table;
+    }
     /**
      * Contains 'system', as well as keyspace names for meta store, and Cassandra File System
      * FIXME: need to ref. the configuration value of the meta store keyspace. Should also coincide
