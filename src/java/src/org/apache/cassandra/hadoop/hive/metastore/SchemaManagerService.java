@@ -226,6 +226,14 @@ public class SchemaManagerService
     private Database buildDatabase(KsDef ksDef)
     {
         Database database = new Database();
+        try 
+        {
+            database.setLocationUri(warehouse.getDefaultDatabasePath(ksDef.name).toString());
+        } 
+        catch (MetaException me) 
+        {
+            throw new CassandraHiveMetaStoreException("Could not determine storage URI of database", me);
+        }
         database.setName(ksDef.name);
         return database;
     }
@@ -254,7 +262,8 @@ public class SchemaManagerService
         serde.putToParameters("serialization.format", "1");
         sd.setSerdeInfo(serde);
         table.setSd(sd);
-        //table.setFieldValue(field, value)
+        // TODO add meta data noodle:
+        // - table.setFieldValue(field, value)
         return table;
     }
     /**
