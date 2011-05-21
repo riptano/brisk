@@ -1,18 +1,26 @@
 package org.apache.cassandra.hadoop.hive.metastore;
 
+import java.sql.Types;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.cassandra.config.CFMetaData;
+import org.apache.cassandra.config.ConfigurationException;
+import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.config.KSMetaData;
+import org.apache.cassandra.db.marshal.AbstractType;
 import org.apache.cassandra.thrift.CfDef;
+import org.apache.cassandra.thrift.ColumnDef;
 import org.apache.cassandra.thrift.KsDef;
+import org.apache.cassandra.utils.ByteBufferUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.Warehouse;
 import org.apache.hadoop.hive.metastore.api.Database;
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.InvalidObjectException;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
@@ -186,29 +194,7 @@ public class SchemaManagerService
         {
             throw new CassandraHiveMetaStoreException("Problem persisting metadata", me);
         }
-        // Full set of parameters for a CFS table:
-        /*
-        table.setParameters: 
-        EXTERNAL=TRUE, 
-        cassandra.ks.name=default, 
-        cassandra.cf.name=cassandra_hive_table, 
-        transient_lastDdlTime=1305668140, 
-        storage_handler=org.apache.hadoop.hive.cassandra.CassandraStorageHandler
-        
-        serdeInfo:
-           (
-            name:null, 
-            serializationLib:org.apache.hadoop.hive.cassandra.serde.StandardColumnSerDe, 
-            parameters:
-             {
-              serialization.format=1
-             }
-            )
-        
-        inputFormat:org.apache.hadoop.hive.cassandra.input.HiveCassandraStandardColumnInputFormat,  
-        outputFormat:org.apache.hadoop.hive.cassandra.output.HiveCassandraOutputFormat,
-        tableType:EXTERNAL_TABLE, 
-        */
+
     }
     
     public void createKeyspaceSchemasIfNeeded()
@@ -261,10 +247,68 @@ public class SchemaManagerService
         serde.setSerializationLib("org.apache.hadoop.hive.cassandra.serde.StandardColumnSerDe");
         serde.putToParameters("serialization.format", "1");
         sd.setSerdeInfo(serde);
+        
+        if ( cfDef.getColumn_metadataSize() > 0 )
+        {
+            for (ColumnDef column : cfDef.getColumn_metadata() )
+            {
+                applyType(sd, column);
+            }
+        }        
         table.setSd(sd);
-        // TODO add meta data noodle:
-        // - table.setFieldValue(field, value)
         return table;
+    }
+
+    /**
+     * Deduce the type information based on column validator, adding a FieldSchema to the provided
+     * StorageDescriptor
+     * @param sd
+     * @param column
+     */
+    private void applyType(StorageDescriptor sd, ColumnDef column)
+    {
+        if ( log.isDebugEnabled() )
+        {
+            log.debug("Applying type information for column: {}", column.toString());
+        }
+        try 
+        {
+            AbstractType<?> type = DatabaseDescriptor.getComparator(column.getValidation_class());
+            
+            switch (type.getJdbcType())
+            {
+            // UTF8Type
+            case Types.VARCHAR:
+                sd.addToCols(new FieldSchema(ByteBufferUtil.string(column.name), "string", buildTypeComment(type)));                        
+                break;
+            case Types.BINARY:
+                // TODO not sure there is much we can do here outside of conversion to HEX
+                sd.addToCols(new FieldSchema(ByteBufferUtil.bytesToHex(column.name), "string", buildTypeComment(type)));
+                break;
+                // IntegerType
+            case Types.BIGINT:
+                sd.addToCols(new FieldSchema(ByteBufferUtil.string(column.name), "bigint", buildTypeComment(type)));
+                break;                
+                // LongType
+            case Types.INTEGER:
+                sd.addToCols(new FieldSchema(ByteBufferUtil.string(column.name), "int", buildTypeComment(type)));
+                break;
+                // UUIDType variants are all 'other'
+            default:
+                // TODO same as binary, we'll just do a hex string for now
+                sd.addToCols(new FieldSchema(ByteBufferUtil.bytesToHex(column.name), "string", buildTypeComment(type)));
+                break;
+            }
+        }
+        catch (Exception e) 
+        {
+            throw new CassandraHiveMetaStoreException("There was a problem determining type information while creating schemas",e);
+        }
+    }
+    
+    private static final String buildTypeComment(AbstractType type)
+    {
+        return String.format("Auto-created based on %s from Column Family meta data", type.getClass().getName());
     }
     /**
      * Contains 'system', as well as keyspace names for meta store, and Cassandra File System

@@ -45,5 +45,10 @@
   <value>${brisk.bin}/brisk hadoop</value>
 </property>
 
+<!-- Set this to true to enable auto-creation of keyspaces as Hive schemas -->
+<property>
+  <name>cassandra.autoCreateSchema</name>
+  <value>false</value>
+</property>
 
 </configuration>
