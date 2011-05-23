@@ -62,7 +62,7 @@ public class SchemaManagerServiceTest extends MetaStoreTestBase
     @Test
     public void testDiscoverUnmappedKeyspaces() throws Exception 
     {        
-        cassandraClientHolder.getClient().system_add_keyspace(setupOtherKeyspace("OtherKeyspace", false)); 
+        cassandraClientHolder.getClient().system_add_keyspace(setupOtherKeyspace(configuration,"OtherKeyspace", false)); 
         // init the meta store for usage
 
         List<KsDef> keyspaces = schemaManagerService.findUnmappedKeyspaces();
@@ -83,7 +83,7 @@ public class SchemaManagerServiceTest extends MetaStoreTestBase
     @Test
     public void testCreateKeyspaceSchema() throws Exception
     {
-        KsDef ksDef = setupOtherKeyspace("CreatedKeyspace", false);
+        KsDef ksDef = setupOtherKeyspace(configuration,"CreatedKeyspace", false);
         cassandraClientHolder.getClient().system_add_keyspace(ksDef);
         schemaManagerService.createKeyspaceSchema(ksDef);
         List<KsDef> keyspaces = schemaManagerService.findUnmappedKeyspaces();
@@ -101,7 +101,7 @@ public class SchemaManagerServiceTest extends MetaStoreTestBase
     @Test
     public void testSkipCreateOnConfig() throws Exception
     {
-        KsDef ksDef = setupOtherKeyspace("SkipCreatedKeyspace", false);
+        KsDef ksDef = setupOtherKeyspace(configuration,"SkipCreatedKeyspace", false);
         cassandraClientHolder.getClient().system_add_keyspace(ksDef);               
         
         schemaManagerService.createKeyspaceSchemasIfNeeded();
@@ -120,7 +120,7 @@ public class SchemaManagerServiceTest extends MetaStoreTestBase
     @Test
     public void testCreateOnConfig() throws Exception
     {
-        KsDef ksDef = setupOtherKeyspace("ConfigCreatedKeyspace", false);
+        KsDef ksDef = setupOtherKeyspace(configuration,"ConfigCreatedKeyspace", false);
         cassandraClientHolder.getClient().system_add_keyspace(ksDef);
         configuration.setBoolean("cassandra.autoCreateSchema", true);        
         
@@ -138,7 +138,7 @@ public class SchemaManagerServiceTest extends MetaStoreTestBase
     @Test
     public void testCreateOnConfigWithMetaData() throws Exception
     {
-        KsDef ksDef = setupOtherKeyspace("ConfigCreatedKeyspaceMetaData", true);
+        KsDef ksDef = setupOtherKeyspace(configuration, "ConfigCreatedKeyspaceMetaData", true);
         cassandraClientHolder.getClient().system_add_keyspace(ksDef);
         configuration.setBoolean("cassandra.autoCreateSchema", true);        
         
@@ -170,32 +170,6 @@ public class SchemaManagerServiceTest extends MetaStoreTestBase
                 assertEquals("bigint", fs.getType());                            
         }
     }
-   
-    /**
-     * Builds out a KsDef, does not persist.
-     * @param ksName
-     * @return
-     * @throws Exception
-     */
-    private KsDef setupOtherKeyspace(String ksName, boolean addMetaData) throws Exception
-    {
-        CfDef cf = new CfDef(ksName, 
-                "OtherCf1");
-        cf.setKey_validation_class("UTF8Type");
-        cf.setComparator_type("UTF8Type");
-        if ( addMetaData )
-        {
-            cf.addToColumn_metadata(new ColumnDef(ByteBufferUtil.bytes("col_name_utf8"), UTF8Type.class.getName()));
-            cf.addToColumn_metadata(new ColumnDef(ByteBufferUtil.bytes("col_name_bytes"), BytesType.class.getName()));
-            cf.addToColumn_metadata(new ColumnDef(ByteBufferUtil.bytes("col_name_int"), IntegerType.class.getName()));
-            cf.addToColumn_metadata(new ColumnDef(ByteBufferUtil.bytes("col_name_long"), LongType.class.getName()));
-            cf.addToColumn_metadata(new ColumnDef(ByteBufferUtil.bytes("col_name_timeuuid"), TimeUUIDType.class.getName()));
-        }
-        KsDef ks = new KsDef(ksName, 
-                "org.apache.cassandra.locator.SimpleStrategy",  
-                Arrays.asList(cf));
-        ks.setStrategy_options(KSMetaData.optsWithRF(configuration.getInt(CassandraClientHolder.CONF_PARAM_REPLICATION_FACTOR, 1)));
-        return ks;                 
-    }   
+    
 
 }

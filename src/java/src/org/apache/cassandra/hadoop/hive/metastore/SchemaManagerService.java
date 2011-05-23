@@ -13,7 +13,9 @@ import org.apache.cassandra.config.KSMetaData;
 import org.apache.cassandra.db.marshal.AbstractType;
 import org.apache.cassandra.thrift.CfDef;
 import org.apache.cassandra.thrift.ColumnDef;
+import org.apache.cassandra.thrift.InvalidRequestException;
 import org.apache.cassandra.thrift.KsDef;
+import org.apache.cassandra.thrift.NotFoundException;
 import org.apache.cassandra.utils.ByteBufferUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -150,6 +152,23 @@ public class SchemaManagerService
         return defs;
     }
     
+    public KsDef getKeyspaceForDatabaseName(String databaseName)
+    {        
+        try 
+        {
+            return cassandraClientHolder.getClient().describe_keyspace(databaseName);
+        } 
+        catch (NotFoundException e) 
+        {
+            return null;
+        }
+        catch (Exception ex)
+        {
+            throw new CassandraHiveMetaStoreException("Problem finding Keyspace for databaseName " + databaseName, ex);
+        }        
+    }
+            
+    
     /**
      * Returns true if this keyspaceName returns a Database via
      * {@link CassandraHiveMetaStore#getDatabase(String)}
@@ -199,7 +218,7 @@ public class SchemaManagerService
     
     public void createKeyspaceSchemasIfNeeded()
     {
-        if ( configuration.getBoolean("cassandra.autoCreateSchema", false) )
+        if ( getAutoCreateSchema() )
         {
             List<KsDef> keyspaces = findUnmappedKeyspaces();
             for (KsDef ksDef : keyspaces)
@@ -207,6 +226,16 @@ public class SchemaManagerService
                 createKeyspaceSchema(ksDef);
             }
         }
+    }
+    
+    /**
+     * Check to see if we are configured to auto create schema
+     * @return the value of 'cassandra.autoCreateHiveSchema' according to 
+     * the configuration. False by default.
+     */
+    public boolean getAutoCreateSchema()
+    {
+        return configuration.getBoolean("cassandra.autoCreateHiveSchema", false); 
     }
     
     private Database buildDatabase(KsDef ksDef)

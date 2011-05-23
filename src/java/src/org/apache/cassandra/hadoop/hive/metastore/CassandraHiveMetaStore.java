@@ -50,6 +50,7 @@ public class CassandraHiveMetaStore implements RawStore {
     private Configuration configuration;
     private MetaStorePersister metaStorePersister;
     private CassandraClientHolder cassandraClientHolder;    
+    private SchemaManagerService schemaManagerService;
     
     public CassandraHiveMetaStore()
     {
@@ -66,14 +67,16 @@ public class CassandraHiveMetaStore implements RawStore {
     {
         configuration = conf;
         cassandraClientHolder = new CassandraClientHolder(configuration);
-        SchemaManagerService schemaManagerService = 
-            new SchemaManagerService(this, configuration);
+        
+        schemaManagerService = new SchemaManagerService(this, configuration);
         // create the meta store if it does not exist
         schemaManagerService.createMetaStoreIfNeeded();
+        // load meta store
+        metaStorePersister = new MetaStorePersister(configuration);
         // create schemas for Keyspaces if configured for such
         schemaManagerService.createKeyspaceSchemasIfNeeded();
             
-        metaStorePersister = new MetaStorePersister(configuration);
+        
     }
     
     public Configuration getConf()
@@ -102,9 +105,37 @@ public class CassandraHiveMetaStore implements RawStore {
         } 
         catch (NotFoundException e) 
         {
-            throw new NoSuchObjectException("Database named " + databaseName + " did not exist.");
+            if ( schemaManagerService.getAutoCreateSchema() && maybeAutoCreateFromCassandra(databaseName) )
+            {
+                log.debug("Configured for auto schema creation with keyspace found: {}", databaseName);
+                try 
+                {
+                    metaStorePersister.load(db, databaseName);
+                } 
+                catch (NotFoundException nfe) 
+                {
+                    throw new CassandraHiveMetaStoreException("Could not auto create schema.", nfe);
+                }
+            } 
+            else 
+            {
+                throw new NoSuchObjectException("Database named " + databaseName + " did not exist.");
+            }
         }        
         return db;
+    }
+    
+    private boolean maybeAutoCreateFromCassandra(String databaseName) 
+    {
+        KsDef ksDef = schemaManagerService.getKeyspaceForDatabaseName(databaseName);
+        if (ksDef != null) 
+        {
+            log.debug("Found mapped Keyspace {} in Cassandra. Creating schema.", databaseName);
+            schemaManagerService.createKeyspaceSchema(ksDef);
+            return true;
+        }
+        log.debug("Did not find matching keyspace for {} database", databaseName);
+        return false;
     }
     
     public List<String> getDatabases(String databaseNamePattern) throws MetaException
