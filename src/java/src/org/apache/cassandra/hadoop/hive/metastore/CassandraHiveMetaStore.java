@@ -240,6 +240,16 @@ public class CassandraHiveMetaStore implements RawStore {
     throws MetaException
     {
         log.info("in getTables with dbName: {} and tableNamePattern: {}", dbName, tableNamePattern);
+        if ( schemaManagerService.getAutoCreateSchema() )
+        {
+            KsDef ksDef = schemaManagerService.getKeyspaceForDatabaseName(dbName);
+            if ( ksDef != null )
+            {
+                log.debug("Checking for new column families to add");
+                schemaManagerService.createNewColumnFamilyTables(ksDef);
+            }
+        }
+        
         List<TBase> tables = metaStorePersister.find(new Table(), dbName);
         List<String> results = new ArrayList<String>(tables.size());
         for (TBase tBase : tables)

@@ -229,6 +229,31 @@ public class SchemaManagerService
     }
     
     /**
+     * Compares the column families in the keyspace with what we have in hive so far,
+     * creating tables for any that do not exist as such already.
+     * @param ksDef
+     */
+    public void createNewColumnFamilyTables(KsDef ksDef)
+    {
+        for (CfDef cfDef : ksDef.cf_defs)
+        {
+            try 
+            {
+                if ( cassandraHiveMetaStore.getTable(cfDef.keyspace, cfDef.name) == null)
+                    cassandraHiveMetaStore.createTable(buildTable(cfDef));
+            }
+            catch (InvalidObjectException ioe) 
+            {            
+                throw new CassandraHiveMetaStoreException("Could not create table for CF: " + cfDef.name, ioe);
+            }
+            catch (MetaException me)
+            {
+                throw new CassandraHiveMetaStoreException("Problem persisting metadata for CF: " + cfDef.name, me);
+            }
+        }
+    }
+    
+    /**
      * Check to see if we are configured to auto create schema
      * @return the value of 'cassandra.autoCreateHiveSchema' according to 
      * the configuration. False by default.
