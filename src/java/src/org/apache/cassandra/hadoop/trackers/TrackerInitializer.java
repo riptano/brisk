@@ -40,8 +40,8 @@ public class TrackerInitializer
     public static final boolean isTrackerNode = System.getProperty(trackersProperty, "false").equalsIgnoreCase("true");
     
     // Hold the reference to the taskTracker and JobTracker thread.
-    private static Thread jobTrackerThread;
-    private static Thread taskTrackerThread;
+    public static Thread jobTrackerThread;
+    public static Thread taskTrackerThread;
     
     
     public static void init() 
@@ -125,7 +125,8 @@ public class TrackerInitializer
                     catch(Throwable t)
                     {
                         //on OOM shut down the tracker
-                        if(t instanceof OutOfMemoryError || t.getCause() instanceof OutOfMemoryError)
+                        if(t instanceof InterruptedException || t instanceof OutOfMemoryError || 
+                        		t.getCause() instanceof OutOfMemoryError)
                         {
                             try
                             {
@@ -180,5 +181,7 @@ public class TrackerInitializer
        
        return taskTrackerThread;
     }
+    
+    
     
 }
