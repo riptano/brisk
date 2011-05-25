@@ -11,6 +11,7 @@ import org.apache.cassandra.db.ReadCommand;
 import org.apache.cassandra.db.Row;
 import org.apache.cassandra.db.RowMutation;
 import org.apache.cassandra.db.SliceByNamesReadCommand;
+import org.apache.cassandra.db.filter.QueryPath;
 import org.apache.cassandra.service.StorageProxy;
 import org.apache.cassandra.thrift.ColumnParent;
 import org.apache.cassandra.thrift.ConsistencyLevel;
@@ -35,6 +36,9 @@ public class TrackerManager {
 	private static final ColumnParent cp = new ColumnParent(BriskSchema.JOB_TRACKER_CF);
 
 	private static final ByteBuffer columnName = ByteBufferUtil.bytes("current");
+
+	/**n It is the path to the only column in JOB_TRACKER_CF */
+	private static final QueryPath jobTrackerCFQueryPath = new QueryPath(BriskSchema.JOB_TRACKER_CF,null, columnName);
 
 	/**
 	 * Retrieves the current job tracker IP.
@@ -70,7 +74,13 @@ public class TrackerManager {
 	 * @throws TrackerAdminException if an error occurs
 	 */
 	public static void insertJobtrackerLocation(String jobTrackerIP) throws TrackerAdminException {
+		// Insert the current JB location in the only column of the only row.
 		RowMutation rm = new RowMutation(BriskSchema.KEYSPACE_NAME, currentJobtrackerKey);
+		
+		rm.add(
+				jobTrackerCFQueryPath, 
+				ByteBufferUtil.bytes(jobTrackerIP), 
+				System.currentTimeMillis());
 		try {
 			StorageProxy.mutate(Arrays.asList(rm), ConsistencyLevel.QUORUM);
 		} 
