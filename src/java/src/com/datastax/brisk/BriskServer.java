@@ -49,6 +49,8 @@ import org.apache.cassandra.utils.Filter;
 import org.apache.log4j.Logger;
 import org.apache.thrift.TException;
 
+import static com.datastax.brisk.BriskDBUtil.validateAndGetColumn;
+
 public class BriskServer extends CassandraServer implements Brisk.Iface
 {
     
@@ -441,25 +443,6 @@ public class BriskServer extends CassandraServer implements Brisk.Iface
     }
 
 
-    private IColumn validateAndGetColumn(List<Row> rows, ByteBuffer columnName) throws NotFoundException {
-        if(rows.isEmpty())
-            throw new NotFoundException();
-
-        if(rows.size() > 1)
-            throw new RuntimeException("Block id returned more than one row");
-
-        Row row = rows.get(0);
-        if(row.cf == null)
-            throw new NotFoundException();
-
-        IColumn col = row.cf.getColumn(columnName);
-
-        if(col == null || !col.isLive())
-            throw new NotFoundException();
-
-        return col;
-    }
-
     public String get_jobtracker_address() throws NotFoundException, TException
     {
         if(!TrackerInitializer.isTrackerNode)
@@ -473,6 +456,12 @@ public class BriskServer extends CassandraServer implements Brisk.Iface
 	@Override
 	public String move_job_tracker(String new_jobtracker)
 			throws NotFoundException, TException {
+		TrackerInitializer.jobTrackerThread.interrupt();
+		try {
+			TrackerInitializer.jobTrackerThread.join(30000);
+		} catch (InterruptedException e) {
+			return "Unable t stop JobTracker";
+		}
 		return "received: " + new_jobtracker + " returned: " + CassandraJobConf.getJobTrackerNode().toString();
 	}
 

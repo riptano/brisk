@@ -2,7 +2,6 @@ package com.datastax.brisk;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,7 +10,6 @@ import java.util.Random;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.hadoop.CassandraProxyClient;
 import org.apache.cassandra.hadoop.CassandraProxyClient.ConnectionStrategy;
-import org.apache.cassandra.hadoop.trackers.TrackerInitializer;
 import org.apache.cassandra.locator.BriskSimpleSnitch;
 import org.apache.cassandra.service.StorageService;
 import org.apache.cassandra.thrift.Brisk;
@@ -19,8 +17,6 @@ import org.apache.cassandra.thrift.CfDef;
 import org.apache.cassandra.thrift.InvalidRequestException;
 import org.apache.cassandra.thrift.KsDef;
 import org.apache.cassandra.thrift.NotFoundException;
-import org.apache.cassandra.utils.ByteBufferUtil;
-import org.apache.cassandra.utils.FBUtilities;
 import org.apache.log4j.Logger;
 import org.apache.thrift.TException;
 
@@ -28,9 +24,9 @@ public class BriskSchema {
 	
 	private static Logger logger = Logger.getLogger(BriskSchema.class);
 	
-	private static final String keyspaceName = "brisk_system";
+	public static final String KEYSPACE_NAME = "brisk_system";
 	
-	private static final String jobTrackerCF = "jobtracker";
+	public static final String JOB_TRACKER_CF = "jobtracker";
 	
 	private static Brisk.Iface client;
 	
@@ -53,7 +49,7 @@ public class BriskSchema {
     {
         try
         {
-            return client.describe_keyspace(keyspaceName);
+            return client.describe_keyspace(KEYSPACE_NAME);
         }
         catch (NotFoundException e)
         {
@@ -73,7 +69,7 @@ public class BriskSchema {
     {
         try
         {
-        	logger.info("Creating keyspace: " + keyspaceName);
+        	logger.info("Creating keyspace: " + KEYSPACE_NAME);
             Thread.sleep(new Random().nextInt(5000));
 
             KsDef cfsKs = checkKeyspace();
@@ -87,14 +83,14 @@ public class BriskSchema {
             List<CfDef> cfs = new ArrayList<CfDef>();
 
             CfDef cf = new CfDef();
-            cf.setName(jobTrackerCF);
+            cf.setName(JOB_TRACKER_CF);
             cf.setComparator_type("BytesType");
             // there is only one row and one column.
             cf.setKey_cache_size(10);
             cf.setRow_cache_size(10);
             cf.setGc_grace_seconds(60);
             cf.setComment("Stores the current JobTracker node");
-            cf.setKeyspace(keyspaceName);
+            cf.setKeyspace(KEYSPACE_NAME);
 
             cfs.add(cf);
             
@@ -103,7 +99,7 @@ public class BriskSchema {
             stratOpts.put(BriskSimpleSnitch.CASSANDRA_DC, "0");
 
             cfsKs = new KsDef()
-                .setName(keyspaceName)
+                .setName(KEYSPACE_NAME)
                 .setStrategy_class("org.apache.cassandra.locator.NetworkTopologyStrategy")
                 .setStrategy_options(stratOpts)
                 .setCf_defs(cfs);
