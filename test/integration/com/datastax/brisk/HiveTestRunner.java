@@ -12,7 +12,7 @@ import java.sql.Statement;
 import java.sql.Connection;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Assert.*;
+import static org.junit.Assert.*;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
