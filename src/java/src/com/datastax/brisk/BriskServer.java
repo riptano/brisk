@@ -20,6 +20,7 @@ package com.datastax.brisk;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
@@ -35,6 +36,8 @@ import org.apache.cassandra.db.marshal.AbstractType;
 import org.apache.cassandra.dht.Token;
 import org.apache.cassandra.hadoop.trackers.CassandraJobConf;
 import org.apache.cassandra.hadoop.trackers.TrackerInitializer;
+import org.apache.cassandra.hadoop.trackers.TrackerManager;
+import org.apache.cassandra.hadoop.trackers.TrackerManagerException;
 import org.apache.cassandra.io.sstable.Component;
 import org.apache.cassandra.io.sstable.IndexHelper;
 import org.apache.cassandra.io.sstable.SSTableReader;
@@ -454,15 +457,17 @@ public class BriskServer extends CassandraServer implements Brisk.Iface
     }
 
 	@Override
-	public String move_job_tracker(String new_jobtracker)
-			throws NotFoundException, TException {
-		TrackerInitializer.jobTrackerThread.interrupt();
+	public String move_job_tracker(String newJobtracker) throws NotFoundException, TException {
+		
 		try {
-			TrackerInitializer.jobTrackerThread.join(30000);
-		} catch (InterruptedException e) {
-			return "Unable t stop JobTracker";
+			TrackerManager.insertJobtrackerLocation(InetAddress.getByName(newJobtracker));
+		} catch (UnknownHostException e) {
+			throw new TException("Unable to set the new Job Tracker lcoation");
+		} catch (TrackerManagerException e) {
+			throw new TException("Unable to set the new Job Tracker lcoation");
 		}
-		return "received: " + new_jobtracker + " returned: " + CassandraJobConf.getJobTrackerNode().toString();
+		return "New JobTracker location: " + newJobtracker + 
+			" set successfully. Please wait and check Brisk web interface at: http://" + newJobtracker + ":50030";
 	}
 
 }

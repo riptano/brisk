@@ -2,6 +2,7 @@ package org.apache.cassandra.hadoop.trackers;
 
 import static com.datastax.brisk.BriskDBUtil.validateAndGetColumn;
 
+import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
@@ -44,9 +45,9 @@ public class TrackerManager {
 	 * Retrieves the current job tracker IP.
 	 * 
 	 * @return the current job tracker IP
-	 * @throws TrackerAdminException
+	 * @throws TrackerManagerException
 	 */
-	public static String getCurrentJobtrackerLocation() throws TrackerAdminException {
+	public static InetAddress getCurrentJobtrackerLocation() throws TrackerManagerException {
 
 		ReadCommand rc = new SliceByNamesReadCommand(BriskSchema.KEYSPACE_NAME,
 				currentJobtrackerKey, cp, Arrays.asList(columnName));
@@ -58,35 +59,34 @@ public class TrackerManager {
 
 			// ByteBuffer util duplicates for us the value.
 			result = ByteBufferUtil.string(col.value());
+			return InetAddress.getByName(result);
 
 		} catch (NotFoundException e) {
-			result = null;
+			return null;
 		} catch (Exception e) {
-			throw new TrackerAdminException(e);
+			throw new TrackerManagerException(e);
 		}
-
-		return result;
 	}
 
 	/**
 	 * Insert the new Job Tracker location (IP)
 	 * @param jobTrackerIP
-	 * @throws TrackerAdminException if an error occurs
+	 * @throws TrackerManagerException if an error occurs
 	 */
-	public static void insertJobtrackerLocation(String jobTrackerIP) throws TrackerAdminException {
+	public static void insertJobtrackerLocation(InetAddress jobTrackerAddress) throws TrackerManagerException {
 		// Insert the current JB location in the only column of the only row.
 		RowMutation rm = new RowMutation(BriskSchema.KEYSPACE_NAME, currentJobtrackerKey);
 		
 		rm.add(
 				jobTrackerCFQueryPath, 
-				ByteBufferUtil.bytes(jobTrackerIP), 
+				ByteBufferUtil.bytes(jobTrackerAddress.getHostAddress()), 
 				System.currentTimeMillis());
 		try {
 			StorageProxy.mutate(Arrays.asList(rm), ConsistencyLevel.QUORUM);
 		} 
 		catch (Exception e)
 		{
-			throw new TrackerAdminException(e);
+			throw new TrackerManagerException(e);
 		}
 	}
 

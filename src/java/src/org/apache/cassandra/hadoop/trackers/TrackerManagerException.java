@@ -1,13 +1,13 @@
 package org.apache.cassandra.hadoop.trackers;
 
-public class TrackerAdminException extends Exception {
+public class TrackerManagerException extends Exception {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public TrackerAdminException(Exception e) {
+	public TrackerManagerException(Exception e) {
 		super(e);
 	}
 	

@@ -20,6 +20,8 @@ package org.apache.cassandra.hadoop.trackers;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.cassandra.utils.FBUtilities;
@@ -35,21 +37,23 @@ import com.datastax.brisk.BriskSchema;
 public class TrackerInitializer
 {
     private static Logger logger = Logger.getLogger(TrackerInitializer.class);
-    private static final CountDownLatch jobTrackerStarted = new CountDownLatch(1);
+    private static CountDownLatch jobTrackerStarted = new CountDownLatch(1);
     public static final String  trackersProperty = "hadoop-trackers";
     public static final boolean isTrackerNode = System.getProperty(trackersProperty, "false").equalsIgnoreCase("true");
     
     // Hold the reference to the taskTracker and JobTracker thread.
+    /** This attribute will be null if we are not the job tracker */
     public static Thread jobTrackerThread;
     public static Thread taskTrackerThread;
+    
+    private static InetAddress lastKnowJobTracker;
     
     
     public static void init() 
     {
-             
-        //Wait for gossip                
+        //Wait for gossip
         try
-        {                    
+        {
             logger.info("Waiting for gossip to start");
             Thread.sleep(5000);
         }
@@ -62,7 +66,21 @@ public class TrackerInitializer
         
         //Are we a JobTracker?
         InetAddress jobTrackerAddr = CassandraJobConf.getJobTrackerNode();
-        if(amIJobTracker(jobTrackerAddr))
+        lastKnowJobTracker = jobTrackerAddr;
+        
+        launchTrackers();
+        
+        // Launches cron service to listen to JobTracker changes
+        ScheduledExecutorService trackersWatcher = Executors.newSingleThreadScheduledExecutor();
+        trackersWatcher.scheduleWithFixedDelay(new TrackerWatcherTask(), 60, 20, TimeUnit.SECONDS);
+    }
+    
+    /**
+     * Starts JobTracker(if corresponds) and the TastTrackers
+     * @param jobTrackerAddr
+     */
+    private static void launchTrackers() {
+        if(amIJobTracker())
         {
             jobTrackerThread = getJobTrackerThread();
             jobTrackerThread.start();
@@ -75,22 +93,87 @@ public class TrackerInitializer
             {
                 throw new RuntimeException("JobTracker not started",e);
             }
-            
-            // insert JobTracker address.
+
         }
         else
         {
             if(logger.isDebugEnabled())
-                logger.debug("We are not the job tracker: "+jobTrackerAddr+" vs "+FBUtilities.getLocalAddress());
+                logger.debug("We are not the job tracker: "+ lastKnowJobTracker + " vs "+FBUtilities.getLocalAddress());
         }
               
         taskTrackerThread = getTaskTrackerThread();
         taskTrackerThread.start();
+		
+	}
+
+
+	/**
+     * In charge to detect JobTracker changes and restart the task trackers as well as
+     * identify when I JobTracker in this node needs to be shutdown or created.
+     *
+     */
+    private static class TrackerWatcherTask implements Runnable {
+
+		@Override
+		public void run() {
+	        //Are we a JobTracker?
+	        InetAddress currentJobTrackerAddr = CassandraJobConf.getJobTrackerNode();
+	        
+	        // Did JobTracker change?
+	        if (lastKnowJobTracker.equals(currentJobTrackerAddr))
+	        {
+	        	// Nothing changed. JobTracker is the same so the
+	        	// Task trackers are pointing to the right place.
+	        	return;
+	        }
+	        
+	        // The Job Tracker location changed. then update last know location.
+	        lastKnowJobTracker = currentJobTrackerAddr;
+	        
+	        try {
+				restartTrackers();
+			} catch (InterruptedException e) {
+				logger.error("Unable to restart trackers", e);
+			}
+		}
+    }
+
+    
+	private static void restartTrackers() throws InterruptedException {
+		reset();
+		stopJobTracker();
+		stopTaskTracker();
+		launchTrackers();
+	}
+
+    public static void stopJobTracker() throws InterruptedException {
+    	// I was the JobTracker as the thread was created.
+		// We need to stop it and clear the reference for future usage
+		// NULL means that the JT was not launched.
+		if (jobTrackerThread != null)
+		{
+			// Let the thread stop by itself
+			jobTrackerThread.interrupt();
+			jobTrackerThread.join(60000);
+			jobTrackerThread = null;
+		}
     }
     
+
+	public static void stopTaskTracker() throws InterruptedException {
+		taskTrackerThread.interrupt();
+		taskTrackerThread.join(60000);
+	}
     
-    private static boolean amIJobTracker(InetAddress jobTrackerAddr) {
-		return jobTrackerAddr.equals(FBUtilities.getLocalAddress());
+    
+    /** Performs the necessary reset of resources for a restart to take place*/
+    private static void reset() {
+    	jobTrackerStarted = new CountDownLatch(1);
+    }
+
+
+    private static boolean amIJobTracker() {
+		return lastKnowJobTracker.equals(FBUtilities.getLocalAddress());
 	}
 
 
@@ -103,7 +186,9 @@ public class TrackerInitializer
 		}
 	}
 
-
+	/**
+	 * The Job Tracker Thread.
+	 */
 	private static Thread getJobTrackerThread()
     {
        Thread jobTrackerThread = new Thread(new Runnable() {
@@ -124,9 +209,21 @@ public class TrackerInitializer
                     }
                     catch(Throwable t)
                     {
+                    	if (t instanceof InterruptedException)
+                    	{
+                    		try
+                    		{
+                    			jobTracker.stopTracker();
+                    			logger.info("Job Tracker shutdown property");
+                    		}
+                    		catch (Exception e)
+                    		{
+                    			logger.error("An Error occured when stopping Job tracker");
+                    		}
+                    	}
+                    	
                         //on OOM shut down the tracker
-                        if(t instanceof InterruptedException || t instanceof OutOfMemoryError || 
-                        		t.getCause() instanceof OutOfMemoryError)
+                        if(t instanceof OutOfMemoryError || t.getCause() instanceof OutOfMemoryError)
                         {
                             try
                             {
@@ -149,6 +246,9 @@ public class TrackerInitializer
     }
     
     
+	/**
+	 * The thread for the Task Tracker.
+	 */
     private static Thread getTaskTrackerThread()
     {
         Thread taskTrackerThread = new Thread(new Runnable() {
@@ -156,8 +256,7 @@ public class TrackerInitializer
             public void run()
             {
                 TaskTracker taskTracker = null; 
-                               
-                
+
                 while(true)
                 {
                     try
@@ -169,6 +268,18 @@ public class TrackerInitializer
                     }
                     catch(Throwable t)
                     {
+                    	// Shutdown the Task Tracker
+                    	if (t instanceof InterruptedException)
+                    	{
+                    		try {
+								taskTracker.shutdown();
+								logger.info("Task tracker was shutdown");
+							} catch (Exception e) {
+								logger.warn("Interruption when shutting down the task tracker");
+							} 
+							break;
+                    	}
+                    	
                         //on OOM shut down the tracker
                         if(t instanceof OutOfMemoryError || t.getCause() instanceof OutOfMemoryError)
                         {                         
