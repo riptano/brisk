@@ -12,12 +12,21 @@ import java.sql.Statement;
 import java.sql.Connection;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.Assert.*;
+
+import junit.framework.Assert;
+import junit.framework.TestCase;
+import junit.framework.TestResult;
 import junitx.framework.FileAssert;
 
 public class HiveTestRunner {
 	
+	private static final int colCount = 10000;
+	
     public static void runQueries(Connection con, String testScript) throws Exception  
     {  
+ //   	this.setName(testScript);
+    	
     	String s = new String(); 
     	String orig_query = new String();  
     	String new_query = new String();  
@@ -36,7 +45,7 @@ public class HiveTestRunner {
     	String script = testDir + testScript;
     	String actualOutput = resultsDir + testScript + ".out";
     	String expectedOutput = resultsDir + testScript + ".exp";
-    	
+    	    	
         try{        	
             FileReader fr = new FileReader(new File(script));                      
             BufferedReader br = new BufferedReader(fr);  
@@ -59,7 +68,9 @@ public class HiveTestRunner {
             {  
             	orig_query = inst[i].trim();
             	
-                if(!orig_query.equals("") && !orig_query.startsWith("--")) {  
+            	// De-tokenize SQL files
+                if(!orig_query.equals("") && !orig_query.startsWith("--")) 
+                {  
                    	new_query = orig_query.replace("[[DATA_DIR]]", dataDir);
                 	new_query = new_query.replace("[[EXAMPLES]]", examplesDir);
  
@@ -75,12 +86,13 @@ public class HiveTestRunner {
                 	//Print run time to standard out, but not to file
                 	long secDiff = TimeUnit.SECONDS.convert(System.nanoTime() - start, TimeUnit.NANOSECONDS);
                 	long msDiff = TimeUnit.MILLISECONDS.convert(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+                	
                 	//System.out.println(" [Runtime: " + secDiff + "s / " + msDiff + "ms]"); 
 
-                	// Not Supported: res.getMetaData().getColumnCount();
+                	// Not Supported: colCount = res.getMetaData().getColumnCount();
                 	// Workaround: Iterate thru columns until exception reached.
                 	while (res.next()) {                     
-                		for (int j=1; j<=10; j++) {                            	
+                		for (int j=1; j<=colCount; j++) {                            	
                 			try {
                 				results.write(res.getString(j) + ", ");    
                 			} catch (SQLException e) {
@@ -103,12 +115,20 @@ public class HiveTestRunner {
             results.close();
             fstream.close();
 		    System.out.flush();
-       
+		    		    
             // Verify that the two files are identical
-            FileAssert.assertEquals("---------- FILE DIFF FOUND ---------- \n",new File(expectedOutput), new File(actualOutput));
+            if  ((new File(expectedOutput)).exists()) 
+            {
+            	//FileAssert sucks ... returns diff's when cli diff doesn't
+                //FileAssert.assertEquals("---------- FILE DIFF FOUND ---------- \n",new File(expectedOutput), new File(actualOutput));
+            	Process proc = Runtime.getRuntime().exec("diff " + actualOutput + " " + expectedOutput);
+            } else {
+            	fail("Expected output file not found: " + expectedOutput);
+            }
 
         } catch (Exception e) {
      		  System.out.println(e.getMessage());
+     		  e.printStackTrace();
           }
-    }  // finish parser
+    }
 }

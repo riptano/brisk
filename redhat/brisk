@@ -86,7 +86,7 @@ do_start()
     if [ "$HADOOP_ENABLED" = "0" ]; then
         echo "$DESC starting with Hadoop disabled (edit /etc/default/brisk to enable)"
     else
-        BRISK_CMD="$BRISK_CMD -t -Djava.library.path=$JAVA_LIBRARY_PATH"
+        BRISK_CMD="$BRISK_CMD -t"
         echo "$DESC starting with Hadoop enabled (edit /etc/default/brisk to disable)"
     fi
 

@@ -1,0 +1,10 @@
+-- Statement: DROP TABLE IF EXISTS HistLoss
+-- Statement: DROP TABLE IF EXISTS Stocks
+-- Statement: CREATE EXTERNAL TABLE Stocks (row_key string, column_name string,  value string) STORED BY 'org.apache.hadoop.hive.cassandra.CassandraStorageHandler'
+-- Statement: SELECT COUNT(*) from Stocks
+0, 
+-- Statement: CREATE EXTERNAL TABLE HistLoss (row_key string, worst_date string, loss string) STORED BY 'org.apache.hadoop.hive.cassandra.CassandraStorageHandler'
+-- Statement: SELECT COUNT(*) from HistLoss
+0, 
+-- Statement: DROP TABLE HistLoss
+-- Statement: DROP TABLE Stocks

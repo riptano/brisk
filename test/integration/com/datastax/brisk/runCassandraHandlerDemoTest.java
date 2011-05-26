@@ -1,6 +1,7 @@
 package com.datastax.brisk;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.DriverManager;
@@ -10,7 +11,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class runCassandraHandlerTest {
+public class runCassandraHandlerDemoTest {
 	public static Connection connection = null;
 	    
 	@BeforeClass
@@ -21,20 +22,23 @@ public class runCassandraHandlerTest {
     	
 	    //Generate Demo Data
 	    String rootDir = System.getProperty("user.dir");
-	    String demoDir = rootDir + "/demos/portfolio_manager";
-        
-	    String[] commands = {"cd " + demoDir + ";ant",
-	    					 "cd " + demoDir + ";./bin/pricer -o INSERT_PRICES",
-	    					 "cd " + demoDir + ";./bin/pricer -o UPDATE_PORTFOLIOS",
-	    					 "cd " + demoDir + ";./bin/pricer -o INSERT_HISTORICAL_PRICES -n 100",
-	    					 rootDir + "/bin/brisk hive -f " + demoDir + "/10_day_loss.q"
-	    					 };
+	    File demoDir = new File(rootDir + "/demos/portfolio_manager");
 	    
-	    for(int i=0; i<commands.length ;i++){
+	    String[] envp = {"BRISK_HOME=" + rootDir};
 
-	    	try {
-	    		System.out.println("Setting up demo: " + commands[i]);
-	    		Process proc = Runtime.getRuntime().exec(commands[i]);
+	    String[] commands = {"ant",
+				 "bin/pricer -o INSERT_PRICES",
+				 "bin/pricer -o UPDATE_PORTFOLIOS",
+				 "bin/pricer -o INSERT_HISTORICAL_PRICES -n 100",
+				 rootDir + "/bin/brisk hive -f 10_day_loss.q"
+				 };
+
+	    for(int i=0; i<commands.length ;i++){
+	    	
+    		try {
+	    		System.out.println("Setting up demo: " + commands[i]);	    		
+	    		Process proc = Runtime.getRuntime().exec(commands[i], envp, demoDir);
+
 	    		BufferedReader br = new BufferedReader(new InputStreamReader(proc.getInputStream()));
 	    		String commandResult = null;     
 	    		
@@ -42,8 +46,9 @@ public class runCassandraHandlerTest {
 	    			System.out.println(commandResult);
 	    		    System.out.flush();
 	    		}            
-	    } catch (IOException e) {
-	          System.exit(0);
+    		} catch (IOException e) {
+    			e.printStackTrace();
+    			System.exit(0);
 		      }
 	    }
 	}
@@ -55,8 +60,8 @@ public class runCassandraHandlerTest {
 		
 	@Test
 	public void testCreateLoadDropTable() throws Exception {
-		System.out.println("===> cassCRUDtable: Create External C* Table, Load Data and Drop");	
-		HiveTestRunner.runQueries(connection, "cassCRUDtable"); 
+		System.out.println("===> cassHandler_Demo: Create External C* Table, Load Data and Drop");	
+		HiveTestRunner.runQueries(connection, "cassHandler_Demo"); 
 	} 
 
 }
