@@ -278,6 +278,8 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
 
             // Optimization for 128 MB blocks.
             cf.setMemtable_throughput_in_mb(128);
+            cf.setMemtable_flush_after_mins(1);
+
             cf.setMin_compaction_threshold(16);
             cf.setMax_compaction_threshold(64);
             
@@ -314,6 +316,7 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
             cf.setKeyspace(keySpace);
 
             // Optimization for 128 MB blocks.
+            cf.setMemtable_flush_after_mins(1);
             cf.setMemtable_throughput_in_mb(128);
             // Disable compaction for archive.
             cf.setMin_compaction_threshold(0);
@@ -329,6 +332,7 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
                 .setName(keySpace)
                 .setStrategy_class("org.apache.cassandra.locator.NetworkTopologyStrategy")
                 .setStrategy_options(stratOpts)
+                .setDurable_writes(false)
                 .setCf_defs(cfs);
 
             client.system_add_keyspace(cfsKs);
