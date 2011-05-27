@@ -21,7 +21,6 @@ import org.apache.cassandra.utils.ByteBufferUtil;
 
 import com.datastax.brisk.BriskSchema;
 
-
 /**
  * Responsible for access the DB and manages Job Tracker information.
  * 
@@ -32,62 +31,58 @@ import com.datastax.brisk.BriskSchema;
  */
 public class TrackerManager {
 
-	private static final ByteBuffer currentJobtrackerKey = ByteBufferUtil.bytes("currentJobTracker");
+    private static final ByteBuffer currentJobtrackerKey = ByteBufferUtil.bytes("currentJobTracker");
 
-	private static final ColumnParent cp = new ColumnParent(BriskSchema.JOB_TRACKER_CF);
+    private static final ColumnParent cp = new ColumnParent(BriskSchema.JOB_TRACKER_CF);
 
-	private static final ByteBuffer columnName = ByteBufferUtil.bytes("current");
+    private static final ByteBuffer columnName = ByteBufferUtil.bytes("current");
 
-	/**n It is the path to the only column in JOB_TRACKER_CF */
-	private static final QueryPath jobTrackerCFQueryPath = new QueryPath(BriskSchema.JOB_TRACKER_CF,null, columnName);
+    /** n It is the path to the only column in JOB_TRACKER_CF */
+    private static final QueryPath jobTrackerCFQueryPath = new QueryPath(BriskSchema.JOB_TRACKER_CF, null, columnName);
 
-	/**
-	 * Retrieves the current job tracker IP.
-	 * 
-	 * @return the current job tracker IP
-	 * @throws TrackerManagerException
-	 */
-	public static InetAddress getCurrentJobtrackerLocation() throws TrackerManagerException {
+    /**
+     * Retrieves the current job tracker IP.
+     * 
+     * @return the current job tracker IP
+     * @throws TrackerManagerException
+     */
+    public static InetAddress getCurrentJobtrackerLocation() throws TrackerManagerException {
 
-		ReadCommand rc = new SliceByNamesReadCommand(BriskSchema.KEYSPACE_NAME,
-				currentJobtrackerKey, cp, Arrays.asList(columnName));
+        ReadCommand rc = new SliceByNamesReadCommand(BriskSchema.KEYSPACE_NAME, currentJobtrackerKey, cp, Arrays.asList(columnName));
 
-		String result;
-		try {
-			List<Row> rows = StorageProxy.read(Arrays.asList(rc), ConsistencyLevel.QUORUM);
-			IColumn col = validateAndGetColumn(rows, columnName);
+        String result;
+        try {
+            List<Row> rows = StorageProxy.read(Arrays.asList(rc), ConsistencyLevel.QUORUM);
+            IColumn col = validateAndGetColumn(rows, columnName);
 
-			// ByteBuffer util duplicates for us the value.
-			result = ByteBufferUtil.string(col.value());
-			return InetAddress.getByName(result);
+            // ByteBuffer util duplicates for us the value.
+            result = ByteBufferUtil.string(col.value());
+            return InetAddress.getByName(result);
 
-		} catch (NotFoundException e) {
-			return null;
-		} catch (Exception e) {
-			throw new TrackerManagerException(e);
-		}
-	}
+        } catch (NotFoundException e) {
+            return null;
+        } catch (Exception e) {
+            throw new TrackerManagerException(e);
+        }
+    }
 
-	/**
-	 * Insert the new Job Tracker location (IP)
-	 * @param jobTrackerIP
-	 * @throws TrackerManagerException if an error occurs
-	 */
-	public static void insertJobtrackerLocation(InetAddress jobTrackerAddress) throws TrackerManagerException {
-		// Insert the current JB location in the only column of the only row.
-		RowMutation rm = new RowMutation(BriskSchema.KEYSPACE_NAME, currentJobtrackerKey);
-		
-		rm.add(
-				jobTrackerCFQueryPath, 
-				ByteBufferUtil.bytes(jobTrackerAddress.getHostAddress()), 
-				System.currentTimeMillis());
-		try {
-			StorageProxy.mutate(Arrays.asList(rm), ConsistencyLevel.QUORUM);
-		} 
-		catch (Exception e)
-		{
-			throw new TrackerManagerException(e);
-		}
-	}
+    /**
+     * Insert the new Job Tracker location (IP)
+     * 
+     * @param jobTrackerIP
+     * @throws TrackerManagerException if an error occurs
+     */
+    public static void insertJobtrackerLocation(InetAddress jobTrackerAddress) throws TrackerManagerException {
+        // Insert the current JB location in the only column of the only row.
+        RowMutation rm = new RowMutation(BriskSchema.KEYSPACE_NAME, currentJobtrackerKey);
+
+        rm.add(jobTrackerCFQueryPath, ByteBufferUtil.bytes(jobTrackerAddress.getHostAddress()),
+                System.currentTimeMillis());
+        try {
+            StorageProxy.mutate(Arrays.asList(rm), ConsistencyLevel.QUORUM);
+        } catch (Exception e) {
+            throw new TrackerManagerException(e);
+        }
+    }
 
 }
