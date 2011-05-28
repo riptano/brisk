@@ -44,6 +44,7 @@ public class TrackerInitializer {
     /** This attribute will be null if we are not the job tracker */
     public static Thread jobTrackerThread;
     public static Thread taskTrackerThread;
+    private static TaskTracker taskTracker;
 
     private static InetAddress lastKnowJobTracker;
 
@@ -120,13 +121,13 @@ public class TrackerInitializer {
 
             try {
                 restartTrackers();
-            } catch (InterruptedException e) {
+            } catch (Exception e) {
                 logger.error("Unable to restart trackers", e);
             }
         }
     }
 
-    private static void restartTrackers() throws InterruptedException {
+    private static void restartTrackers() throws InterruptedException, IOException {
         reset();
         stopJobTracker();
         stopTaskTracker();
@@ -145,8 +146,9 @@ public class TrackerInitializer {
         }
     }
 
-    public static void stopTaskTracker() throws InterruptedException {
+    public static void stopTaskTracker() throws InterruptedException, IOException {
         taskTrackerThread.interrupt();
+        taskTracker.shutdown();
         taskTrackerThread.join(60000);
     }
 
@@ -201,9 +203,10 @@ public class TrackerInitializer {
                             } catch (IOException e) {
 
                             }
+                            logger.warn("Error starting job tracker", t);
                             break;
                         }
-                        logger.warn("Error starting job tracker", t);
+                        
                         break;
                     }
                 }
@@ -220,7 +223,7 @@ public class TrackerInitializer {
         Thread taskTrackerThread = new Thread(new Runnable() {
 
             public void run() {
-                TaskTracker taskTracker = null;
+                taskTracker = null;
 
                 while (true) {
                     try {
@@ -228,6 +231,7 @@ public class TrackerInitializer {
                         MBeans.register("TaskTracker", "TaskTrackerInfo", taskTracker);
                         logger.info("Hadoop Task Tracker Started... ");
                         taskTracker.run();
+                        logger.info("TaskTracker has finished");
                     } catch (Throwable t) {
                         // Shutdown the Task Tracker
                         if (t instanceof InterruptedException) {
