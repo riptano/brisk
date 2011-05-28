@@ -232,6 +232,7 @@ public class TrackerInitializer {
                         logger.info("Hadoop Task Tracker Started... ");
                         taskTracker.run();
                         logger.info("TaskTracker has finished");
+                        break;
                     } catch (Throwable t) {
                         // Shutdown the Task Tracker
                         if (t instanceof InterruptedException) {
