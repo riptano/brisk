@@ -20,6 +20,7 @@ package com.datastax.brisk;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
@@ -35,6 +36,8 @@ import org.apache.cassandra.db.marshal.AbstractType;
 import org.apache.cassandra.dht.Token;
 import org.apache.cassandra.hadoop.trackers.CassandraJobConf;
 import org.apache.cassandra.hadoop.trackers.TrackerInitializer;
+import org.apache.cassandra.hadoop.trackers.TrackerManager;
+import org.apache.cassandra.hadoop.trackers.TrackerManagerException;
 import org.apache.cassandra.io.sstable.Component;
 import org.apache.cassandra.io.sstable.IndexHelper;
 import org.apache.cassandra.io.sstable.SSTableReader;
@@ -48,6 +51,8 @@ import org.apache.cassandra.utils.FBUtilities;
 import org.apache.cassandra.utils.Filter;
 import org.apache.log4j.Logger;
 import org.apache.thrift.TException;
+
+import static com.datastax.brisk.BriskDBUtil.validateAndGetColumn;
 
 public class BriskServer extends CassandraServer implements Brisk.Iface
 {
@@ -441,25 +446,6 @@ public class BriskServer extends CassandraServer implements Brisk.Iface
     }
 
 
-    private IColumn validateAndGetColumn(List<Row> rows, ByteBuffer columnName) throws NotFoundException {
-        if(rows.isEmpty())
-            throw new NotFoundException();
-
-        if(rows.size() > 1)
-            throw new RuntimeException("Block id returned more than one row");
-
-        Row row = rows.get(0);
-        if(row.cf == null)
-            throw new NotFoundException();
-
-        IColumn col = row.cf.getColumn(columnName);
-
-        if(col == null || !col.isLive())
-            throw new NotFoundException();
-
-        return col;
-    }
-
     public String get_jobtracker_address() throws NotFoundException, TException
     {
         if(!TrackerInitializer.isTrackerNode)
@@ -469,5 +455,19 @@ public class BriskServer extends CassandraServer implements Brisk.Iface
                 
         return CassandraJobConf.getJobTrackerNode().getHostName()+":8012";
     }
+
+	@Override
+	public String move_job_tracker(String newJobtracker) throws NotFoundException, TException {
+		
+		try {
+			TrackerManager.insertJobtrackerLocation(InetAddress.getByName(newJobtracker));
+		} catch (UnknownHostException e) {
+			throw new TException("Unable to set the new Job Tracker lcoation");
+		} catch (TrackerManagerException e) {
+			throw new TException("Unable to set the new Job Tracker lcoation");
+		}
+		return "New JobTracker location: " + newJobtracker + 
+			" set successfully. Please wait and check Brisk web interface at: http://" + newJobtracker + ":50030";
+	}
 
 }

@@ -49,24 +49,49 @@ public class CassandraJobConf extends org.apache.hadoop.mapred.JobConf
         
         return super.get(name);
     }
+    
+	/**
+     * Retrives the JobTracker location from the database.
+     * If it is not there fallback into the config file and insert it
+     * back to the DB.
+     * @return the jobtracker address
+     */
+    public static InetAddress getJobTrackerNode() {
+	 	try
+		{
+	    	InetAddress jobTrackerLocation = TrackerManager.getCurrentJobtrackerLocation();
+	    	
+	    	if (jobTrackerLocation == null)
+	    	{
+	    		// Insert it once so that later we can use the data from the DB
+	    		jobTrackerLocation = internalgetJobTrackerNode();
+	    		TrackerManager.insertJobtrackerLocation(jobTrackerLocation);
+	    	}
+	    	
+	    	return jobTrackerLocation;
+		} 
+		catch (TrackerManagerException e)
+		{
+			throw new RuntimeException(e);
+		}
+    }
 
     //Will pick a seed to use as a job tracker in this local dc
     //We can't check for live seeds because if this is a ec2 cluster
     //the seeds might not be up yet :(
-    public static InetAddress getJobTrackerNode()
-    {       
+    private static InetAddress internalgetJobTrackerNode()
+    {
         //Get this nodes local DC
         String localDC = DatabaseDescriptor.getEndpointSnitch().getDatacenter(FBUtilities.getLocalAddress());
-        
+
         Set<InetAddress> seeds    = DatabaseDescriptor.getSeeds();
-        
-        
+
         InetAddress[] sortedSeeds = seeds.toArray(new InetAddress[]{});
         Arrays.sort(sortedSeeds, new Comparator<InetAddress>(){
             public int compare(InetAddress a, InetAddress b)
             {
-                return a.getHostAddress().compareTo(b.getHostAddress());            
-            }         
+                return a.getHostAddress().compareTo(b.getHostAddress());
+            }
         }); 
         
 
@@ -79,5 +104,5 @@ public class CassandraJobConf extends org.apache.hadoop.mapred.JobConf
             } 
         
         throw new RuntimeException("No seeds found in this DC: "+localDC);
-    }   
+    }
 }

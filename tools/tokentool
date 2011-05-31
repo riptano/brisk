@@ -1,0 +1,173 @@
+#! /usr/bin/python
+
+import sys, random
+
+MAXRANGE = (2**127)
+MAXRANGE = 100
+
+originalTokens = {}
+dcOffsets = {}
+tokenClashOffsets = {}
+
+def readInt(number, exitOnFail=False):
+    returnVal = None
+    try:
+        returnVal = int(number)
+    except:
+        print "Please input a valid number."
+        if exitOnFail:
+            sys.exit(1)
+    return returnVal
+
+def splitRing(dc, numOfNodes):
+    global originalTokens
+    originalTokens[dc] = {}
+    for i in range(0, numOfNodes):
+        token = (i * MAXRANGE / numOfNodes) % MAXRANGE
+        originalTokens[dc][i] = token
+
+def run():
+    global dcOffsets, tokenClashOffsets
+    if (len(sys.argv) == 1):
+        print "Command line usage:"
+        print "    tools/tokentool <# of nodes in DC1> [<# of nodes in DC2> <# of nodes in DC3> ...]"
+        print
+    else:
+        # Gather then number of datacenters
+        datacenters = readInt(len(sys.argv) - 1)
+
+        # Gather the number of nodes in each datacenter
+        numNodesInDC = []
+        for i in range(0, datacenters):
+            numNodesInDC.append(readInt(sys.argv[i + 1], True))
+    
+    # Calculate the tokens for each datacenter
+    for i, node in enumerate(numNodesInDC):
+        splitRing(i, node)
+    
+    previousOffsets = {}
+    # Calculate tension
+    while True:
+
+        # Loop over all dcs
+        keys = originalTokens.keys()
+        keys.reverse()
+        for dc in keys:
+
+            # Allow the first dc to stay in it's initial spot
+            if dc == 0:
+                continue
+            
+            # Loop over all nodes to find average offset
+            averageOffset = 0
+            for node in originalTokens[dc].keys():
+                closestMinToken = 0
+                closestMaxToken = MAXRANGE
+
+                # Add an offset to the token if an offset exists
+                if dc in dcOffsets:
+                    thisToken = (originalTokens[dc][node] + dcOffsets[dc]) % MAXRANGE
+                else:
+                    thisToken = originalTokens[dc][node]
+
+                # Compare each node to all other nodes of the other dcs
+                for otherdc in originalTokens.keys():
+
+                    # Do not compare against itself
+                    if dc != otherdc:
+
+                        # Find the tokens that will be compared against
+                        for othernode in originalTokens[otherdc].keys():
+
+                            # Add an offset to the token if an offset exists
+                            if otherdc in dcOffsets:
+                                thatToken = (originalTokens[otherdc][othernode] + dcOffsets[otherdc]) % MAXRANGE
+                            else:
+                                thatToken = originalTokens[otherdc][othernode]
+                            
+                            # Find the floor token
+                            if thatToken <= thisToken:
+                                if thatToken > closestMinToken:
+                                    closestMinToken = thatToken
+                            else:
+                                # Find the ceiling token on the next pass
+                                # then exit the loop
+                                if thatToken < closestMaxToken:
+                                    closestMaxToken = thatToken
+                                break
+                
+                # If the token has clashed, offset the token by a random
+                # integer close to that of the number of clashes
+                if dc in tokenClashOffsets:
+                    offset = (closestMinToken + closestMaxToken) / 2 - originalTokens[dc][node] + random.randint(0, tokenClashOffsets[dc])
+                else:
+                    offset = (closestMinToken + closestMaxToken) / 2 - originalTokens[dc][node]           
+                
+                # Do a running average of offset values
+                if not averageOffset:
+                    averageOffset = offset
+                else:
+                    averageOffset = (averageOffset + offset) / 2
+
+            # Save the offset
+            dcOffsets[dc] = averageOffset
+
+        # Verify the offsets have stopped shifting
+        normalizedOffsets = True
+
+        # Copy dcOffsets the first time around
+        if len(previousOffsets) == 0:
+            normalizedOffsets = False
+            previousOffsets = dcOffsets.copy()
+        else:
+            seenTokens = []
+
+            # Add the first DC's tokens to the seen list
+            for node in originalTokens[0].keys():
+                seenTokens.append(originalTokens[0][node])
+
+            # Go through all the other tokens in all other DCs
+            for dc in dcOffsets.keys():
+
+                # Confirm there are no token conflicts
+                for node in originalTokens[dc].keys():
+                    token = (originalTokens[dc][node] + dcOffsets[dc]) % MAXRANGE
+
+                    # If two tokens sit in the same spot,
+                    # increase the rotation variance for that particular dc ring
+                    if token in seenTokens:
+                        normalizedOffsets = False
+                        if dc in tokenClashOffsets:
+                            tokenClashOffsets[dc] = tokenClashOffsets[dc] + 1
+                        else:
+                            tokenClashOffsets[dc] = 1
+                        break
+
+                    # Mark current token as seen
+                    seenTokens.append(token)
+                
+                # Check to makes sure offsets still aren't shifting
+                if dcOffsets[dc] != previousOffsets[dc]:
+                    normalizedOffsets = False
+                    break
+
+            # Update the previous offsets to be the present offsets
+            previousOffsets = dcOffsets.copy()
+
+        # Stop looping if offsets have settled
+        if normalizedOffsets:
+            break
+
+    # Recalculate the shifted tokens and print
+    for i, dc in enumerate(originalTokens.keys()):
+        print "DC%d:" % (i + 1)
+        for node in originalTokens[dc].keys():
+            if dc in dcOffsets:
+                newToken = (originalTokens[dc][node] + dcOffsets[dc]) % MAXRANGE
+                print "Node %d: %d" % (node, newToken)
+            else:
+                print "Node %d: %d" % (node, originalTokens[dc][node])
+        print
+
+
+run()
