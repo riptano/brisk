@@ -286,6 +286,13 @@ public class BriskErrorServer implements Brisk.Iface
         return null;
     }
 
+	@Override
+	public String move_job_tracker(String new_jobtracker)
+			throws NotFoundException, TException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 
 
 }

@@ -26,6 +26,7 @@ import java.nio.channels.FileChannel;
 import java.util.*;
 
 import com.datastax.brisk.BriskInternalServer;
+import com.datastax.brisk.BriskSchema;
 
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.hadoop.CassandraProxyClient;
@@ -105,7 +106,7 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
 
     private ConsistencyLevel            consistencyLevelWrite;
 
-    private Cassandra.Iface             client;
+    private Brisk.Iface             client;
 
     public CassandraFileSystemThriftStore()
     {
@@ -336,7 +337,7 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
                 .setCf_defs(cfs);
 
             client.system_add_keyspace(cfsKs);
-            waitForSchemaAgreement();
+            BriskSchema.waitForSchemaAgreement(client);
 
             return cfsKs;
         }
@@ -344,28 +345,8 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
         {
             throw new IOException(e);
         }
-
     }
 
-    private void waitForSchemaAgreement() throws InvalidRequestException, InterruptedException, TException {
-        int waited = 0;
-        int versions = 0;
-        while (versions != 1)
-        {
-            ArrayList<String> liveschemas = new ArrayList<String>();
-            Map <String, List<String>> schema = client.describe_schema_versions();
-            for (Map.Entry<String, List<String>> entry : schema.entrySet())
-            {
-                if (!entry.getKey().equals("UNREACHABLE"))
-                    liveschemas.add(entry.getKey());
-            }
-            versions = liveschemas.size();
-            Thread.sleep(1000);
-            waited += 1000;
-            if (waited > StorageService.RING_DELAY)
-                throw new RuntimeException("Could not reach schema agreement in " + StorageService.RING_DELAY + "ms");
-        }
-    }
 
     public InputStream retrieveBlock(Block block, long byteRangeStart) throws IOException
     {

@@ -1,0 +1,62 @@
+#! /usr/bin/python
+
+import sys
+
+def readInt(number, exitOnFail=False):
+    returnVal = None
+    try:
+        returnVal = int(number)
+    except:
+        print "Please input a valid number."
+        if exitOnFail:
+            sys.exit(1)
+    return returnVal
+
+def run():
+    datacenters = None
+    nodesperdc = []
+
+    if (len(sys.argv) > 1):
+        # Read from the commandline
+        
+        # Gather then number of datacenters
+        datacenters = len(sys.argv) - 1
+
+        # Gather the number of nodes in each datacenter
+        for i in range(0, datacenters):
+            nodesperdc.append(readInt(sys.argv[i + 1], True))
+    else:
+        # Read from interactive prompts
+        
+        # Gather then number of datacenters
+        while not datacenters:
+            datacenters = readInt(raw_input("How many datacenters are in your cluster? "))
+
+        # Gather the number of nodes in each datacenter
+        for i in range(0, datacenters):
+            thisDCNodes = None
+            while not thisDCNodes:
+                thisDCNodes = readInt(raw_input("How many nodes are in your DC%d? " % (i + 1)))
+            nodesperdc.append(thisDCNodes)
+    
+    # Print tokens for each datacenter
+    for i in range(len(nodesperdc)):
+        print "DC%d:" % (i + 1)
+        splitRing(nodesperdc[i], (2**127) / 4 / len(nodesperdc) * i)
+        print
+
+def splitRing(numOfNodes, offset=0):
+    for i in range(0, numOfNodes):
+        print "token position %d: %d" % (i, (i*(2**127)/numOfNodes + offset) % (2**127))
+
+
+
+
+try:
+    print "Command line usage:"
+    print "    tools/tokentool <# of nodes in DC1> [<# of nodes in DC2> <# of nodes in DC3> ...]"
+    print
+    run()
+except KeyboardInterrupt:
+    print
+    pass

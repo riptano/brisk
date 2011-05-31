@@ -56,6 +56,13 @@ public class Brisk {
      */
     public String get_jobtracker_address() throws NotFoundException, org.apache.thrift.TException;
 
+    /**
+     * Mode the JobTracker to the node specified in the parameter.
+     * 
+     * @param new_jobtracker
+     */
+    public String move_job_tracker(String new_jobtracker) throws NotFoundException, org.apache.thrift.TException;
+
   }
 
   public interface AsyncIface extends org.apache.cassandra.thrift.Cassandra .AsyncIface {
@@ -65,6 +72,8 @@ public class Brisk {
     public void get_cfs_sblock(String caller_host_name, ByteBuffer block_id, ByteBuffer sblock_id, int offset, StorageType storageType, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.get_cfs_sblock_call> resultHandler) throws org.apache.thrift.TException;
 
     public void get_jobtracker_address(org.apache.thrift.async.AsyncMethodCallback<AsyncClient.get_jobtracker_address_call> resultHandler) throws org.apache.thrift.TException;
+
+    public void move_job_tracker(String new_jobtracker, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.move_job_tracker_call> resultHandler) throws org.apache.thrift.TException;
 
   }
 
@@ -225,6 +234,45 @@ public class Brisk {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "get_jobtracker_address failed: unknown result");
     }
 
+    public String move_job_tracker(String new_jobtracker) throws NotFoundException, org.apache.thrift.TException
+    {
+      send_move_job_tracker(new_jobtracker);
+      return recv_move_job_tracker();
+    }
+
+    public void send_move_job_tracker(String new_jobtracker) throws org.apache.thrift.TException
+    {
+      oprot_.writeMessageBegin(new org.apache.thrift.protocol.TMessage("move_job_tracker", org.apache.thrift.protocol.TMessageType.CALL, ++seqid_));
+      move_job_tracker_args args = new move_job_tracker_args();
+      args.setNew_jobtracker(new_jobtracker);
+      args.write(oprot_);
+      oprot_.writeMessageEnd();
+      oprot_.getTransport().flush();
+    }
+
+    public String recv_move_job_tracker() throws NotFoundException, org.apache.thrift.TException
+    {
+      org.apache.thrift.protocol.TMessage msg = iprot_.readMessageBegin();
+      if (msg.type == org.apache.thrift.protocol.TMessageType.EXCEPTION) {
+        org.apache.thrift.TApplicationException x = org.apache.thrift.TApplicationException.read(iprot_);
+        iprot_.readMessageEnd();
+        throw x;
+      }
+      if (msg.seqid != seqid_) {
+        throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.BAD_SEQUENCE_ID, "move_job_tracker failed: out of sequence response");
+      }
+      move_job_tracker_result result = new move_job_tracker_result();
+      result.read(iprot_);
+      iprot_.readMessageEnd();
+      if (result.isSetSuccess()) {
+        return result.success;
+      }
+      if (result.nfe != null) {
+        throw result.nfe;
+      }
+      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "move_job_tracker failed: unknown result");
+    }
+
   }
   public static class AsyncClient extends org.apache.cassandra.thrift.Cassandra.AsyncClient implements AsyncIface {
     public static class Factory implements org.apache.thrift.async.TAsyncClientFactory<AsyncClient> {
@@ -351,6 +399,38 @@ public class Brisk {
       }
     }
 
+    public void move_job_tracker(String new_jobtracker, org.apache.thrift.async.AsyncMethodCallback<move_job_tracker_call> resultHandler) throws org.apache.thrift.TException {
+      checkReady();
+      move_job_tracker_call method_call = new move_job_tracker_call(new_jobtracker, resultHandler, this, protocolFactory, transport);
+      this.currentMethod = method_call;
+      manager.call(method_call);
+    }
+
+    public static class move_job_tracker_call extends org.apache.thrift.async.TAsyncMethodCall {
+      private String new_jobtracker;
+      public move_job_tracker_call(String new_jobtracker, org.apache.thrift.async.AsyncMethodCallback<move_job_tracker_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+        this.new_jobtracker = new_jobtracker;
+      }
+
+      public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("move_job_tracker", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        move_job_tracker_args args = new move_job_tracker_args();
+        args.setNew_jobtracker(new_jobtracker);
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public String getResult() throws NotFoundException, org.apache.thrift.TException {
+        if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
+          throw new IllegalStateException("Method call not finished!");
+        }
+        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
+        org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        return (new Client(prot)).recv_move_job_tracker();
+      }
+    }
+
   }
 
   public static class Processor extends org.apache.cassandra.thrift.Cassandra.Processor implements org.apache.thrift.TProcessor {
@@ -362,6 +442,7 @@ public class Brisk {
       processMap_.put("describe_keys", new describe_keys());
       processMap_.put("get_cfs_sblock", new get_cfs_sblock());
       processMap_.put("get_jobtracker_address", new get_jobtracker_address());
+      processMap_.put("move_job_tracker", new move_job_tracker());
     }
 
     private Iface iface_;
@@ -501,6 +582,44 @@ public class Brisk {
           return;
         }
         oprot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("get_jobtracker_address", org.apache.thrift.protocol.TMessageType.REPLY, seqid));
+        result.write(oprot);
+        oprot.writeMessageEnd();
+        oprot.getTransport().flush();
+      }
+
+    }
+
+    private class move_job_tracker implements ProcessFunction {
+      public void process(int seqid, org.apache.thrift.protocol.TProtocol iprot, org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException
+      {
+        move_job_tracker_args args = new move_job_tracker_args();
+        try {
+          args.read(iprot);
+        } catch (org.apache.thrift.protocol.TProtocolException e) {
+          iprot.readMessageEnd();
+          org.apache.thrift.TApplicationException x = new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.PROTOCOL_ERROR, e.getMessage());
+          oprot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("move_job_tracker", org.apache.thrift.protocol.TMessageType.EXCEPTION, seqid));
+          x.write(oprot);
+          oprot.writeMessageEnd();
+          oprot.getTransport().flush();
+          return;
+        }
+        iprot.readMessageEnd();
+        move_job_tracker_result result = new move_job_tracker_result();
+        try {
+          result.success = iface_.move_job_tracker(args.new_jobtracker);
+        } catch (NotFoundException nfe) {
+          result.nfe = nfe;
+        } catch (Throwable th) {
+          LOGGER.error("Internal error processing move_job_tracker", th);
+          org.apache.thrift.TApplicationException x = new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.INTERNAL_ERROR, "Internal error processing move_job_tracker");
+          oprot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("move_job_tracker", org.apache.thrift.protocol.TMessageType.EXCEPTION, seqid));
+          x.write(oprot);
+          oprot.writeMessageEnd();
+          oprot.getTransport().flush();
+          return;
+        }
+        oprot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("move_job_tracker", org.apache.thrift.protocol.TMessageType.REPLY, seqid));
         result.write(oprot);
         oprot.writeMessageEnd();
         oprot.getTransport().flush();
@@ -3565,6 +3684,707 @@ public class Brisk {
     @Override
     public String toString() {
       StringBuilder sb = new StringBuilder("get_jobtracker_address_result(");
+      boolean first = true;
+
+      sb.append("success:");
+      if (this.success == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.success);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("nfe:");
+      if (this.nfe == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.nfe);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+  }
+
+  public static class move_job_tracker_args implements org.apache.thrift.TBase<move_job_tracker_args, move_job_tracker_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("move_job_tracker_args");
+
+    private static final org.apache.thrift.protocol.TField NEW_JOBTRACKER_FIELD_DESC = new org.apache.thrift.protocol.TField("new_jobtracker", org.apache.thrift.protocol.TType.STRING, (short)1);
+
+    public String new_jobtracker;
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+      NEW_JOBTRACKER((short)1, "new_jobtracker");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 1: // NEW_JOBTRACKER
+            return NEW_JOBTRACKER;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+
+    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.NEW_JOBTRACKER, new org.apache.thrift.meta_data.FieldMetaData("new_jobtracker", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(move_job_tracker_args.class, metaDataMap);
+    }
+
+    public move_job_tracker_args() {
+    }
+
+    public move_job_tracker_args(
+      String new_jobtracker)
+    {
+      this();
+      this.new_jobtracker = new_jobtracker;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public move_job_tracker_args(move_job_tracker_args other) {
+      if (other.isSetNew_jobtracker()) {
+        this.new_jobtracker = other.new_jobtracker;
+      }
+    }
+
+    public move_job_tracker_args deepCopy() {
+      return new move_job_tracker_args(this);
+    }
+
+    @Override
+    public void clear() {
+      this.new_jobtracker = null;
+    }
+
+    public String getNew_jobtracker() {
+      return this.new_jobtracker;
+    }
+
+    public move_job_tracker_args setNew_jobtracker(String new_jobtracker) {
+      this.new_jobtracker = new_jobtracker;
+      return this;
+    }
+
+    public void unsetNew_jobtracker() {
+      this.new_jobtracker = null;
+    }
+
+    /** Returns true if field new_jobtracker is set (has been assigned a value) and false otherwise */
+    public boolean isSetNew_jobtracker() {
+      return this.new_jobtracker != null;
+    }
+
+    public void setNew_jobtrackerIsSet(boolean value) {
+      if (!value) {
+        this.new_jobtracker = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case NEW_JOBTRACKER:
+        if (value == null) {
+          unsetNew_jobtracker();
+        } else {
+          setNew_jobtracker((String)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case NEW_JOBTRACKER:
+        return getNew_jobtracker();
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case NEW_JOBTRACKER:
+        return isSetNew_jobtracker();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof move_job_tracker_args)
+        return this.equals((move_job_tracker_args)that);
+      return false;
+    }
+
+    public boolean equals(move_job_tracker_args that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_new_jobtracker = true && this.isSetNew_jobtracker();
+      boolean that_present_new_jobtracker = true && that.isSetNew_jobtracker();
+      if (this_present_new_jobtracker || that_present_new_jobtracker) {
+        if (!(this_present_new_jobtracker && that_present_new_jobtracker))
+          return false;
+        if (!this.new_jobtracker.equals(that.new_jobtracker))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      HashCodeBuilder builder = new HashCodeBuilder();
+
+      boolean present_new_jobtracker = true && (isSetNew_jobtracker());
+      builder.append(present_new_jobtracker);
+      if (present_new_jobtracker)
+        builder.append(new_jobtracker);
+
+      return builder.toHashCode();
+    }
+
+    public int compareTo(move_job_tracker_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      move_job_tracker_args typedOther = (move_job_tracker_args)other;
+
+      lastComparison = Boolean.valueOf(isSetNew_jobtracker()).compareTo(typedOther.isSetNew_jobtracker());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetNew_jobtracker()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.new_jobtracker, typedOther.new_jobtracker);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      org.apache.thrift.protocol.TField field;
+      iprot.readStructBegin();
+      while (true)
+      {
+        field = iprot.readFieldBegin();
+        if (field.type == org.apache.thrift.protocol.TType.STOP) { 
+          break;
+        }
+        switch (field.id) {
+          case 1: // NEW_JOBTRACKER
+            if (field.type == org.apache.thrift.protocol.TType.STRING) {
+              this.new_jobtracker = iprot.readString();
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          default:
+            org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
+        }
+        iprot.readFieldEnd();
+      }
+      iprot.readStructEnd();
+
+      // check for required fields of primitive type, which can't be checked in the validate method
+      validate();
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      validate();
+
+      oprot.writeStructBegin(STRUCT_DESC);
+      if (this.new_jobtracker != null) {
+        oprot.writeFieldBegin(NEW_JOBTRACKER_FIELD_DESC);
+        oprot.writeString(this.new_jobtracker);
+        oprot.writeFieldEnd();
+      }
+      oprot.writeFieldStop();
+      oprot.writeStructEnd();
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("move_job_tracker_args(");
+      boolean first = true;
+
+      sb.append("new_jobtracker:");
+      if (this.new_jobtracker == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.new_jobtracker);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+  }
+
+  public static class move_job_tracker_result implements org.apache.thrift.TBase<move_job_tracker_result, move_job_tracker_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("move_job_tracker_result");
+
+    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.STRING, (short)0);
+    private static final org.apache.thrift.protocol.TField NFE_FIELD_DESC = new org.apache.thrift.protocol.TField("nfe", org.apache.thrift.protocol.TType.STRUCT, (short)1);
+
+    public String success;
+    public NotFoundException nfe;
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+      SUCCESS((short)0, "success"),
+      NFE((short)1, "nfe");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 0: // SUCCESS
+            return SUCCESS;
+          case 1: // NFE
+            return NFE;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+
+    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+      tmpMap.put(_Fields.NFE, new org.apache.thrift.meta_data.FieldMetaData("nfe", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRUCT)));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(move_job_tracker_result.class, metaDataMap);
+    }
+
+    public move_job_tracker_result() {
+    }
+
+    public move_job_tracker_result(
+      String success,
+      NotFoundException nfe)
+    {
+      this();
+      this.success = success;
+      this.nfe = nfe;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public move_job_tracker_result(move_job_tracker_result other) {
+      if (other.isSetSuccess()) {
+        this.success = other.success;
+      }
+      if (other.isSetNfe()) {
+        this.nfe = new NotFoundException(other.nfe);
+      }
+    }
+
+    public move_job_tracker_result deepCopy() {
+      return new move_job_tracker_result(this);
+    }
+
+    @Override
+    public void clear() {
+      this.success = null;
+      this.nfe = null;
+    }
+
+    public String getSuccess() {
+      return this.success;
+    }
+
+    public move_job_tracker_result setSuccess(String success) {
+      this.success = success;
+      return this;
+    }
+
+    public void unsetSuccess() {
+      this.success = null;
+    }
+
+    /** Returns true if field success is set (has been assigned a value) and false otherwise */
+    public boolean isSetSuccess() {
+      return this.success != null;
+    }
+
+    public void setSuccessIsSet(boolean value) {
+      if (!value) {
+        this.success = null;
+      }
+    }
+
+    public NotFoundException getNfe() {
+      return this.nfe;
+    }
+
+    public move_job_tracker_result setNfe(NotFoundException nfe) {
+      this.nfe = nfe;
+      return this;
+    }
+
+    public void unsetNfe() {
+      this.nfe = null;
+    }
+
+    /** Returns true if field nfe is set (has been assigned a value) and false otherwise */
+    public boolean isSetNfe() {
+      return this.nfe != null;
+    }
+
+    public void setNfeIsSet(boolean value) {
+      if (!value) {
+        this.nfe = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case SUCCESS:
+        if (value == null) {
+          unsetSuccess();
+        } else {
+          setSuccess((String)value);
+        }
+        break;
+
+      case NFE:
+        if (value == null) {
+          unsetNfe();
+        } else {
+          setNfe((NotFoundException)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case SUCCESS:
+        return getSuccess();
+
+      case NFE:
+        return getNfe();
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case SUCCESS:
+        return isSetSuccess();
+      case NFE:
+        return isSetNfe();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof move_job_tracker_result)
+        return this.equals((move_job_tracker_result)that);
+      return false;
+    }
+
+    public boolean equals(move_job_tracker_result that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_success = true && this.isSetSuccess();
+      boolean that_present_success = true && that.isSetSuccess();
+      if (this_present_success || that_present_success) {
+        if (!(this_present_success && that_present_success))
+          return false;
+        if (!this.success.equals(that.success))
+          return false;
+      }
+
+      boolean this_present_nfe = true && this.isSetNfe();
+      boolean that_present_nfe = true && that.isSetNfe();
+      if (this_present_nfe || that_present_nfe) {
+        if (!(this_present_nfe && that_present_nfe))
+          return false;
+        if (!this.nfe.equals(that.nfe))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      HashCodeBuilder builder = new HashCodeBuilder();
+
+      boolean present_success = true && (isSetSuccess());
+      builder.append(present_success);
+      if (present_success)
+        builder.append(success);
+
+      boolean present_nfe = true && (isSetNfe());
+      builder.append(present_nfe);
+      if (present_nfe)
+        builder.append(nfe);
+
+      return builder.toHashCode();
+    }
+
+    public int compareTo(move_job_tracker_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      move_job_tracker_result typedOther = (move_job_tracker_result)other;
+
+      lastComparison = Boolean.valueOf(isSetSuccess()).compareTo(typedOther.isSetSuccess());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetSuccess()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.success, typedOther.success);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetNfe()).compareTo(typedOther.isSetNfe());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetNfe()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.nfe, typedOther.nfe);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      org.apache.thrift.protocol.TField field;
+      iprot.readStructBegin();
+      while (true)
+      {
+        field = iprot.readFieldBegin();
+        if (field.type == org.apache.thrift.protocol.TType.STOP) { 
+          break;
+        }
+        switch (field.id) {
+          case 0: // SUCCESS
+            if (field.type == org.apache.thrift.protocol.TType.STRING) {
+              this.success = iprot.readString();
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          case 1: // NFE
+            if (field.type == org.apache.thrift.protocol.TType.STRUCT) {
+              this.nfe = new NotFoundException();
+              this.nfe.read(iprot);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          default:
+            org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
+        }
+        iprot.readFieldEnd();
+      }
+      iprot.readStructEnd();
+
+      // check for required fields of primitive type, which can't be checked in the validate method
+      validate();
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      oprot.writeStructBegin(STRUCT_DESC);
+
+      if (this.isSetSuccess()) {
+        oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
+        oprot.writeString(this.success);
+        oprot.writeFieldEnd();
+      } else if (this.isSetNfe()) {
+        oprot.writeFieldBegin(NFE_FIELD_DESC);
+        this.nfe.write(oprot);
+        oprot.writeFieldEnd();
+      }
+      oprot.writeFieldStop();
+      oprot.writeStructEnd();
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("move_job_tracker_result(");
       boolean first = true;
 
       sb.append("success:");
