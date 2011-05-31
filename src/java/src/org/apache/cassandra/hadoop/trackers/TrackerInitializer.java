@@ -24,6 +24,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import javax.management.ObjectName;
+
 import org.apache.cassandra.utils.FBUtilities;
 import org.apache.hadoop.mapred.JobTracker;
 import org.apache.hadoop.mapred.TaskTracker;
@@ -45,6 +47,7 @@ public class TrackerInitializer {
     public static Thread jobTrackerThread;
     public static Thread taskTrackerThread;
     private static TaskTracker taskTracker;
+    private static ObjectName taskTrackerMBean;
 
     private static InetAddress lastKnowJobTracker;
 
@@ -148,6 +151,7 @@ public class TrackerInitializer {
     }
 
     public static void stopTaskTracker() throws InterruptedException, IOException {
+        MBeans.unregister(taskTrackerMBean);
         taskTrackerThread.interrupt();
         taskTracker.shutdown();
         taskTrackerThread.join(60000);
@@ -229,7 +233,7 @@ public class TrackerInitializer {
                 while (true) {
                     try {
                         taskTracker = new TaskTracker(new CassandraJobConf());
-                        MBeans.register("TaskTracker", "TaskTrackerInfo", taskTracker);
+                        taskTrackerMBean = MBeans.register("TaskTracker", "TaskTrackerInfo", taskTracker);
                         logger.info("Hadoop Task Tracker Started... ");
                         taskTracker.run();
                         logger.info("TaskTracker has finished");
