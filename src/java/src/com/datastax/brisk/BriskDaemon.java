@@ -23,7 +23,10 @@ import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Properties;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
@@ -43,6 +46,7 @@ public class BriskDaemon extends org.apache.cassandra.service.AbstractCassandraD
 
     private static Logger logger = LoggerFactory.getLogger(BriskDaemon.class);
     private ThriftServer server;
+
 
     public String getReleaseVersion()
     {
@@ -78,13 +82,8 @@ public class BriskDaemon extends org.apache.cassandra.service.AbstractCassandraD
         {
             throw new RuntimeException(e);
         }
-        //Start hadoop trackers...
-        if(TrackerInitializer.isTrackerNode)
-        {
-            logger.info("Starting up Hadoop trackers");
-            TrackerInitializer.init();
-        }
         
+
     }
 
     protected void startServer()
@@ -94,6 +93,15 @@ public class BriskDaemon extends org.apache.cassandra.service.AbstractCassandraD
             server = new ThriftServer(listenAddr, listenPort);
             server.start();
         }
+        
+        
+        //Start hadoop trackers...
+        if(TrackerInitializer.isTrackerNode)
+        {
+            logger.info("Starting up Hadoop trackers");
+            TrackerInitializer.init();
+        }
+
     }
 
     protected void stopServer()
@@ -152,18 +160,11 @@ public class BriskDaemon extends org.apache.cassandra.service.AbstractCassandraD
 
             // Transport factory
             TTransportFactory inTransportFactory, outTransportFactory;
-            //if (DatabaseDescriptor.isThriftFramed())
-            //{
-                int tFramedTransportSize = DatabaseDescriptor.getThriftFramedTransportSize();
-                inTransportFactory  = new TFramedTransport.Factory(tFramedTransportSize);
-                outTransportFactory = new TFramedTransport.Factory(tFramedTransportSize);
-                logger.info("Using TFastFramedTransport with a max frame size of {} bytes.", tFramedTransportSize);
-            //}
-            //else
-            //{
-            //    inTransportFactory = new TTransportFactory();
-            //    outTransportFactory = new TTransportFactory();
-            //}
+
+            int tFramedTransportSize = DatabaseDescriptor.getThriftFramedTransportSize();
+            inTransportFactory  = new TFramedTransport.Factory(tFramedTransportSize);
+            outTransportFactory = new TFramedTransport.Factory(tFramedTransportSize);
+            logger.info("Using TFastFramedTransport with a max frame size of {} bytes.", tFramedTransportSize);
 
             TThreadPoolServer.Args args = new TThreadPoolServer.Args(tServerSocket)
             .minWorkerThreads(DatabaseDescriptor.getRpcMinThreads())
