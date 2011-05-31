@@ -115,15 +115,12 @@ public class TrackerInitializer {
                 // Task trackers are pointing to the right place.
                 return;
             }
+            
+            // The Job Tracker location changed. then update last know location.
+            lastKnowJobTracker = currentJobTrackerAddr;
 
             try {
                 restartTrackers();
-                
-                // The Job Tracker location changed. then update last know location.
-                // I update it here as in case of failure, we make sure that this task will
-                // still be able to pass the previous if to restart again the trackers.
-                lastKnowJobTracker = currentJobTrackerAddr;
-                
             } catch (Exception e) {
                 logger.error("Unable to restart trackers", e);
             }
