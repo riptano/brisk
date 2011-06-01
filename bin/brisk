@@ -96,6 +96,7 @@ case "$1" in
         export PIG_OPTS=$PIG_OPTS" -Dudf.import.list=org.apache.cassandra.hadoop.pig"
         $PIG_HOME/bin/pig $*
         exit $?
+        ;;
     *)
         echo "$0: cassandra [options] | hadoop [options] | hive [options]"
         exit 1
