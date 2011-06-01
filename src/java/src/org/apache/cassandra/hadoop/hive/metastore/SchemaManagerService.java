@@ -327,7 +327,7 @@ public class SchemaManagerService
         }
         try 
         {
-            AbstractType<?> type = DatabaseDescriptor.getComparator(column.getValidation_class());
+            AbstractType<?> type = (AbstractType<?>)Class.forName(column.getValidation_class()).newInstance();
             
             switch (type.getJdbcType())
             {
