@@ -73,4 +73,9 @@ service Brisk extends cassandra.Cassandra
     * 
     */  
     string get_jobtracker_address() throws (1:NotFoundException nfe)
+    
+    /**
+     * Mode the JobTracker to the node specified in the parameter.
+     */
+    string move_job_tracker(1:string new_jobtracker) throws (1:NotFoundException nfe)
 }
