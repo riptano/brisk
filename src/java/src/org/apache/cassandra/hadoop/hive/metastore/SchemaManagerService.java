@@ -1,7 +1,9 @@
 package org.apache.cassandra.hadoop.hive.metastore;
 
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -288,10 +290,13 @@ public class SchemaManagerService
         table.putToParameters("cassandra.ks.name", cfDef.keyspace);
         table.putToParameters("cassandra.cf.name", cfDef.name);
         table.putToParameters("storage_handler", "org.apache.hadoop.hive.cassandra.CassandraStorageHandler");
+        table.setPartitionKeys(new ArrayList<FieldSchema>());
+
         
         StorageDescriptor sd = new StorageDescriptor();
         sd.setInputFormat("org.apache.hadoop.hive.cassandra.input.HiveCassandraStandardColumnInputFormat");
         sd.setOutputFormat("org.apache.hadoop.hive.cassandra.output.HiveCassandraOutputFormat");
+        sd.setParameters(new HashMap<String, String>());
         try {
             sd.setLocation(warehouse.getDefaultTablePath(cfDef.keyspace, cfDef.name).toString());
         } catch (MetaException me) {
@@ -309,6 +314,11 @@ public class SchemaManagerService
                 applyType(sd, column);
             }
         }        
+        else
+        {   
+            // satisfy requirement of at least one col on a table
+            sd.addToCols(new FieldSchema("defaultcol", "string", "Auto-created default column."));
+        }
         table.setSd(sd);
         return table;
     }
@@ -327,7 +337,8 @@ public class SchemaManagerService
         }
         try 
         {
-            AbstractType<?> type = (AbstractType<?>)Class.forName(column.getValidation_class()).newInstance();
+            // assume its a FQ classname if we find a period. Built-in otherwise.
+            AbstractType<?> type = DatabaseDescriptor.getComparator(column.getValidation_class());
             
             switch (type.getJdbcType())
             {
