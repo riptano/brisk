@@ -52,7 +52,7 @@ public class Brisk {
 
     /**
      * returns the hostname:port of the jobtracker control port
-     *  
+     * 
      */
     public String get_jobtracker_address() throws NotFoundException, org.apache.thrift.TException;
 
@@ -62,6 +62,18 @@ public class Brisk {
      * @param new_jobtracker
      */
     public String move_job_tracker(String new_jobtracker) throws NotFoundException, org.apache.thrift.TException;
+
+    /**
+     * Returns the subset of columns specified in SlicePredicate for the rows matching the IndexClause within key range
+     * 
+     * 
+     * @param column_parent
+     * @param index_clause
+     * @param key_range
+     * @param column_predicate
+     * @param consistency_level
+     */
+    public List<org.apache.cassandra.thrift.KeySlice> get_indexed_slices(org.apache.cassandra.thrift.ColumnParent column_parent, org.apache.cassandra.thrift.IndexClause index_clause, org.apache.cassandra.thrift.KeyRange key_range, org.apache.cassandra.thrift.SlicePredicate column_predicate, org.apache.cassandra.thrift.ConsistencyLevel consistency_level) throws InvalidRequestException, UnavailableException, TimedOutException, org.apache.thrift.TException;
 
   }
 
@@ -74,6 +86,8 @@ public class Brisk {
     public void get_jobtracker_address(org.apache.thrift.async.AsyncMethodCallback<AsyncClient.get_jobtracker_address_call> resultHandler) throws org.apache.thrift.TException;
 
     public void move_job_tracker(String new_jobtracker, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.move_job_tracker_call> resultHandler) throws org.apache.thrift.TException;
+
+    public void get_indexed_slices(org.apache.cassandra.thrift.ColumnParent column_parent, org.apache.cassandra.thrift.IndexClause index_clause, org.apache.cassandra.thrift.KeyRange key_range, org.apache.cassandra.thrift.SlicePredicate column_predicate, org.apache.cassandra.thrift.ConsistencyLevel consistency_level, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.get_indexed_slices_call> resultHandler) throws org.apache.thrift.TException;
 
   }
 
@@ -273,6 +287,55 @@ public class Brisk {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "move_job_tracker failed: unknown result");
     }
 
+    public List<org.apache.cassandra.thrift.KeySlice> get_indexed_slices(org.apache.cassandra.thrift.ColumnParent column_parent, org.apache.cassandra.thrift.IndexClause index_clause, org.apache.cassandra.thrift.KeyRange key_range, org.apache.cassandra.thrift.SlicePredicate column_predicate, org.apache.cassandra.thrift.ConsistencyLevel consistency_level) throws InvalidRequestException, UnavailableException, TimedOutException, org.apache.thrift.TException
+    {
+      send_get_indexed_slices(column_parent, index_clause, key_range, column_predicate, consistency_level);
+      return recv_get_indexed_slices();
+    }
+
+    public void send_get_indexed_slices(org.apache.cassandra.thrift.ColumnParent column_parent, org.apache.cassandra.thrift.IndexClause index_clause, org.apache.cassandra.thrift.KeyRange key_range, org.apache.cassandra.thrift.SlicePredicate column_predicate, org.apache.cassandra.thrift.ConsistencyLevel consistency_level) throws org.apache.thrift.TException
+    {
+      oprot_.writeMessageBegin(new org.apache.thrift.protocol.TMessage("get_indexed_slices", org.apache.thrift.protocol.TMessageType.CALL, ++seqid_));
+      get_indexed_slices_args args = new get_indexed_slices_args();
+      args.setColumn_parent(column_parent);
+      args.setIndex_clause(index_clause);
+      args.setKey_range(key_range);
+      args.setColumn_predicate(column_predicate);
+      args.setConsistency_level(consistency_level);
+      args.write(oprot_);
+      oprot_.writeMessageEnd();
+      oprot_.getTransport().flush();
+    }
+
+    public List<org.apache.cassandra.thrift.KeySlice> recv_get_indexed_slices() throws InvalidRequestException, UnavailableException, TimedOutException, org.apache.thrift.TException
+    {
+      org.apache.thrift.protocol.TMessage msg = iprot_.readMessageBegin();
+      if (msg.type == org.apache.thrift.protocol.TMessageType.EXCEPTION) {
+        org.apache.thrift.TApplicationException x = org.apache.thrift.TApplicationException.read(iprot_);
+        iprot_.readMessageEnd();
+        throw x;
+      }
+      if (msg.seqid != seqid_) {
+        throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.BAD_SEQUENCE_ID, "get_indexed_slices failed: out of sequence response");
+      }
+      get_indexed_slices_result result = new get_indexed_slices_result();
+      result.read(iprot_);
+      iprot_.readMessageEnd();
+      if (result.isSetSuccess()) {
+        return result.success;
+      }
+      if (result.ire != null) {
+        throw result.ire;
+      }
+      if (result.ue != null) {
+        throw result.ue;
+      }
+      if (result.te != null) {
+        throw result.te;
+      }
+      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "get_indexed_slices failed: unknown result");
+    }
+
   }
   public static class AsyncClient extends org.apache.cassandra.thrift.Cassandra.AsyncClient implements AsyncIface {
     public static class Factory implements org.apache.thrift.async.TAsyncClientFactory<AsyncClient> {
@@ -431,6 +494,50 @@ public class Brisk {
       }
     }
 
+    public void get_indexed_slices(org.apache.cassandra.thrift.ColumnParent column_parent, org.apache.cassandra.thrift.IndexClause index_clause, org.apache.cassandra.thrift.KeyRange key_range, org.apache.cassandra.thrift.SlicePredicate column_predicate, org.apache.cassandra.thrift.ConsistencyLevel consistency_level, org.apache.thrift.async.AsyncMethodCallback<get_indexed_slices_call> resultHandler) throws org.apache.thrift.TException {
+      checkReady();
+      get_indexed_slices_call method_call = new get_indexed_slices_call(column_parent, index_clause, key_range, column_predicate, consistency_level, resultHandler, this, protocolFactory, transport);
+      this.currentMethod = method_call;
+      manager.call(method_call);
+    }
+
+    public static class get_indexed_slices_call extends org.apache.thrift.async.TAsyncMethodCall {
+      private org.apache.cassandra.thrift.ColumnParent column_parent;
+      private org.apache.cassandra.thrift.IndexClause index_clause;
+      private org.apache.cassandra.thrift.KeyRange key_range;
+      private org.apache.cassandra.thrift.SlicePredicate column_predicate;
+      private org.apache.cassandra.thrift.ConsistencyLevel consistency_level;
+      public get_indexed_slices_call(org.apache.cassandra.thrift.ColumnParent column_parent, org.apache.cassandra.thrift.IndexClause index_clause, org.apache.cassandra.thrift.KeyRange key_range, org.apache.cassandra.thrift.SlicePredicate column_predicate, org.apache.cassandra.thrift.ConsistencyLevel consistency_level, org.apache.thrift.async.AsyncMethodCallback<get_indexed_slices_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+        this.column_parent = column_parent;
+        this.index_clause = index_clause;
+        this.key_range = key_range;
+        this.column_predicate = column_predicate;
+        this.consistency_level = consistency_level;
+      }
+
+      public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("get_indexed_slices", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        get_indexed_slices_args args = new get_indexed_slices_args();
+        args.setColumn_parent(column_parent);
+        args.setIndex_clause(index_clause);
+        args.setKey_range(key_range);
+        args.setColumn_predicate(column_predicate);
+        args.setConsistency_level(consistency_level);
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public List<org.apache.cassandra.thrift.KeySlice> getResult() throws InvalidRequestException, UnavailableException, TimedOutException, org.apache.thrift.TException {
+        if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
+          throw new IllegalStateException("Method call not finished!");
+        }
+        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
+        org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        return (new Client(prot)).recv_get_indexed_slices();
+      }
+    }
+
   }
 
   public static class Processor extends org.apache.cassandra.thrift.Cassandra.Processor implements org.apache.thrift.TProcessor {
@@ -443,6 +550,7 @@ public class Brisk {
       processMap_.put("get_cfs_sblock", new get_cfs_sblock());
       processMap_.put("get_jobtracker_address", new get_jobtracker_address());
       processMap_.put("move_job_tracker", new move_job_tracker());
+      processMap_.put("get_indexed_slices", new get_indexed_slices());
     }
 
     private Iface iface_;
@@ -620,6 +728,48 @@ public class Brisk {
           return;
         }
         oprot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("move_job_tracker", org.apache.thrift.protocol.TMessageType.REPLY, seqid));
+        result.write(oprot);
+        oprot.writeMessageEnd();
+        oprot.getTransport().flush();
+      }
+
+    }
+
+    private class get_indexed_slices implements ProcessFunction {
+      public void process(int seqid, org.apache.thrift.protocol.TProtocol iprot, org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException
+      {
+        get_indexed_slices_args args = new get_indexed_slices_args();
+        try {
+          args.read(iprot);
+        } catch (org.apache.thrift.protocol.TProtocolException e) {
+          iprot.readMessageEnd();
+          org.apache.thrift.TApplicationException x = new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.PROTOCOL_ERROR, e.getMessage());
+          oprot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("get_indexed_slices", org.apache.thrift.protocol.TMessageType.EXCEPTION, seqid));
+          x.write(oprot);
+          oprot.writeMessageEnd();
+          oprot.getTransport().flush();
+          return;
+        }
+        iprot.readMessageEnd();
+        get_indexed_slices_result result = new get_indexed_slices_result();
+        try {
+          result.success = iface_.get_indexed_slices(args.column_parent, args.index_clause, args.key_range, args.column_predicate, args.consistency_level);
+        } catch (InvalidRequestException ire) {
+          result.ire = ire;
+        } catch (UnavailableException ue) {
+          result.ue = ue;
+        } catch (TimedOutException te) {
+          result.te = te;
+        } catch (Throwable th) {
+          LOGGER.error("Internal error processing get_indexed_slices", th);
+          org.apache.thrift.TApplicationException x = new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.INTERNAL_ERROR, "Internal error processing get_indexed_slices");
+          oprot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("get_indexed_slices", org.apache.thrift.protocol.TMessageType.EXCEPTION, seqid));
+          x.write(oprot);
+          oprot.writeMessageEnd();
+          oprot.getTransport().flush();
+          return;
+        }
+        oprot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("get_indexed_slices", org.apache.thrift.protocol.TMessageType.REPLY, seqid));
         result.write(oprot);
         oprot.writeMessageEnd();
         oprot.getTransport().flush();
@@ -4400,6 +4550,1347 @@ public class Brisk {
         sb.append("null");
       } else {
         sb.append(this.nfe);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+  }
+
+  public static class get_indexed_slices_args implements org.apache.thrift.TBase<get_indexed_slices_args, get_indexed_slices_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("get_indexed_slices_args");
+
+    private static final org.apache.thrift.protocol.TField COLUMN_PARENT_FIELD_DESC = new org.apache.thrift.protocol.TField("column_parent", org.apache.thrift.protocol.TType.STRUCT, (short)1);
+    private static final org.apache.thrift.protocol.TField INDEX_CLAUSE_FIELD_DESC = new org.apache.thrift.protocol.TField("index_clause", org.apache.thrift.protocol.TType.STRUCT, (short)2);
+    private static final org.apache.thrift.protocol.TField KEY_RANGE_FIELD_DESC = new org.apache.thrift.protocol.TField("key_range", org.apache.thrift.protocol.TType.STRUCT, (short)3);
+    private static final org.apache.thrift.protocol.TField COLUMN_PREDICATE_FIELD_DESC = new org.apache.thrift.protocol.TField("column_predicate", org.apache.thrift.protocol.TType.STRUCT, (short)4);
+    private static final org.apache.thrift.protocol.TField CONSISTENCY_LEVEL_FIELD_DESC = new org.apache.thrift.protocol.TField("consistency_level", org.apache.thrift.protocol.TType.I32, (short)5);
+
+    public org.apache.cassandra.thrift.ColumnParent column_parent;
+    public org.apache.cassandra.thrift.IndexClause index_clause;
+    public org.apache.cassandra.thrift.KeyRange key_range;
+    public org.apache.cassandra.thrift.SlicePredicate column_predicate;
+    /**
+     * 
+     * @see org.apache.cassandra.thrift.ConsistencyLevel
+     */
+    public org.apache.cassandra.thrift.ConsistencyLevel consistency_level;
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+      COLUMN_PARENT((short)1, "column_parent"),
+      INDEX_CLAUSE((short)2, "index_clause"),
+      KEY_RANGE((short)3, "key_range"),
+      COLUMN_PREDICATE((short)4, "column_predicate"),
+      /**
+       * 
+       * @see org.apache.cassandra.thrift.ConsistencyLevel
+       */
+      CONSISTENCY_LEVEL((short)5, "consistency_level");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 1: // COLUMN_PARENT
+            return COLUMN_PARENT;
+          case 2: // INDEX_CLAUSE
+            return INDEX_CLAUSE;
+          case 3: // KEY_RANGE
+            return KEY_RANGE;
+          case 4: // COLUMN_PREDICATE
+            return COLUMN_PREDICATE;
+          case 5: // CONSISTENCY_LEVEL
+            return CONSISTENCY_LEVEL;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+
+    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.COLUMN_PARENT, new org.apache.thrift.meta_data.FieldMetaData("column_parent", org.apache.thrift.TFieldRequirementType.REQUIRED, 
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, org.apache.cassandra.thrift.ColumnParent.class)));
+      tmpMap.put(_Fields.INDEX_CLAUSE, new org.apache.thrift.meta_data.FieldMetaData("index_clause", org.apache.thrift.TFieldRequirementType.REQUIRED, 
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, org.apache.cassandra.thrift.IndexClause.class)));
+      tmpMap.put(_Fields.KEY_RANGE, new org.apache.thrift.meta_data.FieldMetaData("key_range", org.apache.thrift.TFieldRequirementType.REQUIRED, 
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, org.apache.cassandra.thrift.KeyRange.class)));
+      tmpMap.put(_Fields.COLUMN_PREDICATE, new org.apache.thrift.meta_data.FieldMetaData("column_predicate", org.apache.thrift.TFieldRequirementType.REQUIRED, 
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, org.apache.cassandra.thrift.SlicePredicate.class)));
+      tmpMap.put(_Fields.CONSISTENCY_LEVEL, new org.apache.thrift.meta_data.FieldMetaData("consistency_level", org.apache.thrift.TFieldRequirementType.REQUIRED, 
+          new org.apache.thrift.meta_data.EnumMetaData(org.apache.thrift.protocol.TType.ENUM, org.apache.cassandra.thrift.ConsistencyLevel.class)));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(get_indexed_slices_args.class, metaDataMap);
+    }
+
+    public get_indexed_slices_args() {
+      this.consistency_level = org.apache.cassandra.thrift.ConsistencyLevel.ONE;
+
+    }
+
+    public get_indexed_slices_args(
+      org.apache.cassandra.thrift.ColumnParent column_parent,
+      org.apache.cassandra.thrift.IndexClause index_clause,
+      org.apache.cassandra.thrift.KeyRange key_range,
+      org.apache.cassandra.thrift.SlicePredicate column_predicate,
+      org.apache.cassandra.thrift.ConsistencyLevel consistency_level)
+    {
+      this();
+      this.column_parent = column_parent;
+      this.index_clause = index_clause;
+      this.key_range = key_range;
+      this.column_predicate = column_predicate;
+      this.consistency_level = consistency_level;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public get_indexed_slices_args(get_indexed_slices_args other) {
+      if (other.isSetColumn_parent()) {
+        this.column_parent = new org.apache.cassandra.thrift.ColumnParent(other.column_parent);
+      }
+      if (other.isSetIndex_clause()) {
+        this.index_clause = new org.apache.cassandra.thrift.IndexClause(other.index_clause);
+      }
+      if (other.isSetKey_range()) {
+        this.key_range = new org.apache.cassandra.thrift.KeyRange(other.key_range);
+      }
+      if (other.isSetColumn_predicate()) {
+        this.column_predicate = new org.apache.cassandra.thrift.SlicePredicate(other.column_predicate);
+      }
+      if (other.isSetConsistency_level()) {
+        this.consistency_level = other.consistency_level;
+      }
+    }
+
+    public get_indexed_slices_args deepCopy() {
+      return new get_indexed_slices_args(this);
+    }
+
+    @Override
+    public void clear() {
+      this.column_parent = null;
+      this.index_clause = null;
+      this.key_range = null;
+      this.column_predicate = null;
+      this.consistency_level = org.apache.cassandra.thrift.ConsistencyLevel.ONE;
+
+    }
+
+    public org.apache.cassandra.thrift.ColumnParent getColumn_parent() {
+      return this.column_parent;
+    }
+
+    public get_indexed_slices_args setColumn_parent(org.apache.cassandra.thrift.ColumnParent column_parent) {
+      this.column_parent = column_parent;
+      return this;
+    }
+
+    public void unsetColumn_parent() {
+      this.column_parent = null;
+    }
+
+    /** Returns true if field column_parent is set (has been assigned a value) and false otherwise */
+    public boolean isSetColumn_parent() {
+      return this.column_parent != null;
+    }
+
+    public void setColumn_parentIsSet(boolean value) {
+      if (!value) {
+        this.column_parent = null;
+      }
+    }
+
+    public org.apache.cassandra.thrift.IndexClause getIndex_clause() {
+      return this.index_clause;
+    }
+
+    public get_indexed_slices_args setIndex_clause(org.apache.cassandra.thrift.IndexClause index_clause) {
+      this.index_clause = index_clause;
+      return this;
+    }
+
+    public void unsetIndex_clause() {
+      this.index_clause = null;
+    }
+
+    /** Returns true if field index_clause is set (has been assigned a value) and false otherwise */
+    public boolean isSetIndex_clause() {
+      return this.index_clause != null;
+    }
+
+    public void setIndex_clauseIsSet(boolean value) {
+      if (!value) {
+        this.index_clause = null;
+      }
+    }
+
+    public org.apache.cassandra.thrift.KeyRange getKey_range() {
+      return this.key_range;
+    }
+
+    public get_indexed_slices_args setKey_range(org.apache.cassandra.thrift.KeyRange key_range) {
+      this.key_range = key_range;
+      return this;
+    }
+
+    public void unsetKey_range() {
+      this.key_range = null;
+    }
+
+    /** Returns true if field key_range is set (has been assigned a value) and false otherwise */
+    public boolean isSetKey_range() {
+      return this.key_range != null;
+    }
+
+    public void setKey_rangeIsSet(boolean value) {
+      if (!value) {
+        this.key_range = null;
+      }
+    }
+
+    public org.apache.cassandra.thrift.SlicePredicate getColumn_predicate() {
+      return this.column_predicate;
+    }
+
+    public get_indexed_slices_args setColumn_predicate(org.apache.cassandra.thrift.SlicePredicate column_predicate) {
+      this.column_predicate = column_predicate;
+      return this;
+    }
+
+    public void unsetColumn_predicate() {
+      this.column_predicate = null;
+    }
+
+    /** Returns true if field column_predicate is set (has been assigned a value) and false otherwise */
+    public boolean isSetColumn_predicate() {
+      return this.column_predicate != null;
+    }
+
+    public void setColumn_predicateIsSet(boolean value) {
+      if (!value) {
+        this.column_predicate = null;
+      }
+    }
+
+    /**
+     * 
+     * @see org.apache.cassandra.thrift.ConsistencyLevel
+     */
+    public org.apache.cassandra.thrift.ConsistencyLevel getConsistency_level() {
+      return this.consistency_level;
+    }
+
+    /**
+     * 
+     * @see org.apache.cassandra.thrift.ConsistencyLevel
+     */
+    public get_indexed_slices_args setConsistency_level(org.apache.cassandra.thrift.ConsistencyLevel consistency_level) {
+      this.consistency_level = consistency_level;
+      return this;
+    }
+
+    public void unsetConsistency_level() {
+      this.consistency_level = null;
+    }
+
+    /** Returns true if field consistency_level is set (has been assigned a value) and false otherwise */
+    public boolean isSetConsistency_level() {
+      return this.consistency_level != null;
+    }
+
+    public void setConsistency_levelIsSet(boolean value) {
+      if (!value) {
+        this.consistency_level = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case COLUMN_PARENT:
+        if (value == null) {
+          unsetColumn_parent();
+        } else {
+          setColumn_parent((org.apache.cassandra.thrift.ColumnParent)value);
+        }
+        break;
+
+      case INDEX_CLAUSE:
+        if (value == null) {
+          unsetIndex_clause();
+        } else {
+          setIndex_clause((org.apache.cassandra.thrift.IndexClause)value);
+        }
+        break;
+
+      case KEY_RANGE:
+        if (value == null) {
+          unsetKey_range();
+        } else {
+          setKey_range((org.apache.cassandra.thrift.KeyRange)value);
+        }
+        break;
+
+      case COLUMN_PREDICATE:
+        if (value == null) {
+          unsetColumn_predicate();
+        } else {
+          setColumn_predicate((org.apache.cassandra.thrift.SlicePredicate)value);
+        }
+        break;
+
+      case CONSISTENCY_LEVEL:
+        if (value == null) {
+          unsetConsistency_level();
+        } else {
+          setConsistency_level((org.apache.cassandra.thrift.ConsistencyLevel)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case COLUMN_PARENT:
+        return getColumn_parent();
+
+      case INDEX_CLAUSE:
+        return getIndex_clause();
+
+      case KEY_RANGE:
+        return getKey_range();
+
+      case COLUMN_PREDICATE:
+        return getColumn_predicate();
+
+      case CONSISTENCY_LEVEL:
+        return getConsistency_level();
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case COLUMN_PARENT:
+        return isSetColumn_parent();
+      case INDEX_CLAUSE:
+        return isSetIndex_clause();
+      case KEY_RANGE:
+        return isSetKey_range();
+      case COLUMN_PREDICATE:
+        return isSetColumn_predicate();
+      case CONSISTENCY_LEVEL:
+        return isSetConsistency_level();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof get_indexed_slices_args)
+        return this.equals((get_indexed_slices_args)that);
+      return false;
+    }
+
+    public boolean equals(get_indexed_slices_args that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_column_parent = true && this.isSetColumn_parent();
+      boolean that_present_column_parent = true && that.isSetColumn_parent();
+      if (this_present_column_parent || that_present_column_parent) {
+        if (!(this_present_column_parent && that_present_column_parent))
+          return false;
+        if (!this.column_parent.equals(that.column_parent))
+          return false;
+      }
+
+      boolean this_present_index_clause = true && this.isSetIndex_clause();
+      boolean that_present_index_clause = true && that.isSetIndex_clause();
+      if (this_present_index_clause || that_present_index_clause) {
+        if (!(this_present_index_clause && that_present_index_clause))
+          return false;
+        if (!this.index_clause.equals(that.index_clause))
+          return false;
+      }
+
+      boolean this_present_key_range = true && this.isSetKey_range();
+      boolean that_present_key_range = true && that.isSetKey_range();
+      if (this_present_key_range || that_present_key_range) {
+        if (!(this_present_key_range && that_present_key_range))
+          return false;
+        if (!this.key_range.equals(that.key_range))
+          return false;
+      }
+
+      boolean this_present_column_predicate = true && this.isSetColumn_predicate();
+      boolean that_present_column_predicate = true && that.isSetColumn_predicate();
+      if (this_present_column_predicate || that_present_column_predicate) {
+        if (!(this_present_column_predicate && that_present_column_predicate))
+          return false;
+        if (!this.column_predicate.equals(that.column_predicate))
+          return false;
+      }
+
+      boolean this_present_consistency_level = true && this.isSetConsistency_level();
+      boolean that_present_consistency_level = true && that.isSetConsistency_level();
+      if (this_present_consistency_level || that_present_consistency_level) {
+        if (!(this_present_consistency_level && that_present_consistency_level))
+          return false;
+        if (!this.consistency_level.equals(that.consistency_level))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      HashCodeBuilder builder = new HashCodeBuilder();
+
+      boolean present_column_parent = true && (isSetColumn_parent());
+      builder.append(present_column_parent);
+      if (present_column_parent)
+        builder.append(column_parent);
+
+      boolean present_index_clause = true && (isSetIndex_clause());
+      builder.append(present_index_clause);
+      if (present_index_clause)
+        builder.append(index_clause);
+
+      boolean present_key_range = true && (isSetKey_range());
+      builder.append(present_key_range);
+      if (present_key_range)
+        builder.append(key_range);
+
+      boolean present_column_predicate = true && (isSetColumn_predicate());
+      builder.append(present_column_predicate);
+      if (present_column_predicate)
+        builder.append(column_predicate);
+
+      boolean present_consistency_level = true && (isSetConsistency_level());
+      builder.append(present_consistency_level);
+      if (present_consistency_level)
+        builder.append(consistency_level.getValue());
+
+      return builder.toHashCode();
+    }
+
+    public int compareTo(get_indexed_slices_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      get_indexed_slices_args typedOther = (get_indexed_slices_args)other;
+
+      lastComparison = Boolean.valueOf(isSetColumn_parent()).compareTo(typedOther.isSetColumn_parent());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetColumn_parent()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.column_parent, typedOther.column_parent);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetIndex_clause()).compareTo(typedOther.isSetIndex_clause());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetIndex_clause()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.index_clause, typedOther.index_clause);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetKey_range()).compareTo(typedOther.isSetKey_range());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetKey_range()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.key_range, typedOther.key_range);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetColumn_predicate()).compareTo(typedOther.isSetColumn_predicate());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetColumn_predicate()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.column_predicate, typedOther.column_predicate);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetConsistency_level()).compareTo(typedOther.isSetConsistency_level());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetConsistency_level()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.consistency_level, typedOther.consistency_level);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      org.apache.thrift.protocol.TField field;
+      iprot.readStructBegin();
+      while (true)
+      {
+        field = iprot.readFieldBegin();
+        if (field.type == org.apache.thrift.protocol.TType.STOP) { 
+          break;
+        }
+        switch (field.id) {
+          case 1: // COLUMN_PARENT
+            if (field.type == org.apache.thrift.protocol.TType.STRUCT) {
+              this.column_parent = new org.apache.cassandra.thrift.ColumnParent();
+              this.column_parent.read(iprot);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          case 2: // INDEX_CLAUSE
+            if (field.type == org.apache.thrift.protocol.TType.STRUCT) {
+              this.index_clause = new org.apache.cassandra.thrift.IndexClause();
+              this.index_clause.read(iprot);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          case 3: // KEY_RANGE
+            if (field.type == org.apache.thrift.protocol.TType.STRUCT) {
+              this.key_range = new org.apache.cassandra.thrift.KeyRange();
+              this.key_range.read(iprot);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          case 4: // COLUMN_PREDICATE
+            if (field.type == org.apache.thrift.protocol.TType.STRUCT) {
+              this.column_predicate = new org.apache.cassandra.thrift.SlicePredicate();
+              this.column_predicate.read(iprot);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          case 5: // CONSISTENCY_LEVEL
+            if (field.type == org.apache.thrift.protocol.TType.I32) {
+              this.consistency_level = org.apache.cassandra.thrift.ConsistencyLevel.findByValue(iprot.readI32());
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          default:
+            org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
+        }
+        iprot.readFieldEnd();
+      }
+      iprot.readStructEnd();
+
+      // check for required fields of primitive type, which can't be checked in the validate method
+      validate();
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      validate();
+
+      oprot.writeStructBegin(STRUCT_DESC);
+      if (this.column_parent != null) {
+        oprot.writeFieldBegin(COLUMN_PARENT_FIELD_DESC);
+        this.column_parent.write(oprot);
+        oprot.writeFieldEnd();
+      }
+      if (this.index_clause != null) {
+        oprot.writeFieldBegin(INDEX_CLAUSE_FIELD_DESC);
+        this.index_clause.write(oprot);
+        oprot.writeFieldEnd();
+      }
+      if (this.key_range != null) {
+        oprot.writeFieldBegin(KEY_RANGE_FIELD_DESC);
+        this.key_range.write(oprot);
+        oprot.writeFieldEnd();
+      }
+      if (this.column_predicate != null) {
+        oprot.writeFieldBegin(COLUMN_PREDICATE_FIELD_DESC);
+        this.column_predicate.write(oprot);
+        oprot.writeFieldEnd();
+      }
+      if (this.consistency_level != null) {
+        oprot.writeFieldBegin(CONSISTENCY_LEVEL_FIELD_DESC);
+        oprot.writeI32(this.consistency_level.getValue());
+        oprot.writeFieldEnd();
+      }
+      oprot.writeFieldStop();
+      oprot.writeStructEnd();
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("get_indexed_slices_args(");
+      boolean first = true;
+
+      sb.append("column_parent:");
+      if (this.column_parent == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.column_parent);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("index_clause:");
+      if (this.index_clause == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.index_clause);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("key_range:");
+      if (this.key_range == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.key_range);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("column_predicate:");
+      if (this.column_predicate == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.column_predicate);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("consistency_level:");
+      if (this.consistency_level == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.consistency_level);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+      if (column_parent == null) {
+        throw new org.apache.thrift.protocol.TProtocolException("Required field 'column_parent' was not present! Struct: " + toString());
+      }
+      if (index_clause == null) {
+        throw new org.apache.thrift.protocol.TProtocolException("Required field 'index_clause' was not present! Struct: " + toString());
+      }
+      if (key_range == null) {
+        throw new org.apache.thrift.protocol.TProtocolException("Required field 'key_range' was not present! Struct: " + toString());
+      }
+      if (column_predicate == null) {
+        throw new org.apache.thrift.protocol.TProtocolException("Required field 'column_predicate' was not present! Struct: " + toString());
+      }
+      if (consistency_level == null) {
+        throw new org.apache.thrift.protocol.TProtocolException("Required field 'consistency_level' was not present! Struct: " + toString());
+      }
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+  }
+
+  public static class get_indexed_slices_result implements org.apache.thrift.TBase<get_indexed_slices_result, get_indexed_slices_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("get_indexed_slices_result");
+
+    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.LIST, (short)0);
+    private static final org.apache.thrift.protocol.TField IRE_FIELD_DESC = new org.apache.thrift.protocol.TField("ire", org.apache.thrift.protocol.TType.STRUCT, (short)1);
+    private static final org.apache.thrift.protocol.TField UE_FIELD_DESC = new org.apache.thrift.protocol.TField("ue", org.apache.thrift.protocol.TType.STRUCT, (short)2);
+    private static final org.apache.thrift.protocol.TField TE_FIELD_DESC = new org.apache.thrift.protocol.TField("te", org.apache.thrift.protocol.TType.STRUCT, (short)3);
+
+    public List<org.apache.cassandra.thrift.KeySlice> success;
+    public InvalidRequestException ire;
+    public UnavailableException ue;
+    public TimedOutException te;
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+      SUCCESS((short)0, "success"),
+      IRE((short)1, "ire"),
+      UE((short)2, "ue"),
+      TE((short)3, "te");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 0: // SUCCESS
+            return SUCCESS;
+          case 1: // IRE
+            return IRE;
+          case 2: // UE
+            return UE;
+          case 3: // TE
+            return TE;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+
+    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
+              new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, org.apache.cassandra.thrift.KeySlice.class))));
+      tmpMap.put(_Fields.IRE, new org.apache.thrift.meta_data.FieldMetaData("ire", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRUCT)));
+      tmpMap.put(_Fields.UE, new org.apache.thrift.meta_data.FieldMetaData("ue", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRUCT)));
+      tmpMap.put(_Fields.TE, new org.apache.thrift.meta_data.FieldMetaData("te", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRUCT)));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(get_indexed_slices_result.class, metaDataMap);
+    }
+
+    public get_indexed_slices_result() {
+    }
+
+    public get_indexed_slices_result(
+      List<org.apache.cassandra.thrift.KeySlice> success,
+      InvalidRequestException ire,
+      UnavailableException ue,
+      TimedOutException te)
+    {
+      this();
+      this.success = success;
+      this.ire = ire;
+      this.ue = ue;
+      this.te = te;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public get_indexed_slices_result(get_indexed_slices_result other) {
+      if (other.isSetSuccess()) {
+        List<org.apache.cassandra.thrift.KeySlice> __this__success = new ArrayList<org.apache.cassandra.thrift.KeySlice>();
+        for (org.apache.cassandra.thrift.KeySlice other_element : other.success) {
+          __this__success.add(new org.apache.cassandra.thrift.KeySlice(other_element));
+        }
+        this.success = __this__success;
+      }
+      if (other.isSetIre()) {
+        this.ire = new InvalidRequestException(other.ire);
+      }
+      if (other.isSetUe()) {
+        this.ue = new UnavailableException(other.ue);
+      }
+      if (other.isSetTe()) {
+        this.te = new TimedOutException(other.te);
+      }
+    }
+
+    public get_indexed_slices_result deepCopy() {
+      return new get_indexed_slices_result(this);
+    }
+
+    @Override
+    public void clear() {
+      this.success = null;
+      this.ire = null;
+      this.ue = null;
+      this.te = null;
+    }
+
+    public int getSuccessSize() {
+      return (this.success == null) ? 0 : this.success.size();
+    }
+
+    public java.util.Iterator<org.apache.cassandra.thrift.KeySlice> getSuccessIterator() {
+      return (this.success == null) ? null : this.success.iterator();
+    }
+
+    public void addToSuccess(org.apache.cassandra.thrift.KeySlice elem) {
+      if (this.success == null) {
+        this.success = new ArrayList<org.apache.cassandra.thrift.KeySlice>();
+      }
+      this.success.add(elem);
+    }
+
+    public List<org.apache.cassandra.thrift.KeySlice> getSuccess() {
+      return this.success;
+    }
+
+    public get_indexed_slices_result setSuccess(List<org.apache.cassandra.thrift.KeySlice> success) {
+      this.success = success;
+      return this;
+    }
+
+    public void unsetSuccess() {
+      this.success = null;
+    }
+
+    /** Returns true if field success is set (has been assigned a value) and false otherwise */
+    public boolean isSetSuccess() {
+      return this.success != null;
+    }
+
+    public void setSuccessIsSet(boolean value) {
+      if (!value) {
+        this.success = null;
+      }
+    }
+
+    public InvalidRequestException getIre() {
+      return this.ire;
+    }
+
+    public get_indexed_slices_result setIre(InvalidRequestException ire) {
+      this.ire = ire;
+      return this;
+    }
+
+    public void unsetIre() {
+      this.ire = null;
+    }
+
+    /** Returns true if field ire is set (has been assigned a value) and false otherwise */
+    public boolean isSetIre() {
+      return this.ire != null;
+    }
+
+    public void setIreIsSet(boolean value) {
+      if (!value) {
+        this.ire = null;
+      }
+    }
+
+    public UnavailableException getUe() {
+      return this.ue;
+    }
+
+    public get_indexed_slices_result setUe(UnavailableException ue) {
+      this.ue = ue;
+      return this;
+    }
+
+    public void unsetUe() {
+      this.ue = null;
+    }
+
+    /** Returns true if field ue is set (has been assigned a value) and false otherwise */
+    public boolean isSetUe() {
+      return this.ue != null;
+    }
+
+    public void setUeIsSet(boolean value) {
+      if (!value) {
+        this.ue = null;
+      }
+    }
+
+    public TimedOutException getTe() {
+      return this.te;
+    }
+
+    public get_indexed_slices_result setTe(TimedOutException te) {
+      this.te = te;
+      return this;
+    }
+
+    public void unsetTe() {
+      this.te = null;
+    }
+
+    /** Returns true if field te is set (has been assigned a value) and false otherwise */
+    public boolean isSetTe() {
+      return this.te != null;
+    }
+
+    public void setTeIsSet(boolean value) {
+      if (!value) {
+        this.te = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case SUCCESS:
+        if (value == null) {
+          unsetSuccess();
+        } else {
+          setSuccess((List<org.apache.cassandra.thrift.KeySlice>)value);
+        }
+        break;
+
+      case IRE:
+        if (value == null) {
+          unsetIre();
+        } else {
+          setIre((InvalidRequestException)value);
+        }
+        break;
+
+      case UE:
+        if (value == null) {
+          unsetUe();
+        } else {
+          setUe((UnavailableException)value);
+        }
+        break;
+
+      case TE:
+        if (value == null) {
+          unsetTe();
+        } else {
+          setTe((TimedOutException)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case SUCCESS:
+        return getSuccess();
+
+      case IRE:
+        return getIre();
+
+      case UE:
+        return getUe();
+
+      case TE:
+        return getTe();
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case SUCCESS:
+        return isSetSuccess();
+      case IRE:
+        return isSetIre();
+      case UE:
+        return isSetUe();
+      case TE:
+        return isSetTe();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof get_indexed_slices_result)
+        return this.equals((get_indexed_slices_result)that);
+      return false;
+    }
+
+    public boolean equals(get_indexed_slices_result that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_success = true && this.isSetSuccess();
+      boolean that_present_success = true && that.isSetSuccess();
+      if (this_present_success || that_present_success) {
+        if (!(this_present_success && that_present_success))
+          return false;
+        if (!this.success.equals(that.success))
+          return false;
+      }
+
+      boolean this_present_ire = true && this.isSetIre();
+      boolean that_present_ire = true && that.isSetIre();
+      if (this_present_ire || that_present_ire) {
+        if (!(this_present_ire && that_present_ire))
+          return false;
+        if (!this.ire.equals(that.ire))
+          return false;
+      }
+
+      boolean this_present_ue = true && this.isSetUe();
+      boolean that_present_ue = true && that.isSetUe();
+      if (this_present_ue || that_present_ue) {
+        if (!(this_present_ue && that_present_ue))
+          return false;
+        if (!this.ue.equals(that.ue))
+          return false;
+      }
+
+      boolean this_present_te = true && this.isSetTe();
+      boolean that_present_te = true && that.isSetTe();
+      if (this_present_te || that_present_te) {
+        if (!(this_present_te && that_present_te))
+          return false;
+        if (!this.te.equals(that.te))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      HashCodeBuilder builder = new HashCodeBuilder();
+
+      boolean present_success = true && (isSetSuccess());
+      builder.append(present_success);
+      if (present_success)
+        builder.append(success);
+
+      boolean present_ire = true && (isSetIre());
+      builder.append(present_ire);
+      if (present_ire)
+        builder.append(ire);
+
+      boolean present_ue = true && (isSetUe());
+      builder.append(present_ue);
+      if (present_ue)
+        builder.append(ue);
+
+      boolean present_te = true && (isSetTe());
+      builder.append(present_te);
+      if (present_te)
+        builder.append(te);
+
+      return builder.toHashCode();
+    }
+
+    public int compareTo(get_indexed_slices_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      get_indexed_slices_result typedOther = (get_indexed_slices_result)other;
+
+      lastComparison = Boolean.valueOf(isSetSuccess()).compareTo(typedOther.isSetSuccess());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetSuccess()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.success, typedOther.success);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetIre()).compareTo(typedOther.isSetIre());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetIre()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.ire, typedOther.ire);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetUe()).compareTo(typedOther.isSetUe());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetUe()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.ue, typedOther.ue);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetTe()).compareTo(typedOther.isSetTe());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetTe()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.te, typedOther.te);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      org.apache.thrift.protocol.TField field;
+      iprot.readStructBegin();
+      while (true)
+      {
+        field = iprot.readFieldBegin();
+        if (field.type == org.apache.thrift.protocol.TType.STOP) { 
+          break;
+        }
+        switch (field.id) {
+          case 0: // SUCCESS
+            if (field.type == org.apache.thrift.protocol.TType.LIST) {
+              {
+                org.apache.thrift.protocol.TList _list12 = iprot.readListBegin();
+                this.success = new ArrayList<org.apache.cassandra.thrift.KeySlice>(_list12.size);
+                for (int _i13 = 0; _i13 < _list12.size; ++_i13)
+                {
+                  org.apache.cassandra.thrift.KeySlice _elem14;
+                  _elem14 = new org.apache.cassandra.thrift.KeySlice();
+                  _elem14.read(iprot);
+                  this.success.add(_elem14);
+                }
+                iprot.readListEnd();
+              }
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          case 1: // IRE
+            if (field.type == org.apache.thrift.protocol.TType.STRUCT) {
+              this.ire = new InvalidRequestException();
+              this.ire.read(iprot);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          case 2: // UE
+            if (field.type == org.apache.thrift.protocol.TType.STRUCT) {
+              this.ue = new UnavailableException();
+              this.ue.read(iprot);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          case 3: // TE
+            if (field.type == org.apache.thrift.protocol.TType.STRUCT) {
+              this.te = new TimedOutException();
+              this.te.read(iprot);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          default:
+            org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
+        }
+        iprot.readFieldEnd();
+      }
+      iprot.readStructEnd();
+
+      // check for required fields of primitive type, which can't be checked in the validate method
+      validate();
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      oprot.writeStructBegin(STRUCT_DESC);
+
+      if (this.isSetSuccess()) {
+        oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
+        {
+          oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, this.success.size()));
+          for (org.apache.cassandra.thrift.KeySlice _iter15 : this.success)
+          {
+            _iter15.write(oprot);
+          }
+          oprot.writeListEnd();
+        }
+        oprot.writeFieldEnd();
+      } else if (this.isSetIre()) {
+        oprot.writeFieldBegin(IRE_FIELD_DESC);
+        this.ire.write(oprot);
+        oprot.writeFieldEnd();
+      } else if (this.isSetUe()) {
+        oprot.writeFieldBegin(UE_FIELD_DESC);
+        this.ue.write(oprot);
+        oprot.writeFieldEnd();
+      } else if (this.isSetTe()) {
+        oprot.writeFieldBegin(TE_FIELD_DESC);
+        this.te.write(oprot);
+        oprot.writeFieldEnd();
+      }
+      oprot.writeFieldStop();
+      oprot.writeStructEnd();
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("get_indexed_slices_result(");
+      boolean first = true;
+
+      sb.append("success:");
+      if (this.success == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.success);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("ire:");
+      if (this.ire == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.ire);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("ue:");
+      if (this.ue == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.ue);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("te:");
+      if (this.te == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.te);
       }
       first = false;
       sb.append(")");
