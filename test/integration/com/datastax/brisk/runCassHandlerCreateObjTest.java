@@ -1,5 +1,7 @@
 package com.datastax.brisk;
 
+import static org.junit.Assert.fail;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -27,6 +29,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.internal.runners.statements.Fail;
 
 public class runCassHandlerCreateObjTest {
 	public static Connection connection = null;
@@ -37,35 +40,39 @@ public class runCassHandlerCreateObjTest {
 	public static void setUpBeforeClass() throws 
 	InvalidRequestException,TimedOutException, TException, NotFoundException, ClassNotFoundException, SQLException 
     {
-		//Test Database Connection
-		Class.forName("org.apache.hadoop.hive.jdbc.HiveDriver");
-	    connection = DriverManager.getConnection("jdbc:hive://localhost:10000/default", "", "");
-    	
-	    // Clean up existing Keyspaces and Databases
+        //Test Database Connection
 	    try {
-	    	TTransport tr = new TFramedTransport(new TSocket("localhost", 9160));
+	        Class.forName("org.apache.hadoop.hive.jdbc.HiveDriver");
+	        connection = DriverManager.getConnection("jdbc:hive://localhost:10000/default", "", "");
+    	
+	       } catch (SQLException e) {
+               fail("Hive JDBC Login Error: " + e.getMessage());
+           }
+	      	       
+        // Clean up existing Keyspaces and Databases
+        try {   
+            TTransport tr = new TFramedTransport(new TSocket("localhost", 9160));
 	    	TProtocol proto = new TBinaryProtocol(tr);
 	    	Cassandra.Client client = new Cassandra.Client(proto);
 	    	tr.open();
-
-	    	try {
-                
-		    	if (DatabaseDescriptor.getTables().contains(columnFamily)) {
-		    		client.system_drop_column_family(columnFamily);
-		    	} 
+	    	
+	        try {   
+	            if (DatabaseDescriptor.getTables().contains(columnFamily)) {
+	                client.system_drop_column_family(columnFamily);
+	            } 
 		    	
-		    	if (client.describe_keyspace(keySpace) != null) {
-		    		client.system_drop_keyspace(keySpace);
-		    	} 
-		    	
+	            if (client.describe_keyspace(keySpace) != null) {
+	                client.system_drop_keyspace(keySpace);
+	            } 		    	
 	    	} catch (NotFoundException nfe) {
-	    	}
+	    	    //Swallow exception - this occurs when keyspace doesn't exist - which is ok
+	    	  }
 	    		
 	    	tr.close();
 
 	    } catch (Exception e) {
-	   		System.out.println(e.getMessage());
-	   		e.printStackTrace();
+	        e.printStackTrace();
+            fail(e.getMessage());
 	    }
 	}
 			
@@ -75,8 +82,8 @@ public class runCassHandlerCreateObjTest {
 	}
 		
 	@Test
+    /* System.out.println("===> cassHandler_CreateNewCassObjs: Create New KS and Table in Cassandra */
 	public void testCreateLoadDropTable() throws Exception {
-		System.out.println("===> cassHandler_CreateNewCassObjs: Create New KS and Table in Cass");	
 		HiveTestRunner.runQueries(connection, "cassHandler_CreateNewCassObjs"); 
 	} 
 

@@ -13,7 +13,6 @@ WITH SERDEPROPERTIES (
 
 INSERT OVERWRITE TABLE fresh_cf_ext select foo, bar from fresh_cf;
 
-SHOW TABLES;
 SELECT foo, bar from fresh_cf_ext;
 SELECT count(*) from fresh_cf_ext;
 SELECT max(foo), min(foo), sum(foo), count(*) from fresh_cf_ext;

@@ -1,8 +1,9 @@
 package com.datastax.brisk;
 
+import static org.junit.Assert.fail;
+
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.DriverManager;
 import java.sql.Connection;
@@ -16,7 +17,7 @@ public class runCassandraHandlerDemoTest {
 	    
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		//Test Database Connection
+	    //Test Database Connection
 		Class.forName("org.apache.hadoop.hive.jdbc.HiveDriver");
 	    connection = DriverManager.getConnection("jdbc:hive://localhost:10000/default", "", "");
     	
@@ -36,20 +37,19 @@ public class runCassandraHandlerDemoTest {
 	    for(int i=0; i<commands.length ;i++){
 	    	
     		try {
-	    		System.out.println("Setting up demo: " + commands[i]);	    		
+	    		//System.out.println("Setting up demo: " + commands[i]);	    		
 	    		Process proc = Runtime.getRuntime().exec(commands[i], envp, demoDir);
-
 	    		BufferedReader br = new BufferedReader(new InputStreamReader(proc.getInputStream()));
 	    		String commandResult = null;     
 	    		
 	    		while((commandResult = br.readLine()) != null) {
 	    			System.out.println(commandResult);
-	    		    System.out.flush();
-	    		}            
-    		} catch (IOException e) {
+	    		}     
+	    			             
+    		} catch (Exception e) {
     			e.printStackTrace();
-    			System.exit(0);
-		      }
+                fail(e.getMessage());
+		    }
 	    }
 	}
 			
@@ -59,8 +59,8 @@ public class runCassandraHandlerDemoTest {
 	}
 		
 	@Test
+    /* System.out.println("===> cassHandler_Demo: Create External C* Table, Load Data and Drop */   
 	public void testCreateLoadDropTable() throws Exception {
-		System.out.println("===> cassHandler_Demo: Create External C* Table, Load Data and Drop");	
 		HiveTestRunner.runQueries(connection, "cassHandler_Demo"); 
 	} 
 

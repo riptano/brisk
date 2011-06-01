@@ -24,50 +24,50 @@ public class runHiveSmokeTest {
 	
 	//@Ignore
 	@Test
+    /* hiveCRUDtable: Create Table, Load Data and Drop */   
     public void hiveCRUDtable() throws Exception {
-		System.out.println("====> hiveCRUDtable: Create Table, Load Data and Drop");	
 		HiveTestRunner.runQueries(connection, "hiveCRUDtable"); 
     } 
     
 	//@Ignore
 	@Test
+    /* hiveDropPartition: Create, Load, Drop and Load Partitioned Table */
     public void hiveDropPartition() throws Exception {
-		System.out.println("====> hiveDropPartition: Create, Load, Drop and Load Partitioned Table");
 		HiveTestRunner.runQueries(connection, "hiveDropPartition");
     } 
 
     //@Ignore
 	@Test
+    /* hiveCTAS: Create, Load, Drop non-partitioned table */
     public void hiveCTAS() throws Exception {
-		System.out.println("====> hiveCTAS: Create, Load, Drop non-partitioned table");
 		HiveTestRunner.runQueries(connection, "hiveCTAS");
     } 
 	
     //@Ignore
 	@Test
+    /* hiveCreateLike: Create, Load, Drop partitioned table */
     public void hiveCreateLike() throws Exception {
-		System.out.println("====> hiveCreateLike: Create, Load, Drop partitioned table");
 	    HiveTestRunner.runQueries(connection, "hiveCreateLike");
     } 
 
     //@Ignore
 	@Test
+    /* hiveAlterTable: Lots of ALTER TABLES and ADD COLUMNS stuff */
     public void hiveAlterTable() throws Exception {
-		System.out.println("====> hiveAlterTable: Lots of ALTER TABLES and ADD COLUMNS stuff");
 		HiveTestRunner.runQueries(connection, "hiveAlterTable");     
     } 
 	
     //@Ignore
 	@Test
+    /* hiveMixedCaseTablesNames: LOAD command commented out due to issues with mixed case */
     public void hiveMixedCaseTablesNames() throws Exception {
-		System.out.println("====> hiveMixedCaseTablesNames: LOAD command commented out due to issues with mixed case");
     	HiveTestRunner.runQueries(connection, "hiveMixedCaseTablesNames");     
     } 
     
     @Ignore
 	@Test
+    /* hiveCreateIndex: Not Run due DROP INDEX bugs */
     public void hiveCreateIndex() throws Exception {
-		System.out.println("====> hiveCreateIndex: Not Run due DROP INDEX bugs");
     	//HiveTestRunner. runQueries(connection, "hiveCreateIndex");     
     }  
 }
