@@ -122,6 +122,7 @@ public class SchemaManagerServiceTest extends MetaStoreTestBase
     {
         KsDef ksDef = setupOtherKeyspace(configuration,"ConfigCreatedKeyspace", false);
         cassandraClientHolder.getClient().system_add_keyspace(ksDef);
+
         configuration.setBoolean("cassandra.autoCreateHiveSchema", true);        
         
         schemaManagerService.createKeyspaceSchemasIfNeeded();
@@ -140,6 +141,7 @@ public class SchemaManagerServiceTest extends MetaStoreTestBase
     {
         KsDef ksDef = setupOtherKeyspace(configuration, "ConfigCreatedKeyspaceMetaData", true);
         cassandraClientHolder.getClient().system_add_keyspace(ksDef);
+
         configuration.setBoolean("cassandra.autoCreateHiveSchema", true);        
         
         schemaManagerService.createKeyspaceSchemasIfNeeded();
