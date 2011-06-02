@@ -94,6 +94,13 @@ case "$1" in
     pig)
         shift
         export PIG_OPTS=$PIG_OPTS" -Dudf.import.list=org.apache.cassandra.hadoop.pig"
+        JOBTRACKER=`$BIN/brisktool jobtracker`;
+        if [ "x$JOBTRACKER" != "x" ]; then
+            PIG_OPTS="$PIG_OPTS -Dbrisk.job.tracker=$JOBTRACKER"
+        else
+            echo "Unable to start job: jobtracker not found"
+            exit 2
+        fi
         $PIG_HOME/bin/pig $*
         exit $?
         ;;
