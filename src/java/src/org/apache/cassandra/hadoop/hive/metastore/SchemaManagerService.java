@@ -12,6 +12,7 @@ import org.apache.cassandra.config.CFMetaData;
 import org.apache.cassandra.config.ConfigurationException;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.config.KSMetaData;
+import org.apache.cassandra.db.ColumnFamilyType;
 import org.apache.cassandra.db.marshal.AbstractType;
 import org.apache.cassandra.thrift.CfDef;
 import org.apache.cassandra.thrift.ColumnDef;
@@ -316,8 +317,12 @@ public class SchemaManagerService
         }        
         else
         {   
-            // satisfy requirement of at least one col on a table
-            sd.addToCols(new FieldSchema("defaultcol", "string", "Auto-created default column."));
+            // create default transposition columns 
+            sd.addToCols(new FieldSchema("row_key", "string", "Auto-created default column."));
+            sd.addToCols(new FieldSchema("column_name", "string", "Auto-created default column."));
+            sd.addToCols(new FieldSchema("value", "string", "Auto-created default column."));
+            if ( cfDef.getColumn_type().equals(ColumnFamilyType.Super.toString()) )
+                sd.addToCols(new FieldSchema("sub_column_name", "string", "Auto-created default column."));
         }
         table.setSd(sd);
         return table;
