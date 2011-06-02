@@ -14,12 +14,14 @@ import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.config.KSMetaData;
 import org.apache.cassandra.db.ColumnFamilyType;
 import org.apache.cassandra.db.marshal.AbstractType;
+import org.apache.cassandra.db.marshal.TypeParser;
 import org.apache.cassandra.thrift.CfDef;
 import org.apache.cassandra.thrift.ColumnDef;
 import org.apache.cassandra.thrift.InvalidRequestException;
 import org.apache.cassandra.thrift.KsDef;
 import org.apache.cassandra.thrift.NotFoundException;
 import org.apache.cassandra.utils.ByteBufferUtil;
+import org.apache.cassandra.utils.FBUtilities;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.metastore.TableType;
@@ -343,7 +345,7 @@ public class SchemaManagerService
         try 
         {
             // assume its a FQ classname if we find a period. Built-in otherwise.
-            AbstractType<?> type = DatabaseDescriptor.getComparator(column.getValidation_class());
+            AbstractType<?> type = TypeParser.parse(column.getValidation_class());
             
             switch (type.getJdbcType())
             {
