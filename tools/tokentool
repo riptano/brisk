@@ -48,7 +48,7 @@ def findClosestMinAndMax(thisToken, thisRange):
     return [minimum, thisToken, maximum]
 
 
-def setupInitialTokens():
+def parseOptions():
     global originalTokens, dcOffsets
 
     # Parse Input
@@ -57,17 +57,25 @@ def setupInitialTokens():
         print "    tools/tokentool <# of nodes in DC1> [<# of nodes in DC2> <# of nodes in DC3> ...]"
         print
         sys.exit(0)
+    elif (len(sys.argv) == 4):
+        print "Sorry, more than 2 DC's are not yet supported."
+        print
+        sys.exit(0)
     else:
         # Gather then number of datacenters
         datacenters = readInt(len(sys.argv) - 1)
 
         # Gather the number of nodes in each datacenter
-        numNodesInDC = []
+        sizeSet = []
         for i in range(0, datacenters):
-            numNodesInDC.append(readInt(sys.argv[i + 1], True))
+            sizeSet.append(readInt(sys.argv[i + 1], True))
+    
+    return sizeSet
+
+def initialRingSplit(sizeSet):
 
     # Calculate the inital tokens for each datacenter
-    for i, node in enumerate(numNodesInDC):
+    for i, node in enumerate(sizeSet):
         splitRing(i, node)
     
     # Find the initial DC offsets based on the first node soley
@@ -200,24 +208,33 @@ def focus():
             print "dcOffsets", dcOffsets
             print '-------'
 
-def printResults():
-    # Calculate the shifted tokens and print
-    for i, dc in enumerate(originalTokens.keys()):
+def calculateTokens():
+    for dc in originalTokens.keys():
         sortedTokens = []
         for node in originalTokens[dc].keys():
             sortedTokens.append((originalTokens[dc][node] + dcOffsets[dc]) % MAXRANGE)
 
         sortedTokens.sort()
 
-        print "DC%d:" % (i + 1)
-        for i, token in enumerate(sortedTokens):
+        for node in originalTokens[dc].keys():
+            originalTokens[dc][node] = sortedTokens[node]
+    return calculateTokens
+
+def printResults():
+    # Calculate the shifted tokens
+    calculateTokens()
+
+    # Print
+    for dc in originalTokens.keys():
+        print "DC%d:" % (dc + 1)
+        for i, token in enumerate(originalTokens[dc].values()):
             print "Node %d: %d" % (i, token)
         print
 
 def run():
     global originalTokens, dcOffsets
 
-    setupInitialTokens()
+    initialRingSplit(parseOptions())
     focus()
     printResults()
 
