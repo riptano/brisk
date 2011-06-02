@@ -68,11 +68,11 @@ public class CassandraClientHolder
         } 
         catch (InvalidRequestException ire) 
         {
-            throw new CassandraHiveMetaStoreException("Could not apply the keyspaceName: " + ire.getMessage());
+            throw new CassandraHiveMetaStoreException("Could not apply the keyspaceName: " + keyspaceName, ire);
         } 
         catch (TException e) 
         {
-            throw new CassandraHiveMetaStoreException("transport problem setting keyspace", e);
+            throw new CassandraHiveMetaStoreException("transport problem setting keyspace: " + keyspaceName, e);
         }
     }    
     
