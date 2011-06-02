@@ -46,9 +46,10 @@
 </property>
 
 <!-- Set this to true to enable auto-creation of keyspaces as Hive schemas -->
+<!-- 
 <property>
   <name>cassandra.autoCreateHiveSchema</name>
   <value>true</value>
 </property>
-
+ -->
 </configuration>
