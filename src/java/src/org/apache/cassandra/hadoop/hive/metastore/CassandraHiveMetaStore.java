@@ -25,7 +25,6 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.cassandra.config.KSMetaData;
 import org.apache.cassandra.thrift.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.metastore.RawStore;
@@ -51,21 +50,33 @@ public class CassandraHiveMetaStore implements RawStore {
     private Configuration configuration;
     private MetaStorePersister metaStorePersister;
     private CassandraClientHolder cassandraClientHolder;    
+    private SchemaManagerService schemaManagerService;
     
     public CassandraHiveMetaStore()
     {
         log.debug("Creating CassandraHiveMetaStore");
     }
     
-
+    /**
+     * Starts the underlying Cassandra.Client as well as creating
+     * the meta store schema if it does not already exist and
+     * creating schemas for keyspaces found if 'cassandra.autoCreateSchema'
+     * is set to true.
+     */
     public void setConf(Configuration conf)
     {
         configuration = conf;
         cassandraClientHolder = new CassandraClientHolder(configuration);
-        SchemaManagerService schemaManagerService = 
-            new SchemaManagerService(this, configuration);
-        schemaManagerService.createMetaStoreIfNeeded();                
+        
+        schemaManagerService = new SchemaManagerService(this, configuration);
+        // create the meta store if it does not exist
+        schemaManagerService.createMetaStoreIfNeeded();
+        // load meta store
         metaStorePersister = new MetaStorePersister(configuration);
+        // create schemas for Keyspaces if configured for such
+        schemaManagerService.createKeyspaceSchemasIfNeeded();
+            
+        
     }
     
     public Configuration getConf()
@@ -94,9 +105,37 @@ public class CassandraHiveMetaStore implements RawStore {
         } 
         catch (NotFoundException e) 
         {
-            throw new NoSuchObjectException("Database named " + databaseName + " did not exist.");
+            if ( schemaManagerService.getAutoCreateSchema() && maybeAutoCreateFromCassandra(databaseName) )
+            {
+                log.debug("Configured for auto schema creation with keyspace found: {}", databaseName);
+                try 
+                {
+                    metaStorePersister.load(db, databaseName);
+                } 
+                catch (NotFoundException nfe) 
+                {
+                    throw new CassandraHiveMetaStoreException("Could not auto create schema.", nfe);
+                }
+            } 
+            else 
+            {
+                throw new NoSuchObjectException("Database named " + databaseName + " did not exist.");
+            }
         }        
         return db;
+    }
+    
+    private boolean maybeAutoCreateFromCassandra(String databaseName) 
+    {
+        KsDef ksDef = schemaManagerService.getKeyspaceForDatabaseName(databaseName);
+        if (ksDef != null) 
+        {
+            log.debug("Found mapped Keyspace {} in Cassandra. Creating schema.", databaseName);
+            schemaManagerService.createKeyspaceSchema(ksDef);
+            return true;
+        }
+        log.debug("Did not find matching keyspace for {} database", databaseName);
+        return false;
     }
     
     public List<String> getDatabases(String databaseNamePattern) throws MetaException
@@ -201,6 +240,16 @@ public class CassandraHiveMetaStore implements RawStore {
     throws MetaException
     {
         log.info("in getTables with dbName: {} and tableNamePattern: {}", dbName, tableNamePattern);
+        if ( schemaManagerService.getAutoCreateSchema() )
+        {
+            KsDef ksDef = schemaManagerService.getKeyspaceForDatabaseName(dbName);
+            if ( ksDef != null )
+            {
+                log.debug("Checking for new column families to add");
+                schemaManagerService.createNewColumnFamilyTables(ksDef);
+            }
+        }
+        
         List<TBase> tables = metaStorePersister.find(new Table(), dbName);
         List<String> results = new ArrayList<String>(tables.size());
         for (TBase tBase : tables)

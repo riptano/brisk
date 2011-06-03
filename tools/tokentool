@@ -1,13 +1,17 @@
 #! /usr/bin/python
 
-import sys, random
+import sys, random, time
 
 MAXRANGE = (2**127)
-MAXRANGE = 100
+DEBUG = False
+
+# MAXRANGE = 100
+# DEBUG = True
 
 originalTokens = {}
 dcOffsets = {}
-tokenClashOffsets = {}
+
+zoom = 2
 
 def readInt(number, exitOnFail=False):
     returnVal = None
@@ -26,148 +30,212 @@ def splitRing(dc, numOfNodes):
         token = (i * MAXRANGE / numOfNodes) % MAXRANGE
         originalTokens[dc][i] = token
 
-def run():
-    global dcOffsets, tokenClashOffsets
+def findClosestMinAndMax(thisToken, thisRange):
+    # Double the range for wrap around tokens
+    doubleRange = [token + MAXRANGE for token in thisRange]
+    thisRange = thisRange + doubleRange
+
+    minimum = 0
+    maximum = 0
+    for token in thisRange:
+        if token < thisToken:
+            minimum = token
+        if token >= thisToken:
+            maximum = token
+            break
+    if not maximum:
+        maximum = MAXRANGE
+    return [minimum, thisToken, maximum]
+
+
+def parseOptions():
+    global originalTokens, dcOffsets
+
+    # Parse Input
     if (len(sys.argv) == 1):
         print "Command line usage:"
         print "    tools/tokentool <# of nodes in DC1> [<# of nodes in DC2> <# of nodes in DC3> ...]"
         print
+        sys.exit(0)
+    elif (len(sys.argv) == 4):
+        print "Sorry, more than 2 DC's are not yet supported."
+        print
+        sys.exit(0)
     else:
         # Gather then number of datacenters
         datacenters = readInt(len(sys.argv) - 1)
 
         # Gather the number of nodes in each datacenter
-        numNodesInDC = []
+        sizeSet = []
         for i in range(0, datacenters):
-            numNodesInDC.append(readInt(sys.argv[i + 1], True))
+            sizeSet.append(readInt(sys.argv[i + 1], True))
     
-    # Calculate the tokens for each datacenter
-    for i, node in enumerate(numNodesInDC):
+    return sizeSet
+
+def initialRingSplit(sizeSet):
+
+    # Calculate the inital tokens for each datacenter
+    for i, node in enumerate(sizeSet):
         splitRing(i, node)
     
-    previousOffsets = {}
-    # Calculate tension
-    while True:
+    # Find the initial DC offsets based on the first node soley
+    dcs = originalTokens.keys()
+    dcs.pop(0)
+    dcOffsets[0] = 0
+    for dc in dcs:
+        if len(originalTokens[dc - 1]) > 1:
+            dcOffsets[dc] = ((originalTokens[dc - 1][1] + dcOffsets[dc - 1]) - (originalTokens[dc - 1][0] + dcOffsets[dc - 1])) / 2
+        else:
+            dcOffsets[dc] = MAXRANGE / 2
+
+def noDuplicateTokens(offsetdc=-1, offset=0):
+    allkeys = []
+    for dc in originalTokens.keys():
+        for node in originalTokens[dc].keys():
+            if dc == offsetdc:
+                allkeys.append(originalTokens[dc][node] + offset)
+            else:
+                allkeys.append(originalTokens[dc][node])
+    if len(allkeys) == len(set(allkeys)):
+        return True
+    else:
+        return False
+
+
+def sweepAndFind(dc, otherdc, iteration):
+    global zoom
+    theseTokens = originalTokens[dc].values()
+    otherTokens = originalTokens[otherdc].values()
+    
+    fuzzyRange = MAXRANGE / max(len(theseTokens), len(otherTokens))
+    zoom *= 2
+    steps = fuzzyRange / zoom
+
+    if steps < 1:
+        return True
+
+    if DEBUG: 
+        print "fuzzyRange", fuzzyRange
+        print "zoom", zoom
+        print "steps", steps
+        print
+    
+    # Starting from the current spot, 
+    # try to gain focus by spinning the ring
+    # by the current fuzzy interval
+    currentStep = -(steps * 2)
+    closestToFocus = MAXRANGE
+    frozenDCOffset = dcOffsets[dc]
+
+    if not iteration:
+        searchRange = fuzzyRange / (2 ** iteration)
+    else:
+        searchRange = steps * 2
+
+    while currentStep <= searchRange:
+
+        currentFocus = 0
+        for thisToken in theseTokens:
+            if False:
+                print "thisToken", thisToken
+                print "currentStep", currentStep
+                print "frozenDCOffset", frozenDCOffset
+            thisToken = (thisToken + currentStep + frozenDCOffset) % (2 * MAXRANGE)
+            if False:
+                print "thisToken", thisToken
+
+            minThisMax = findClosestMinAndMax(thisToken, otherTokens)
+            minimum = minThisMax[0]
+            maximum = minThisMax[2]
+            
+            if minimum < maximum:
+                thisTokenOffset = (maximum - minimum) / 2 + minimum - thisToken
+            else:
+                thisTokenOffset = (maximum + MAXRANGE - minimum) / 2 + minimum - thisToken
+            if DEBUG: print minThisMax, thisTokenOffset
+            
+            currentFocus += thisTokenOffset
+        
+        if abs(currentFocus) < closestToFocus:
+            if DEBUG:
+                print "dcOffsets[dc]", dcOffsets[dc]
+                print "currentStep", currentStep
+            
+            if noDuplicateTokens(dc, currentStep + frozenDCOffset):
+                dcOffsets[dc] = currentStep + frozenDCOffset
+                closestToFocus = abs(currentFocus)
+
+        currentStep += steps
+
+        if DEBUG: 
+            print "currentFocus", currentFocus
+            print "closestToFocus", closestToFocus
+            print
+    if DEBUG: 
+        print "closestToFocus", closestToFocus
+
+def focus():
+    global originalTokens, dcOffsets, zoom
+    iteration = 0
+    doneZooming = False
+    if len(originalTokens) == 1:
+        doneZooming = True
+    while not doneZooming:
+
+        # TODO: Confirm no token conflicts
 
         # Loop over all dcs
-        keys = originalTokens.keys()
-        keys.reverse()
-        for dc in keys:
-
+        dcs = originalTokens.keys()
+        dcs.reverse()
+        for dc in dcs:                
+            
             # Allow the first dc to stay in it's initial spot
             if dc == 0:
                 continue
-            
-            # Loop over all nodes to find average offset
-            averageOffset = 0
-            for node in originalTokens[dc].keys():
-                closestMinToken = 0
-                closestMaxToken = MAXRANGE
 
-                # Add an offset to the token if an offset exists
-                if dc in dcOffsets:
-                    thisToken = (originalTokens[dc][node] + dcOffsets[dc]) % MAXRANGE
-                else:
-                    thisToken = originalTokens[dc][node]
+            for otherdc in dcs:
 
-                # Compare each node to all other nodes of the other dcs
-                for otherdc in originalTokens.keys():
-
-                    # Do not compare against itself
-                    if dc != otherdc:
-
-                        # Find the tokens that will be compared against
-                        for othernode in originalTokens[otherdc].keys():
-
-                            # Add an offset to the token if an offset exists
-                            if otherdc in dcOffsets:
-                                thatToken = (originalTokens[otherdc][othernode] + dcOffsets[otherdc]) % MAXRANGE
-                            else:
-                                thatToken = originalTokens[otherdc][othernode]
-                            
-                            # Find the floor token
-                            if thatToken <= thisToken:
-                                if thatToken > closestMinToken:
-                                    closestMinToken = thatToken
-                            else:
-                                # Find the ceiling token on the next pass
-                                # then exit the loop
-                                if thatToken < closestMaxToken:
-                                    closestMaxToken = thatToken
-                                break
+                # Don't compare the dc to itself
+                if otherdc == dc:
+                    continue
                 
-                # If the token has clashed, offset the token by a random
-                # integer close to that of the number of clashes
-                if dc in tokenClashOffsets:
-                    offset = (closestMinToken + closestMaxToken) / 2 - originalTokens[dc][node] + random.randint(0, tokenClashOffsets[dc])
-                else:
-                    offset = (closestMinToken + closestMaxToken) / 2 - originalTokens[dc][node]           
-                
-                # Do a running average of offset values
-                if not averageOffset:
-                    averageOffset = offset
-                else:
-                    averageOffset = (averageOffset + offset) / 2
+                doneZooming = sweepAndFind(dc, otherdc, iteration)
 
-            # Save the offset
-            dcOffsets[dc] = averageOffset
+        iteration += 1
 
-        # Verify the offsets have stopped shifting
-        normalizedOffsets = True
+        if DEBUG: 
+            time.sleep(1)
+            print "dcOffsets", dcOffsets
+            print '-------'
 
-        # Copy dcOffsets the first time around
-        if len(previousOffsets) == 0:
-            normalizedOffsets = False
-            previousOffsets = dcOffsets.copy()
-        else:
-            seenTokens = []
-
-            # Add the first DC's tokens to the seen list
-            for node in originalTokens[0].keys():
-                seenTokens.append(originalTokens[0][node])
-
-            # Go through all the other tokens in all other DCs
-            for dc in dcOffsets.keys():
-
-                # Confirm there are no token conflicts
-                for node in originalTokens[dc].keys():
-                    token = (originalTokens[dc][node] + dcOffsets[dc]) % MAXRANGE
-
-                    # If two tokens sit in the same spot,
-                    # increase the rotation variance for that particular dc ring
-                    if token in seenTokens:
-                        normalizedOffsets = False
-                        if dc in tokenClashOffsets:
-                            tokenClashOffsets[dc] = tokenClashOffsets[dc] + 1
-                        else:
-                            tokenClashOffsets[dc] = 1
-                        break
-
-                    # Mark current token as seen
-                    seenTokens.append(token)
-                
-                # Check to makes sure offsets still aren't shifting
-                if dcOffsets[dc] != previousOffsets[dc]:
-                    normalizedOffsets = False
-                    break
-
-            # Update the previous offsets to be the present offsets
-            previousOffsets = dcOffsets.copy()
-
-        # Stop looping if offsets have settled
-        if normalizedOffsets:
-            break
-
-    # Recalculate the shifted tokens and print
-    for i, dc in enumerate(originalTokens.keys()):
-        print "DC%d:" % (i + 1)
+def calculateTokens():
+    for dc in originalTokens.keys():
+        sortedTokens = []
         for node in originalTokens[dc].keys():
-            if dc in dcOffsets:
-                newToken = (originalTokens[dc][node] + dcOffsets[dc]) % MAXRANGE
-                print "Node %d: %d" % (node, newToken)
-            else:
-                print "Node %d: %d" % (node, originalTokens[dc][node])
+            sortedTokens.append((originalTokens[dc][node] + dcOffsets[dc]) % MAXRANGE)
+
+        sortedTokens.sort()
+
+        for node in originalTokens[dc].keys():
+            originalTokens[dc][node] = sortedTokens[node]
+    return calculateTokens
+
+def printResults():
+    # Calculate the shifted tokens
+    calculateTokens()
+
+    # Print
+    for dc in originalTokens.keys():
+        print "DC%d:" % (dc + 1)
+        for i, token in enumerate(originalTokens[dc].values()):
+            print "Node %d: %d" % (i, token)
         print
 
+def run():
+    global originalTokens, dcOffsets
+
+    initialRingSplit(parseOptions())
+    focus()
+    printResults()
 
 run()
