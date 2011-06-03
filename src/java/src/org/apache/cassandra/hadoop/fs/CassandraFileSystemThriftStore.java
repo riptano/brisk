@@ -79,8 +79,10 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
 
     private static final ByteBuffer     dataCol       = ByteBufferUtil.bytes("data");
     private static final ByteBuffer     pathCol       = ByteBufferUtil.bytes("path");
+    private static final ByteBuffer     parentPathCol = ByteBufferUtil.bytes("parent_path");
     private static final ByteBuffer     sentCol       = ByteBufferUtil.bytes("sentinel");
-    
+
+
     private String         inodeCfInUse       = null;
     private String         sblockCfInUse       = null;
 
@@ -262,9 +264,16 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
             cf.setMemtable_flush_after_mins(1);
             cf.setMemtable_throughput_in_mb(128);
             
-            cf.setColumn_metadata(Arrays.asList(new ColumnDef(pathCol, "BytesType").setIndex_type(IndexType.KEYS)
-                    .setIndex_name("path"), new ColumnDef(sentCol, "BytesType").setIndex_type(IndexType.KEYS)
-                    .setIndex_name("sentinel")));
+            cf.setColumn_metadata(
+                    Arrays.asList(new ColumnDef(pathCol, "BytesType").
+                                      setIndex_type(IndexType.KEYS).
+                                      setIndex_name("path"), 
+                                  new ColumnDef(sentCol, "BytesType").
+                                      setIndex_type(IndexType.KEYS).
+                                      setIndex_name("sentinel"),
+                                  new ColumnDef(parentPathCol, "BytesType").
+                                      setIndex_type(IndexType.KEYS).
+                                      setIndex_name("parent_path")));
 
             cfs.add(cf);
 
@@ -301,9 +310,16 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
             cf.setMemtable_flush_after_mins(1);
             cf.setMemtable_throughput_in_mb(128);
             
-            cf.setColumn_metadata(Arrays.asList(new ColumnDef(pathCol, "BytesType").setIndex_type(IndexType.KEYS)
-                    .setIndex_name("path"), new ColumnDef(sentCol, "BytesType").setIndex_type(IndexType.KEYS)
-                    .setIndex_name("sentinel")));
+            cf.setColumn_metadata(
+                    Arrays.asList(new ColumnDef(pathCol, "BytesType").
+                                      setIndex_type(IndexType.KEYS).
+                                      setIndex_name("path"), 
+                                  new ColumnDef(sentCol, "BytesType").
+                                      setIndex_type(IndexType.KEYS).
+                                      setIndex_name("sentinel"),
+                                  new ColumnDef(parentPathCol, "BytesType").
+                                      setIndex_type(IndexType.KEYS).
+                                      setIndex_name("parent_path")));
 
             cfs.add(cf);
 
@@ -519,16 +535,16 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
         long ts = System.currentTimeMillis();
 
         // file name
-        mutations.add(new Mutation().setColumn_or_supercolumn(new ColumnOrSuperColumn().setColumn(new Column().setName(
-                pathCol).setValue(ByteBufferUtil.bytes(path.toUri().getPath())).setTimestamp(ts))));
+        mutations.add(createMutationForCol(pathCol, ByteBufferUtil.bytes(path.toUri().getPath()), ts));
+
+        // Parent name for this file
+        mutations.add(createMutationForCol(parentPathCol, ByteBufferUtil.bytes(getParentForIndex(path)), ts));
 
         // sentinal
-        mutations.add(new Mutation().setColumn_or_supercolumn(new ColumnOrSuperColumn().setColumn(new Column().setName(
-                sentCol).setValue(sentinelValue).setTimestamp(ts))));
+        mutations.add(createMutationForCol(sentCol, sentinelValue, ts));
 
         // serialized inode
-        mutations.add(new Mutation().setColumn_or_supercolumn(new ColumnOrSuperColumn().setColumn(new Column().setName(
-                dataCol).setValue(data).setTimestamp(ts))));
+        mutations.add(createMutationForCol(dataCol, data, ts));
 
         try
         {
@@ -539,7 +555,38 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
             throw new IOException(e);
         }
     }
-    
+
+    /**
+     * @param path a Path
+     * @return the parent to the <code>path</code> or null if the <code>path</code> represents the root. 
+     */
+    private String getParentForIndex(Path path) {
+        Path parent = path.getParent();
+        
+        if (parent == null)
+        {
+            return "null";
+        }
+        
+        return parent.toUri().getPath();
+    }
+
+    /**
+     * Creates a mutation for a column <code>colName</code> whose value is <code>value</code> and with
+     * tiemstamp <code>ts</code>.
+     * @param colName column name
+     * @param value column value
+     * @param ts column timestamp
+     * @return a Mutation object
+     */
+    private Mutation createMutationForCol(ByteBuffer colName, ByteBuffer value, long ts) {
+        return new Mutation().setColumn_or_supercolumn(
+                    new ColumnOrSuperColumn().setColumn(
+                        new Column().setName(colName).
+                                     setValue(value).
+                                     setTimestamp(ts)));
+    }
+
     /**
      * Print this List by invoking its objects' toString(); using the logger in debug mode.
      * @param blocks list of blocks to be printed
@@ -652,20 +699,38 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
         }
     }
 
+
     public Set<Path> listSubPaths(Path path) throws IOException
     {
-        Set<Path> allPaths = listDeepSubPaths(path);
-        Set<Path> prunedPath = new HashSet<Path>();
 
-        for (Path p : allPaths)
+        String startPath = path.toUri().getPath();
+
+        List<IndexExpression> indexExpressions = new ArrayList<IndexExpression>();
+
+        indexExpressions.add(new IndexExpression(sentCol, IndexOperator.EQ, sentinelValue));
+        indexExpressions.add(new IndexExpression(parentPathCol, IndexOperator.EQ, ByteBufferUtil.bytes(startPath)));
+
+        try
         {
-            if (p.depth() == (path.depth() + 1))
-            {
-                prunedPath.add(p);
-            }
-        }
+            List<KeySlice> keys = client.get_indexed_slices(inodeParent, new IndexClause(indexExpressions,
+                    ByteBufferUtil.EMPTY_BYTE_BUFFER, 100000), pathPredicate, consistencyLevelRead);
 
-        return prunedPath;
+            Set<Path> matches = new HashSet<Path>(keys.size());
+
+            for (KeySlice key : keys)
+            {
+                for (ColumnOrSuperColumn cosc : key.getColumns())
+                {
+                    matches.add(new Path(ByteBufferUtil.string(cosc.column.value)));
+                }
+            }
+
+            return matches;
+        }
+        catch (Exception e)
+        {
+            throw new IOException(e);
+        }
     }
 
     public String getVersion() throws IOException
