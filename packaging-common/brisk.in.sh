@@ -56,6 +56,13 @@ done
 #
 export PIG_HOME=/usr/share/brisk/pig
 export PIG_CONF_DIR=/etc/brisk/pig
+if [ -z "$PIG_LOG_DIR" ]; then
+    if [ -w /var/log/pig ]; then
+        export PIG_LOG_DIR=/var/log/pig
+    else
+        export PIG_LOG_DIR=$HOME
+    fi
+fi
 # PIG_CLASSPATH needs to be set last
 
 #hadoop requires absolute home
