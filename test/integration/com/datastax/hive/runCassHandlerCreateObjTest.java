@@ -1,4 +1,4 @@
-package com.datastax.brisk;
+package com.datastax.hive;
 
 import static org.junit.Assert.fail;
 
@@ -84,7 +84,7 @@ public class runCassHandlerCreateObjTest {
 	@Test
     /* System.out.println("===> cassHandler_CreateNewCassObjs: Create New KS and Table in Cassandra */
 	public void testCreateLoadDropTable() throws Exception {
-		HiveTestRunner.runQueries(connection, "cassHandler_CreateNewCassObjs"); 
+		HiveJDBCRunner.runQueries(connection, "cassHandler_CreateNewCassObjs"); 
 	} 
 
 }

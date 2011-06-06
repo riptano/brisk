@@ -1,4 +1,4 @@
-package com.datastax.brisk;
+package com.datastax.hive;
 
 import static org.junit.Assert.fail;
 
@@ -61,7 +61,7 @@ public class runCassandraHandlerDemoTest {
 	@Test
     /* System.out.println("===> cassHandler_Demo: Create External C* Table, Load Data and Drop */   
 	public void testCreateLoadDropTable() throws Exception {
-		HiveTestRunner.runQueries(connection, "cassHandler_Demo"); 
+		HiveJDBCRunner.runQueries(connection, "cassHandler_Demo"); 
 	} 
 
 }

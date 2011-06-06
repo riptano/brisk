@@ -1,0 +1,12 @@
+use cqldb;
+
+DROP COLUMNFAMILY users;
+
+CREATE COLUMNFAMILY users (
+  KEY varchar PRIMARY KEY, password varchar,
+  gender varchar, session_token varchar,
+  state varchar, birth_year bigint);
+
+CREATE INDEX gender_key ON users (gender);
+CREATE INDEX state_key ON users (state);
+CREATE INDEX birth_year_key ON users (birth_year);
