@@ -56,6 +56,7 @@ done
 #
 export PIG_HOME=/usr/share/brisk/pig
 export PIG_CONF_DIR=/etc/brisk/pig
+# PIG_CLASSPATH needs to be set last
 
 #hadoop requires absolute home
 export HADOOP_HOME=/usr/share/brisk/hadoop
@@ -90,7 +91,8 @@ for jar in $HADOOP_HOME/*.jar $HADOOP_HOME/lib/*.jar; do
 done
 
 export HADOOP_CLASSPATH=$CLASSPATH
-
+# pig script overrides the cp, so set this last
+export PIG_CLASSPATH=$CLASSPATH
 
 #make the hadoop command accessible
 export PATH=$HADOOP_BIN:$PATH
