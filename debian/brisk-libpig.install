@@ -1,0 +1,3 @@
+resources/pig/lib/* usr/share/brisk/pig/lib
+resources/pig/bin/* usr/share/brisk/pig/bin
+resources/pig/conf/* etc/brisk/pig

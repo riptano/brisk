@@ -51,6 +51,12 @@ for jar in $HIVE_HOME/lib/hive-cassandra*.jar; do
     export CLASSPATH=$CLASSPATH:$jar
 done
 
+#
+# Initialize Pig env
+#
+export PIG_HOME=/usr/share/brisk/pig
+export PIG_CONF_DIR=/etc/brisk/pig
+
 #hadoop requires absolute home
 export HADOOP_HOME=/usr/share/brisk/hadoop
 export HADOOP_CONF_DIR=/etc/brisk/hadoop
