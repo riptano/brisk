@@ -311,7 +311,7 @@
 	</target>
 
 	  <!-- Generate Eclipse project description files -->
-	  <target name="eclipse-files" depends="build">
+	  <target name="eclipse-files" depends="maven-ant-tasks-retrieve-build">
 	    <echo file=".project"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
 	<projectDescription>
 	  <name>brisk</name>
