@@ -86,7 +86,7 @@ public class CassandraOutputStream extends OutputStream
         this.path = path;
         this.blockSize = blockSize;
         this.subBlockSize = subBlockSize;
-        this.backupStream = new ByteArrayOutputStream((int) blockSize);
+        this.backupStream = new ByteArrayOutputStream((int) subBlockSize);
         this.bufferSize = buffersize;
         this.progress = progress;
         this.outBuf = new byte[bufferSize];

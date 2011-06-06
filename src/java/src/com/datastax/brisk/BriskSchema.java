@@ -17,6 +17,8 @@ import org.apache.cassandra.thrift.CfDef;
 import org.apache.cassandra.thrift.InvalidRequestException;
 import org.apache.cassandra.thrift.KsDef;
 import org.apache.cassandra.thrift.NotFoundException;
+import org.apache.cassandra.utils.FBUtilities;
+
 import org.apache.log4j.Logger;
 import org.apache.thrift.TException;
 
@@ -123,8 +125,11 @@ public class BriskSchema {
             return;
         }
 
-        // String host = FBUtilities.getLocalAddress().getHostName();
-        String host = DatabaseDescriptor.getRpcAddress().getHostName();
+        String host;
+        if (DatabaseDescriptor.getRpcAddress() != null)
+            host = DatabaseDescriptor.getRpcAddress().getHostName();
+        else
+            host = FBUtilities.getLocalAddress().getHostName();
         int port = DatabaseDescriptor.getRpcPort(); // default
 
         while (true) {
