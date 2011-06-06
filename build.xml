@@ -712,7 +712,7 @@
 					</fileset>
 				</classpath>
 				<batchtest todir="${build.test.dir}/output">
-					<fileset dir="@{inputdir}" includes="@{filter}" />
+					<fileset dir="@{inputdir}" includes="@{filter}" excludes="**/Abstract*Test.java"/>
 				</batchtest>
 			</junit>
 			<fail message="Some @{suitename} test(s) failed.">

@@ -14,6 +14,8 @@ import org.apache.cassandra.CleanupHelper;
 import org.apache.cassandra.EmbeddedServer;
 import org.apache.cassandra.config.ConfigurationException;
 import org.apache.cassandra.config.DatabaseDescriptor;
+import org.apache.cassandra.thrift.CfDef;
+import org.apache.cassandra.thrift.KsDef;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.metastore.api.*;
 import org.apache.thrift.transport.TTransportException;
@@ -220,6 +222,27 @@ public class CassandraHiveMetaStoreTest extends MetaStoreTestBase {
         Table foundTable = metaStore.getTable("cidBname", "table");        
         assertNotNull(foundTable);
         
+    }
+    
+    @Test
+    public void testAutoCreateFromKeyspace() throws Exception 
+    {
+        CassandraHiveMetaStore metaStore = new CassandraHiveMetaStore();
+        Configuration conf = buildConfiguration();
+        CassandraClientHolder clientHolder = new CassandraClientHolder(conf);
+        KsDef ksDef = setupOtherKeyspace(conf,"AutoCreatedFromKeyspace", false);
+        clientHolder.getClient().system_add_keyspace(ksDef);
+        conf.setBoolean("cassandra.autoCreateHiveSchema", true);
+        metaStore.setConf(conf);        
+        Database foundDb = metaStore.getDatabase("AutoCreatedFromKeyspace");
+        assertNotNull(foundDb);
+        CfDef cf = new CfDef("AutoCreatedFromKeyspace","OtherCf2");
+        cf.setKey_validation_class("UTF8Type");
+        cf.setComparator_type("UTF8Type");
+        clientHolder.getClient().set_keyspace("HiveMetaStore");
+        clientHolder.getClient().system_add_column_family(cf);
+        metaStore.getAllTables("AutoCreatedFromKeyspace");
+        assertNotNull(metaStore.getTable("AutoCreatedFromKeyspace", "OtherCf2"));
     }
     
    

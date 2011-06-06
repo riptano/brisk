@@ -93,7 +93,7 @@ case `uname` in
         CLASSPATH=`echo $CLASSPATH | sed -E "s/slf4j/dne/g"`
     ;;
     *)
-        CLASSPATH=`echo $CLASSPATH | sed -r "s/slf4j/dne/g"`
+        CLASSPATH=`echo $CLASSPATH | sed -r "s/antlr|slf4j/dne/g"`
 esac
 
 

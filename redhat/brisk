@@ -30,6 +30,7 @@ JVM_SEARCH_DIRS="/usr/lib/jvm/java-6-sun"
 [ -r /etc/default/$NAME ] && . /etc/default/$NAME
 
 # redhat init functions
+[ -r /etc/init.d/functions ] || { echo 'Initscript functions not found!' >&2; exit 1; }
 . /etc/init.d/functions
 
 # If JAVA_HOME has not been set, try to determine it.
@@ -68,8 +69,7 @@ fi
 #
 is_running()
 {
-    status -p $PIDFILE "$NAME" &> /dev/null
-    return $?
+    status -p $PIDFILE "$NAME" > /dev/null 2>&1
 }
 
 #
@@ -86,7 +86,7 @@ do_start()
     if [ "$HADOOP_ENABLED" = "0" ]; then
         echo "$DESC starting with Hadoop disabled (edit /etc/default/brisk to enable)"
     else
-        BRISK_CMD="$BRISK_CMD -t"
+        BRISK_CMD="$BRISK_CMD -t -Djava.library.path=$JAVA_LIBRARY_PATH"
         echo "$DESC starting with Hadoop enabled (edit /etc/default/brisk to disable)"
     fi
 
