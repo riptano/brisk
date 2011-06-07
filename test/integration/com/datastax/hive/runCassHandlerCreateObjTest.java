@@ -31,25 +31,25 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.internal.runners.statements.Fail;
 
+import com.datastax.TestUtils;
+
 public class runCassHandlerCreateObjTest {
 	public static Connection connection = null;
     private static final String keySpace      = "fresh_ks";
     private static final String columnFamily  = "fresh_cf_ext";
 	    
 	@BeforeClass
-	public static void setUpBeforeClass() throws 
-	InvalidRequestException,TimedOutException, TException, NotFoundException, ClassNotFoundException, SQLException 
+	public static void setUpBeforeClass() throws Exception
+	//InvalidRequestException,TimedOutException, TException, NotFoundException, ClassNotFoundException, SQLException, Exception 
     {
         //Test Database Connection
 	    try {
-	        Class.forName("org.apache.hadoop.hive.jdbc.HiveDriver");
-	        connection = DriverManager.getConnection("jdbc:hive://localhost:10000/default", "", "");
-    	
+	        connection = TestUtils.getHiveConnection();    	
 	       } catch (SQLException e) {
                fail("Hive JDBC Login Error: " + e.getMessage());
            }
 	      	       
-        // Clean up existing Keyspaces and Databases
+        // Use Thrift to clean up existing keyspaces
         try {   
             TTransport tr = new TFramedTransport(new TSocket("localhost", 9160));
 	    	TProtocol proto = new TBinaryProtocol(tr);

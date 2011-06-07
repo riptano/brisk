@@ -12,22 +12,21 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-//import org.apache.cassandra.cql.jdbc.*;
+import com.datastax.TestUtils;
 
 public class runJDBCSmokeTest {
-    public static String keySpace = "cqldb";
-    public static String connectionString = "jdbc:cassandra:root/root@127.0.0.1:9160/";
-
+    private static String keySpace = "cqldb";
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {   
 	    ResultSet res;
 	    
 	    try {
-	        Class.forName("org.apache.cassandra.cql.jdbc.CassandraDriver");
-	        
-	        // Check create keyspace
-	        Connection conn = DriverManager.getConnection(connectionString + "default");     
+	        //Class.forName("org.apache.cassandra.cql.jdbc.CassandraDriver");        
+	        //String connectionString = "jdbc:cassandra:root/root@127.0.0.1:9160/";
+	        //Connection conn = DriverManager.getConnection(connectionString + "default");
+	        Connection conn = TestUtils.getJDBCConnection("default");
+
 	        Statement stmt = conn.createStatement();
 
 	        try {
@@ -46,7 +45,6 @@ public class runJDBCSmokeTest {
             }             
 
             conn.close();              
-            connectionString = connectionString + keySpace;     
 
 	    } catch (Exception e) {
             fail(e.getMessage());
@@ -61,21 +59,21 @@ public class runJDBCSmokeTest {
 	@Test
     /* cql_jdbc_users_crud: Create Table, Load Data and Drop */   
     public void cql_jdbc_users_crud() throws Exception {
-	    JDBCTestRunner.runQueries(connectionString, "create_users");
-		JDBCTestRunner.runQueries(connectionString, "insert_users_sri");
+	    JDBCTestRunner.runQueries(keySpace, "create_users");
+		JDBCTestRunner.runQueries(keySpace, "insert_users_sri");
     }    
 	
     @Test
     /* cql_jdbc_users_crud: Create Table, Load Data and Drop */   
     public void CQL_jdbc_all_options_table() throws Exception {
-        JDBCTestRunner.runQueries(connectionString, "create_all_options_table");
-        JDBCTestRunner.runQueries(connectionString, "insert_all_options_table");
+        JDBCTestRunner.runQueries(keySpace, "create_all_options_table");
+        JDBCTestRunner.runQueries(keySpace, "insert_all_options_table");
     }  
     
     @Test
     /* cql_jdbc_users_crud: Create Table, Load Data and Drop */   
     public void cql_jdbc_keyspace_syntax_check() throws Exception {
-        JDBCTestRunner.runQueries(connectionString, "create_keyspaces_syntax_check");
+        JDBCTestRunner.runQueries(keySpace, "create_keyspaces_syntax_check");
     }  
     
 }

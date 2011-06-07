@@ -6,11 +6,14 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Properties;
 
+import java.sql.DriverManager;
+import java.sql.Connection;
 import static org.junit.Assert.*;
 
 public  class TestUtils {
-
+    
     public static void diffFiles(String actualOutput, String expectedOutput) throws Exception  
     {        
         try {
@@ -44,6 +47,59 @@ public  class TestUtils {
         catch (Exception e) {
               e.printStackTrace();
               fail(e.getMessage());
+        }        
+    }
+    
+    public static Connection getJDBCConnection(String keyspace) throws Exception  
+    {  
+        Connection jdbcConn = null;
+        Properties properties = new Properties();
+
+        String cServer;
+        String cServerPort;
+        String cUser;
+        String cPassword;
+        
+        try {
+            cServer = properties.getProperty("cassandra.server", "localhost");
+            cServerPort = properties.getProperty("cassandra.server.port", "9160");
+            cUser = properties.getProperty("cassandra.user", "root");
+            cPassword = properties.getProperty("cassandra.user", "root");
+            
+            String connectionString = "jdbc:cassandra:" + cUser +"/" + cPassword + "@" +
+            cServer + ":" + cServerPort + "/" + keyspace;
+                        
+            Class.forName("org.apache.cassandra.cql.jdbc.CassandraDriver");
+
+            jdbcConn = DriverManager.getConnection(connectionString);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail(e.getMessage());
         }
+        return jdbcConn;
+
+    }
+    
+    public static Connection getHiveConnection() throws Exception
+    {  
+        Connection hiveConn = null;
+        Properties properties = new Properties();
+        
+        try {
+            String hiveServer = properties.getProperty("hive.server", "localhost");
+            String hiveServerPort = properties.getProperty("hive.server.port", "10000");
+
+            String connectionString = "jdbc:hive://" + hiveServer + ":" + hiveServerPort + "/default";
+
+            Class.forName("org.apache.hadoop.hive.jdbc.HiveDriver");
+
+            hiveConn = DriverManager.getConnection(connectionString);
+         
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+        return hiveConn;
     }
 }

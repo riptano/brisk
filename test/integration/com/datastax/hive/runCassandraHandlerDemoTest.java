@@ -5,22 +5,22 @@ import static org.junit.Assert.fail;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
-import java.sql.DriverManager;
 import java.sql.Connection;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.datastax.TestUtils;
+
 public class runCassandraHandlerDemoTest {
-	public static Connection connection = null;
+	private static Connection connection = null;
 	    
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-	    //Test Database Connection
-		Class.forName("org.apache.hadoop.hive.jdbc.HiveDriver");
-	    connection = DriverManager.getConnection("jdbc:hive://localhost:10000/default", "", "");
-    	
+	    //Test Database Connection   	
+        connection = TestUtils.getHiveConnection();
+	    
 	    //Generate Demo Data
 	    String rootDir = System.getProperty("user.dir");
 	    File demoDir = new File(rootDir + "/demos/portfolio_manager");

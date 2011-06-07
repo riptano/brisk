@@ -8,13 +8,14 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import com.datastax.TestUtils;
+
 public class runHiveExamplesTest {
     public static Connection connection = null;
     
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-        Class.forName("org.apache.hadoop.hive.jdbc.HiveDriver");
-        connection = DriverManager.getConnection("jdbc:hive://localhost:10000/default", "", "");        
+        connection = TestUtils.getHiveConnection();   
     }
 	
 	@AfterClass

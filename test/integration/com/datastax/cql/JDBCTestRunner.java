@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.ResultSet;
@@ -21,10 +20,10 @@ public class JDBCTestRunner {
 	//private static final int colCount = 10000;
 	private static ResultSet res;
 
-    public static void runQueries(String connectionString, String testScript) throws Exception  
+    public static void runQueries(String keyspace, String testScript) throws Exception  
     {   
         /* Due to CASSANDRA-2734 we must re-establish the connection after running DDL in order to do operations*/   
-        Connection conn = DriverManager.getConnection(connectionString);   
+        Connection conn = TestUtils.getJDBCConnection(keyspace);
         PreparedStatement stmt;
         
     	String s = new String(); 
@@ -96,11 +95,11 @@ public class JDBCTestRunner {
                         } else if (e.getMessage().contains("Keyspace does not exist")) {
                             System.out.println("---> DROP KS ERROR: " + testScript);     
                         } else {
-                            // Print all other sql errors for running negative tests and capturing actual output
-                            results.write(e.toString()); 
-                            results.newLine();              
-                        }                  
-                	}                   
+                            // Print all other errors for running negative tests and capturing actual output
+                            results.write(e.toString());
+                            results.newLine();    
+                        }
+                	}
                 	
                 	// Not Supported: colCount = res.getMetaData().getColumnCount();
                 	// Workaround: Iterate thru columns until exception reached.
