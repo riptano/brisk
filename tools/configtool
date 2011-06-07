@@ -1,32 +1,33 @@
 #!/usr/bin/env python
 
-import re, sys
+import re, sys, os
 from optparse import OptionParser
 
-confPath = 'resources/cassandra/conf/'
-hconfPath = 'resources/hadoop/conf/'
+confPath = '/etc/brisk/cassandra'
+if not os.path.isdir(confPath):
+    confPath = 'resources/cassandra/conf/'
+print 'Configuring files inside of: ' + confPath + '.'
+
 opsConfPath = '/etc/opscenter/'
 
 clusterName = None
 seedList = None
 clusterSize = False
-autoBootstrap = False
+# autoBootstrap = False
 internalIP = None
-tokenPosition = -1
+ringPosition = -1
 
 DEBUG = False
 
 # Interactively prompts for information to setup the cluster
 def promptUserInfo():
-    global clusterName, seedList, clusterSize, autoBootstrap, internalIP, tokenPosition
-    print "A programmatic interface is also available. Run ./config -h to see all the options.\n"
+    global clusterName, seedList, clusterSize, internalIP, ringPosition
+    print "Run configtool -h to see all the options.\n"
 
     clusterName = raw_input("Cluster name:\n")
     
     seedList = raw_input("Seed list (comma-delimited):\n")
     seedList = seedList.replace(' ', '')
-    seedList = seedList.split(',')
-    seedList.sort()
 
     while (not type(clusterSize) is int):
         clusterSize = raw_input("Current cluster size:\n")
@@ -35,35 +36,34 @@ def promptUserInfo():
         except:
             print "Please enter a valid number."
 
-    while not (autoBootstrap == 'y' or autoBootstrap == 'n'):
-        autoBootstrap = raw_input("Is this node being autoBootStrapped? [y/n]\n").strip()
-    if autoBootstrap == 'y':
-        autoBootstrap = 'true'
-    else:
-        autoBootstrap = 'false'
+    # while not (autoBootstrap == 'y' or autoBootstrap == 'n'):
+    #     autoBootstrap = raw_input("Is this node being autoBootStrapped? [y/n]\n").strip()
+    # if autoBootstrap == 'y':
+    #     autoBootstrap = 'true'
+    # else:
+    #     autoBootstrap = 'false'
 
     internalIP = raw_input("This node's internal IP address:\n")
     
-    while (tokenPosition < 0) or (tokenPosition >= clusterSize):
-        tokenPosition = raw_input("This node's token position (position < cluster size):\n")
+    while (ringPosition < 0) or (ringPosition >= clusterSize):
+        ringPosition = raw_input("This node's ring position (0 <= position < cluster size):\n")
         try:
-            tokenPosition = int(tokenPosition)
+            ringPosition = int(ringPosition)
         except:
             print "Please enter a valid number."
 
 # Reads the command line switches when running the program.
 def commandLineSwitches():
-    global clusterName, seedList, clusterSize, autoBootstrap, internalIP, tokenPosition, confPath, hconfPath, opsConfPath, DEBUG
+    global clusterName, seedList, clusterSize, internalIP, ringPosition, confPath, opsConfPath, DEBUG
     parser = OptionParser()
     parser.add_option("-n", "--clusterName", action="store", type="string", dest="clusterName", help="Set the cluster name.")
     parser.add_option("-l", "--seedList", action="store", type="string", dest="seedList", help="Provide a comma-delimited list of seeds.")
     parser.add_option("-s", "--clusterSize", action="store", type="int", dest="clusterSize", help="Provide the size of the cluster for equal partitioning.")
-    parser.add_option("-a", "--autoBootstrap", action="store_true", dest="autoBootstrap", help="Set autobootstrap to true. (Defaults to false.)")
+    # parser.add_option("-a", "--autoBootstrap", action="store_true", dest="autoBootstrap", help="Set autobootstrap to true. (Defaults to false.)")
     parser.add_option("-i", "--internalIP", action="store", type="string", dest="internalIP", help="Set this nodes internal ip address.")
-    parser.add_option("-t", "--tokenPosition", action="store", type="int", dest="tokenPosition", help="Set this node's token position starting at 0.")
+    parser.add_option("-p", "--ringPosition", action="store", type="int", dest="ringPosition", help="Set this node's ring position starting at 0.")
 
     parser.add_option("-c", "--confPath", action="store", type="string", dest="confPath", help="Set cassandra/conf/ path.")
-    parser.add_option("-p", "--hconfPath", action="store", type="string", dest="hconfPath", help="Set hadoop/conf/ path.")
     parser.add_option("-d", "--debug", action="store_true", dest="debug", help="Show select configurations.")
     parser.add_option("-r", "--reset", action="store_true", dest="reset", help="Restore default settings.")
 
@@ -75,29 +75,24 @@ def commandLineSwitches():
     if options.seedList:
         seedList = options.seedList
         seedList = seedList.replace(' ', '')
-        seedList = seedList.split(',')
-        seedList.sort()
         switchesUsed = True
     if options.clusterSize:
         clusterSize = options.clusterSize
         switchesUsed = True
-    if options.autoBootstrap:
-        autoBootstrap = options.autoBootstrap
-        switchesUsed = True
+    # if options.autoBootstrap:
+    #     autoBootstrap = options.autoBootstrap
+    #     switchesUsed = True
     if options.internalIP:
         internalIP = options.internalIP
         switchesUsed = True
-    if not options.tokenPosition == None:
-        tokenPosition = options.tokenPosition
-        if not tokenPosition < clusterSize:
-            print "ERROR: Tokens must start at 0 and be less than clusterSize."
+    if not options.ringPosition == None:
+        ringPosition = options.ringPosition
+        if not ringPosition < clusterSize:
+            print "ERROR: Ring positions must start at 0 and be less than clusterSize."
             sys.exit()
         switchesUsed = True
     if options.confPath:
         confPath = options.confPath
-        switchesUsed = True
-    if options.hconfPath:
-        hconfPath = options.hconfPath
         switchesUsed = True
     if options.debug:
         DEBUG = True
@@ -107,81 +102,76 @@ def commandLineSwitches():
     return switchesUsed
 
 def reset():
-    global clusterName, seedList, clusterSize, autoBootstrap, internalIP, tokenPosition
+    global clusterName, seedList, clusterSize, internalIP, ringPosition
     clusterName = 'Test Cluster'
     seedList = ['127.0.0.1']
     clusterSize = False
-    autoBootstrap = False
+    # autoBootstrap = False
     internalIP = 'localhost'
-    tokenPosition = -2
+    ringPosition = -2
 
 
 def configureCassandraYaml():
     with open(confPath + 'cassandra.yaml', 'r') as f:
         yaml = f.read()
 
-    if autoBootstrap:
-        # Set auto_bootstrap to true if expanding
-        yaml = yaml.replace('auto_bootstrap: false', 'auto_bootstrap: true')
-    else:
-        yaml = yaml.replace('auto_bootstrap: true', 'auto_bootstrap: false')
+    # if autoBootstrap:
+    #     # Set auto_bootstrap to true if expanding
+    #     yaml = yaml.replace('auto_bootstrap: false', 'auto_bootstrap: true')
+    # else:
+    #     yaml = yaml.replace('auto_bootstrap: true', 'auto_bootstrap: false')
     
+    p = re.compile('seeds:.*')
     if seedList:
-        # Create the seed list
-        seedsYaml = ''
-        for ip in seedList:
-            seedsYaml += '     - ' + ip + '\n'
-        if DEBUG:
-            print "[DEBUG] seedsYaml: \n" + seedsYaml
-        
         # Set seeds
-        p = re.compile('seeds:(\s*-.*)*\s*#')
-        yaml = p.sub('seeds:\n' + seedsYaml + '\n\n#', yaml)
+        yaml = p.sub('seeds: "%s"' % (seedList), yaml)
+        if DEBUG:
+            print '[DEBUG] seeds: "%s"' % (seedList)
+    if ringPosition == -2:
+        yaml = p.sub('seeds: "127.0.0.1"', yaml)
     
+    p = re.compile('listen_address:.*')
     if internalIP:
         # Set listen_address
-        p = re.compile('listen_address:.*')
         yaml = p.sub('listen_address: ' + internalIP, yaml)
         if DEBUG:
             print "[DEBUG] listen_address: " + internalIP
+    if ringPosition == -2:
+        yaml = p.sub('listen_address: localhost', yaml)
     
+    p = re.compile('cluster_name:.*')
     if clusterName:
         # Set cluster_name
-        p = re.compile('cluster_name:.*')
         yaml = p.sub("cluster_name: '" + clusterName + "'", yaml)
         if DEBUG:
             print "[DEBUG] clusterName: " + clusterName
+    if ringPosition == -2:
+        yaml = p.sub("cluster_name: 'Test Cluster'", yaml)
     
-    if clusterSize and not (tokenPosition < 0):
+    p = re.compile('initial_token:.*')
+    if clusterSize and not (ringPosition < 0):
         # Construct token for an equally split ring
-        token = tokenPosition * (2**127 / clusterSize)
-        p = re.compile('initial_token:.*')
+        token = ringPosition * (2**127 / clusterSize)
         yaml = p.sub('initial_token: ' + str(token), yaml)
         if DEBUG:
             print "[DEBUG] clusterSize: " + str(clusterSize)
-            print "[DEBUG] tokenPosition: " + str(tokenPosition)
+            print "[DEBUG] ringPosition: " + str(ringPosition)
             print "[DEBUG] token: " + str(token)
+    if ringPosition == -2:
+        yaml = p.sub('initial_token:', yaml)
     
+    p = re.compile('rpc_address:.*')
     # Allow Thrift to listen on all interfaces
-    yaml = yaml.replace('rpc_address: localhost', 'rpc_address: 0.0.0.0')
-    
-
-    if tokenPosition == -2:
-        # Reset() was called, so clear the token
-        p = re.compile('initial_token:.*')
-        yaml = p.sub('initial_token: ', yaml)
-        
-        # Reset to default rpc_address
-        yaml = yaml.replace('rpc_address: 0.0.0.0', 'rpc_address: localhost')
-        print "[INFO] Default settings have been restored."
-    
-    # Brisk: Set to use different datacenters
-    # yaml = yaml.replace('endpoint_snitch: org.apache.cassandra.locator.SimpleSnitch', 'endpoint_snitch: org.apache.cassandra.locator.PropertyFileSnitch')
+    yaml = p.sub('rpc_address: 0.0.0.0', yaml)
+    if ringPosition == -2:
+        yaml = p.sub('rpc_address: localhost', yaml)
+        print "Default settings have been restored."
     
     with open(confPath + 'cassandra.yaml', 'w') as f:
         f.write(yaml)
     
-    print '[INFO] cassandra.yaml configured.'
+    if DEBUG:
+        print '[DEBUG] cassandra.yaml configured.'
     
 def configureOpsCenterConf():
     try:
@@ -194,20 +184,36 @@ def configureOpsCenterConf():
 
             # Set Opscenter to point to a single seed.
             p = re.compile('seed_hosts:.*')
-            opsConf = p.sub('seed_hosts = ' + seedList[0], opsConf)
+
+            splitList = seedList.split(',')
+            splitList.sort()
+            opsConf = p.sub('seed_hosts = ' + splitList[0], opsConf)
         
         with open(opsConfPath + 'opscenterd.conf', 'w') as f:
             f.write(opsConf)
             
-        print '[INFO] opscenterd.conf configured.'
+        if DEBUG:
+            print '[DEBUG] opscenterd.conf configured.'
     except:
-        print '[INFO] opscenterd.conf not configured.'
+        if DEBUG:
+            print '[DEBUG] opscenterd.conf not configured.'
+
+def printCommandLineReplication():
+    print
+    print 'Replicate accordingly across the rest of the new nodes:'
+    print '       configtool -n "%s" -l "%s" -s %s -i <internalIP> -p <ringPosition>' % (clusterName, seedList, clusterSize)
+    print
 
 
-
-
+printReplication = False
 if not commandLineSwitches():
     promptUserInfo()
+    printReplication = True
 
 configureCassandraYaml()
 configureOpsCenterConf()
+
+if printReplication:
+    printCommandLineReplication()
+
+print 'Done.'
