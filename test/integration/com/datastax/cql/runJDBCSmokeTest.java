@@ -2,7 +2,6 @@ package com.datastax.cql;
 
 import static org.junit.Assert.fail;
 
-import java.sql.DriverManager;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,16 +18,15 @@ public class runJDBCSmokeTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {   
-	    ResultSet res;
 	    
 	    try {
 	        //Class.forName("org.apache.cassandra.cql.jdbc.CassandraDriver");        
 	        //String connectionString = "jdbc:cassandra:root/root@127.0.0.1:9160/";
 	        //Connection conn = DriverManager.getConnection(connectionString + "default");
 	        Connection conn = TestUtils.getJDBCConnection("default");
-
 	        Statement stmt = conn.createStatement();
-
+	        ResultSet res;
+	        
 	        try {
 	          res = stmt.executeQuery("DROP KEYSPACE " + keySpace);	   
               res = stmt.executeQuery("CREATE KEYSPACE " + keySpace +
