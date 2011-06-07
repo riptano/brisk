@@ -3,10 +3,25 @@
 import re, sys, os
 from optparse import OptionParser
 
-confPath = '/etc/brisk/cassandra'
+confPath = '/etc/brisk/cassandra/'
 if not os.path.isdir(confPath):
     confPath = 'resources/cassandra/conf/'
-print 'Configuring files inside of: ' + confPath + '.'
+    if not os.path.isfile(confPath + 'cassandra.yaml'):
+        confPath = '../resources/cassandra/conf/'
+    if not os.path.isfile(confPath + 'cassandra.yaml'):
+        print 'Cassandra.yaml not found at: ' + confPath + 'cassandra.yaml'
+        sys.exit(1)
+
+print 'Configuring: ' + confPath + 'cassandra.yaml.'
+
+try:
+    with open(confPath + 'cassandra.yaml', 'r') as f:
+        yaml = f.read()
+    with open(confPath + 'cassandra.yaml', 'w') as f:
+        f.write(yaml)
+except:
+    print 'This tool may need to be run as sudo due to file permissions.'
+    sys.exit(1)
 
 opsConfPath = '/etc/opscenter/'
 
@@ -178,6 +193,8 @@ def configureOpsCenterConf():
         with open(opsConfPath + 'opscenterd.conf', 'r') as f:
             opsConf = f.read()
         
+        print 'Configuring: ' + opsConfPath + 'opscenterd.conf'
+
         if seedList:
             # Set OpsCenter to listen to all addresses
             opsConf = opsConf.replace('interface = 127.0.0.1', 'interface = 0.0.0.0')
