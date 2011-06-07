@@ -1,6 +1,5 @@
 package com.datastax.hive;
 
-import java.sql.DriverManager;
 import java.sql.Connection;
 
 import org.junit.AfterClass;

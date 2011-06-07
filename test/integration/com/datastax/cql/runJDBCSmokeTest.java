@@ -20,9 +20,6 @@ public class runJDBCSmokeTest {
 	public static void setUpBeforeClass() throws Exception {   
 	    
 	    try {
-	        //Class.forName("org.apache.cassandra.cql.jdbc.CassandraDriver");        
-	        //String connectionString = "jdbc:cassandra:root/root@127.0.0.1:9160/";
-	        //Connection conn = DriverManager.getConnection(connectionString + "default");
 	        Connection conn = TestUtils.getJDBCConnection("default");
 	        Statement stmt = conn.createStatement();
 	        ResultSet res;

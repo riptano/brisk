@@ -12,6 +12,8 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.datastax.TestUtils;
+
 public class runCqlshSmokeTest {
     public static Connection connection = null;
     
@@ -19,13 +21,10 @@ public class runCqlshSmokeTest {
 	public static void setUpBeforeClass() throws Exception {   
 	    String keySpace = "cqldb";
 	    ResultSet res;
-	    
+
 	    try {
-	        Class.forName("org.apache.cassandra.cql.jdbc.CassandraDriver");
-	        
-	        // Check create keyspace
-	        Connection initConn = DriverManager.getConnection("jdbc:cassandra:root/root@127.0.0.1:9160/default");     
-	        Statement stmt = initConn.createStatement();
+	        Connection conn = TestUtils.getJDBCConnection("default");
+	        Statement stmt = conn.createStatement();
 
 	        try {
 	          res = stmt.executeQuery("DROP KEYSPACE " + keySpace);	   
@@ -37,12 +36,13 @@ public class runCqlshSmokeTest {
                 {
                     // Do nothing ... this just means we are dropping a keyspace that didn't exist
                     res = stmt.executeQuery("CREATE KEYSPACE " + keySpace +
-                    " with strategy_class =  'org.apache.cassandra.locator.SimpleStrategy' and strategy_options:replication_factor=1");  
+                    " with strategy_class =  'org.apache.cassandra.locator.SimpleStrategy' and " + 
+                    " strategy_options:replication_factor=1");  
                 } else {
                     fail(e.getMessage());
                 }                   
             }   
-            initConn.close();            
+            conn.close();            
 
             // Log on to new keyspace
 	        connection = DriverManager.getConnection("jdbc:cassandra:root/root@127.0.0.1:9160/" + keySpace);     
@@ -54,7 +54,6 @@ public class runCqlshSmokeTest {
 	
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
-		connection.close();
 	}
 	
 	@Test

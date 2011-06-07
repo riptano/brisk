@@ -10,6 +10,7 @@ import java.util.Properties;
 
 import java.sql.DriverManager;
 import java.sql.Connection;
+
 import static org.junit.Assert.*;
 
 public  class TestUtils {
@@ -34,7 +35,7 @@ public  class TestUtils {
             
             line = null;
             
-            // Read actual output into array
+            // Read expected output into array
             while((line = ebr.readLine()) != null) {
                 expList.add(line);
             }
@@ -51,24 +52,53 @@ public  class TestUtils {
               fail(e.getMessage());
         }        
     }
+   
+    public static String getCqlshPrompt() throws Exception  
+    {  
+        String cqlsh = null;
+        
+        String cServer = null;
+        String cServerPort = null;
+        String cUser = null;
+        String cPassword = null;
+        
+        try {
+            Properties properties = new Properties();
+            cServer = properties.getProperty("cassandra.server");
+            cServerPort = properties.getProperty("cassandra.server.port");
+            cUser = properties.getProperty("cassandra.user");
+            cPassword = properties.getProperty("cassandra.password");  
+            
+            if (cUser == null && cPassword == null) {
+                cqlsh = "cqlsh " + cServer + " " + cServerPort;  
+            } else {
+                cqlsh = "cqlsh " + cServer + " " + cServerPort + "-u " + cUser + "-p " + cPassword;  
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+        
+        return cqlsh;
+    }
     
     public static Connection getJDBCConnection(String keyspace) throws Exception  
     {  
         Connection jdbcConn = null;
-        Properties properties = new Properties();
-
-        String cServer;
-        String cServerPort;
-        String cUser;
-        String cPassword;
+        String cServer = null;
+        String cServerPort = null;
+        String cUser = null;
+        String cPassword = null;
         
         try {
+            Properties properties = new Properties();
+
             properties.load(new FileInputStream(propFile));
             
             cServer = properties.getProperty("cassandra.server");
             cServerPort = properties.getProperty("cassandra.server.port");
             cUser = properties.getProperty("cassandra.user");
-            cPassword = properties.getProperty("cassandra.user");           
+            cPassword = properties.getProperty("cassandra.password");           
             
             String connectionString = "jdbc:cassandra:" + cUser +"/" + cPassword + "@" +
             cServer + ":" + cServerPort + "/" + keyspace;
@@ -90,9 +120,10 @@ public  class TestUtils {
     public static Connection getHiveConnection() throws Exception
     {  
         Connection hiveConn = null;
-        Properties properties = new Properties();
         
         try {
+            Properties properties = new Properties();
+
             properties.load(new FileInputStream(propFile));
 
             String hiveServer = properties.getProperty("hive.server");
