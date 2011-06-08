@@ -1,47 +1,25 @@
 package com.datastax.hive;
 
-import static org.junit.Assert.fail;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.lang.ClassNotFoundException;
-
-import java.sql.DriverManager;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.apache.cassandra.thrift.InvalidRequestException;
-import org.apache.cassandra.thrift.NotFoundException;
-import org.apache.cassandra.thrift.TimedOutException;
-import org.apache.thrift.TException;
-import org.apache.thrift.protocol.TBinaryProtocol;
-import org.apache.thrift.protocol.TProtocol;
-import org.apache.thrift.transport.TFramedTransport;
-import org.apache.thrift.transport.TSocket;
-import org.apache.thrift.transport.TTransport;
-
-import org.apache.cassandra.thrift.Cassandra;
-import org.apache.cassandra.config.DatabaseDescriptor;
-
+import static org.junit.Assert.fail;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.internal.runners.statements.Fail;
 
 import com.datastax.TestUtils;
+import com.datastax.cql.JDBCTestRunner;
 
 public class runCassHandlerCreateObjTest {
 	public static Connection connection = null;
-    private static final String keySpace      = "fresh_ks";
-    private static final String columnFamily  = "fresh_cf_ext";
 	    
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception
-	//InvalidRequestException,TimedOutException, TException, NotFoundException, ClassNotFoundException, SQLException, Exception 
     {
+	    String ks = "fresh_ks";
+	    String cf  = "fresh_cf_ext";
+
         //Test Database Connection
 	    try {
 	        connection = TestUtils.getHiveConnection();    	
@@ -49,28 +27,19 @@ public class runCassHandlerCreateObjTest {
                fail("Hive JDBC Login Error: " + e.getMessage());
            }
 	      	       
-        // Use Thrift to clean up existing keyspaces
+        // Use JDBC to clean up existing the KEYSPACE
         try {   
-            TTransport tr = new TFramedTransport(new TSocket("localhost", 9160));
-	    	TProtocol proto = new TBinaryProtocol(tr);
-	    	Cassandra.Client client = new Cassandra.Client(proto);
-	    	tr.open();
-	    	
-	        try {   
-	            if (DatabaseDescriptor.getTables().contains(columnFamily)) {
-	                client.system_drop_column_family(columnFamily);
-	            } 
-		    	
-	            if (client.describe_keyspace(keySpace) != null) {
-	                client.system_drop_keyspace(keySpace);
-	            } 		    	
-	    	} catch (NotFoundException nfe) {
-	    	    //Swallow exception - this occurs when keyspace doesn't exist - which is ok
-	    	  }
-	    		
-	    	tr.close();
+            Connection jdbc_conn = TestUtils.getJDBCConnection(ks);
+            String dropCF = "DROP COLUMNFAMILY " + cf;        
+            JDBCTestRunner.executeCQL("", dropCF, jdbc_conn);
+            jdbc_conn.close();
 
-	    } catch (Exception e) {
+            jdbc_conn = TestUtils.getJDBCConnection("default");
+            String dropKS = "DROP KEYSPACE " + ks;        
+            JDBCTestRunner.executeCQL("", dropKS, jdbc_conn);
+            jdbc_conn.close();
+            
+	    } catch (SQLException e) {
 	        e.printStackTrace();
             fail(e.getMessage());
 	    }

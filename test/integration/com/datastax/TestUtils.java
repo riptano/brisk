@@ -65,8 +65,6 @@ public  class TestUtils {
 
             // Get hostname
             hostname = addr.getHostName();
-            System.out.println("---> Host Name = " + hostname);
-
         } catch (UnknownHostException e) {
         }
         return hostname;
@@ -79,9 +77,7 @@ public  class TestUtils {
             InetAddress addr = InetAddress.getLocalHost();
             
             // Get IP Address
-            ip = addr.getHostAddress();
-            System.out.println("---> IP Address = " + ip);
-            
+            ip = addr.getHostAddress();            
         } catch (UnknownHostException e) {
         }
         return ip;
@@ -98,6 +94,8 @@ public  class TestUtils {
         
         try {
             Properties properties = new Properties();
+            properties.load(new FileInputStream(propFile));
+
             cServer = properties.getProperty("cassandra.server").trim();
             cServerPort = properties.getProperty("cassandra.server.port").trim();
             cUser = properties.getProperty("cassandra.user").trim();
@@ -106,7 +104,7 @@ public  class TestUtils {
             if (cUser == null && cPassword == null) {
                 cqlsh = "cqlsh " + cServer + " " + cServerPort;  
             } else {
-                cqlsh = "cqlsh " + cServer + " " + cServerPort + "-u " + cUser + "-p " + cPassword;  
+                cqlsh = "cqlsh " + cServer + " " + cServerPort + " -u " + cUser + " -p " + cPassword;  
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -130,7 +128,6 @@ public  class TestUtils {
 
         try {
             Properties properties = new Properties();
-
             properties.load(new FileInputStream(propFile));
             
             cServer = properties.getProperty("cassandra.server").trim();
@@ -140,8 +137,6 @@ public  class TestUtils {
             
             connectionString = "jdbc:cassandra:" + cUser +"/" + cPassword + "@" +
             cServer + ":" + cServerPort + "/" + keyspace;
-
-            System.out.println("Connection String: " + connectionString);
             
             Class.forName("org.apache.cassandra.cql.jdbc.CassandraDriver");
             jdbcConn = DriverManager.getConnection(connectionString);
@@ -204,7 +199,6 @@ public  class TestUtils {
         
         try {
             Properties properties = new Properties();
-
             properties.load(new FileInputStream(propFile));
 
             String hiveServer = properties.getProperty("hive.server").trim();

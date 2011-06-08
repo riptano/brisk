@@ -42,10 +42,10 @@ public  class cqlshTestRunner {
             BufferedWriter cwriter = new BufferedWriter(new FileWriter(tmpFile));
             
             cwriter.write("#!/bin/bash \n");
-            cwriter.write(TestUtils.getCqlshPrompt() + " <<HERE\n");
+            cwriter.write(TestUtils.getCqlshPrompt() + " <<HERE \n");
             
             while((s = br.readLine()) != null)  {
-                // Ignore empty lines ands comments (starting with "--")
+                // Ignore empty lines ands comments (starting with "--") 
                 if(!s.trim().equals("") && !s.startsWith("--")) 
                 {
                     s = s.replace("[[DATA_DIR]]", dataDir);

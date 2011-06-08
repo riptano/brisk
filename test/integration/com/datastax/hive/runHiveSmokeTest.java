@@ -22,35 +22,30 @@ public class runHiveSmokeTest {
 		connection.close();
 	}
 	
-	@Ignore
 	@Test
     /* hiveCRUDtable: Create Table, Load Data and Drop */   
     public void hiveCRUDtable() throws Exception {
 		HiveJDBCRunner.runQueries(connection, "hiveCRUDtable"); 
     } 
     
-	@Ignore
 	@Test
     /* hiveDropPartition: Create, Load, Drop and Load Partitioned Table */
     public void hiveDropPartition() throws Exception {
 		HiveJDBCRunner.runQueries(connection, "hiveDropPartition");
     } 
 
-    @Ignore
 	@Test
     /* hiveCTAS: Create, Load, Drop non-partitioned table */
     public void hiveCTAS() throws Exception {
 		HiveJDBCRunner.runQueries(connection, "hiveCTAS");
     } 
 	
-    @Ignore
 	@Test
     /* hiveCreateLike: Create, Load, Drop partitioned table */
     public void hiveCreateLike() throws Exception {
 	    HiveJDBCRunner.runQueries(connection, "hiveCreateLike");
     } 
 
-    @Ignore
 	@Test
     /* hiveAlterTable: Lots of ALTER TABLES and ADD COLUMNS stuff */
     public void hiveAlterTable() throws Exception {

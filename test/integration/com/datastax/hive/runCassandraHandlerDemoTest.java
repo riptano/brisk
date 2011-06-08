@@ -37,7 +37,6 @@ public class runCassandraHandlerDemoTest {
 	    for(int i=0; i<commands.length ;i++){
 	    	
     		try {
-	    		//System.out.println("Setting up demo: " + commands[i]);	    		
 	    		Process proc = Runtime.getRuntime().exec(commands[i], envp, demoDir);
 	    		BufferedReader br = new BufferedReader(new InputStreamReader(proc.getInputStream()));
 	    		String commandResult = null;     

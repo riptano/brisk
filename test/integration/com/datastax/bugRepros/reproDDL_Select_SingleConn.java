@@ -8,7 +8,7 @@ import java.sql.Statement;
 
 import org.junit.Test;
 
-public class reproBugTestUnused {
+public class reproDDL_Select_SingleConn {
     
     @Test
     public void simpleSelect() throws Exception {   
