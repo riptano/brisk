@@ -5,6 +5,7 @@ import java.sql.Connection;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.datastax.TestUtils;
@@ -47,9 +48,9 @@ public class runJDBCSmokeTest {
         JDBCTestRunner.runQueries(keySpace, "insert_all_options_table");
     }  
     
-	//@Ignore
+	@Ignore
     @Test
-    /* cql_jdbc_users_crud: Create Table, Load Data and Drop */   
+    /* cql_jdbc_keyspace_syntax_check */   
     public void cql_jdbc_keyspace_syntax_check() throws Exception {
         JDBCTestRunner.runQueries(keySpace, "create_keyspaces_syntax_check");
     }  
