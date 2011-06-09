@@ -51,7 +51,6 @@
 	<property name="dist.dir" value="${build.dir}/dist"/>
 	<property name="test.integration.src" value="${test.dir}/integration"/>
 
-
 	<property name="hadoop.dir" value="${basedir}/resources/hadoop"/>
 	<property name="hadoop.dir.lib" value="${hadoop.dir}/lib"/>
 	<property name="cassandra.dir" value="${basedir}/resources/cassandra"/>
@@ -186,6 +185,7 @@
 		<!-- for distributed tests -->
 		<artifact:remoteRepository id="jclouds"   url="${artifact.remoteRepository.jclouds}"/>
 		<artifact:remoteRepository id="oauth"     url="${artifact.remoteRepository.oauth}"/>
+		<artifact:remoteRepository id="xerial"     url="${artifact.remoteRepository.xerial}"/>
 
 		<property name="maven-ant-tasks.initialized" value="true"/>
 	</target>
@@ -237,6 +237,7 @@
 			<dependency groupId="org.apache.cassandra" artifactId="apache-cassandra-thrift" version="${cassandra-thrift.build.version}"/>
 			<dependency groupId="org.apache.cassandra" artifactId="apache-cassandra-cql" version="${cassandra-cql.build.version}"/>
 			<dependency groupId="joda-time" artifactId="joda-time" version="1.6.2"/>
+			<dependency groupId="org.xerial.snappy" artifactId="snappy-java" version="1.0.3-SNAPSHOT"/>
 			<remoteRepository id="datastax-snapshot"  url="${artifact.remoteRepository.datastax-snapshot}">
 				<snapshots updatePolicy="${snapshot.datastax.updatePolicy}"/>
 			</remoteRepository>
@@ -245,6 +246,7 @@
 			<remoteRepository refid="central"/>
 			<remoteRepository refid="apache"/>
 			<remoteRepository refid="java.net2"/>
+			<remoteRepository refid="xerial"/>
 		</artifact:dependencies>
 
 		<artifact:dependencies filesetId="hive-jars"
@@ -349,7 +351,7 @@
 	</target>
 
 	  <!-- Generate Eclipse project description files -->
-	  <target name="eclipse-files" depends="build">
+	  <target name="eclipse-files" depends="maven-ant-tasks-retrieve-build">
 	    <echo file=".project"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
 	<projectDescription>
 	  <name>brisk</name>
@@ -429,10 +431,10 @@
 	    <mkdir dir=".externalToolBuilders" />
 	    <echo file=".externalToolBuilders/Brisk_Ant_Builder.launch"><![CDATA[<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 	<launchConfiguration type="org.eclipse.ant.AntBuilderLaunchConfigurationType">
-	<stringAttribute key="org.eclipse.ant.ui.ATTR_ANT_AFTER_CLEAN_TARGETS" value="build,build-test,"/>
-	<stringAttribute key="org.eclipse.ant.ui.ATTR_ANT_AUTO_TARGETS" value="build,build-test,"/>
-	<stringAttribute key="org.eclipse.ant.ui.ATTR_ANT_CLEAN_TARGETS" value="build,build-test,"/>
-	<stringAttribute key="org.eclipse.ant.ui.ATTR_ANT_MANUAL_TARGETS" value="build,build-test,"/>
+<stringAttribute key="org.eclipse.ant.ui.ATTR_ANT_AFTER_CLEAN_TARGETS" value="clean,"/>
+<stringAttribute key="org.eclipse.ant.ui.ATTR_ANT_AUTO_TARGETS" value="build-test,"/>
+<stringAttribute key="org.eclipse.ant.ui.ATTR_ANT_CLEAN_TARGETS" value="build-test,"/>
+<stringAttribute key="org.eclipse.ant.ui.ATTR_ANT_MANUAL_TARGETS" value="build-test,"/>
 	<booleanAttribute key="org.eclipse.ant.ui.ATTR_TARGETS_UPDATED" value="true"/>
 	<booleanAttribute key="org.eclipse.ant.ui.DEFAULT_VM_INSTALL" value="false"/>
 	<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">

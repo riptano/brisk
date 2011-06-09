@@ -1,26 +1,26 @@
-package com.datastax.brisk;
+package com.datastax.hive;
 
 import static org.junit.Assert.fail;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
-import java.sql.DriverManager;
 import java.sql.Connection;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.datastax.TestUtils;
+
 public class runCassandraHandlerDemoTest {
-	public static Connection connection = null;
+	private static Connection connection = null;
 	    
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-	    //Test Database Connection
-		Class.forName("org.apache.hadoop.hive.jdbc.HiveDriver");
-	    connection = DriverManager.getConnection("jdbc:hive://localhost:10000/default", "", "");
-    	
+	    //Test Database Connection   	
+        connection = TestUtils.getHiveConnection();
+	    
 	    //Generate Demo Data
 	    String rootDir = System.getProperty("user.dir");
 	    File demoDir = new File(rootDir + "/demos/portfolio_manager");
@@ -37,7 +37,6 @@ public class runCassandraHandlerDemoTest {
 	    for(int i=0; i<commands.length ;i++){
 	    	
     		try {
-	    		//System.out.println("Setting up demo: " + commands[i]);	    		
 	    		Process proc = Runtime.getRuntime().exec(commands[i], envp, demoDir);
 	    		BufferedReader br = new BufferedReader(new InputStreamReader(proc.getInputStream()));
 	    		String commandResult = null;     
@@ -61,7 +60,7 @@ public class runCassandraHandlerDemoTest {
 	@Test
     /* System.out.println("===> cassHandler_Demo: Create External C* Table, Load Data and Drop */   
 	public void testCreateLoadDropTable() throws Exception {
-		HiveTestRunner.runQueries(connection, "cassHandler_Demo"); 
+		HiveJDBCRunner.runQueries(connection, "cassHandler_Demo"); 
 	} 
 
 }

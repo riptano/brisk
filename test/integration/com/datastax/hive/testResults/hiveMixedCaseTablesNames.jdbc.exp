@@ -3,6 +3,7 @@
 -- Statement: DROP TABLE IF EXISTS mixedCaSE_clike
 -- Statement: DROP TABLE IF EXISTS mixedCaSE_ctas
 -- Statement: CREATE TABLE mixedCaSE (foo INT, bar STRING) COMMENT 'table to test DDL ops' PARTITIONED BY (ds STRING) STORED AS TEXTFILE
+-- Statement: LOAD DATA LOCAL INPATH '[[EXAMPLES]]/kv1.txt' OVERWRITE INTO TABLE mixedCaSE PARTITION (ds='2008-08-08')
 -- Statement: CREATE TABLE mixedCaSE_clike LIKE mixedCaSE
 -- Statement: DESCRIBE mixedCaSE_clike
 foo, int, , 

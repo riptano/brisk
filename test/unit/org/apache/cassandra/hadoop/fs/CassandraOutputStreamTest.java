@@ -18,12 +18,12 @@
 package org.apache.cassandra.hadoop.fs;
 
 
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.util.*;
 
 import org.junit.*;
@@ -273,7 +273,7 @@ public class CassandraOutputStreamTest extends CleanupHelper
 		}
 
 		@Override
-		public void storeSubBlock(UUID currentBlockUUID, SubBlock subBlock, ByteArrayOutputStream file)  throws IOException {
+		public void storeSubBlock(UUID currentBlockUUID, SubBlock subBlock, ByteBuffer data)  throws IOException {
 			storeSubBlockCount++;
 			subBlocksStored.add(subBlock);
 		}

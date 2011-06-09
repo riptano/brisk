@@ -8,7 +8,7 @@
 3) The test structure is:
 *Test.java contains test case declarations, using @Test notation
 
-* testCases: contain HiveQL files.
+* testCases: contain HiveQL or CQL files which run either by the CLI or via JDBC
 ** These files can contain comments, specifed as '--'
 ** All SQL statements must end in a semi-colon
 ** To specify input files in the 'testData' directory, test cases can reference [[DATA_DIR]]
@@ -17,3 +17,11 @@
 * testResults:  contains *.exp files which are checked into source.  *.out files are generated for a diff using FileAssert.
 
 * testData: contains input data used for load commands.  
+
+4) To configure connection properties, you should edit:  test/integration/com/datastax/test.properties:
+hive.server=localhost
+hive.server.port=10000
+cassandra.server=localhost
+cassandra.server.port=9160
+cassandra.user=root
+cassandra.password=root
