@@ -47,9 +47,7 @@ public class SnappyCompressor implements Compressor
         outBuf.put(b, off, len);
         
         bytesRead += len;
-    }
-
-   
+    }   
 
     public synchronized void setDictionary(byte[] b, int off, int len)
     {
@@ -58,6 +56,7 @@ public class SnappyCompressor implements Compressor
 
     public synchronized boolean needsInput()
     {       
+        // needs input if compressed data was consumed
         if (compressedBuf.position() > 0 && compressedBuf.limit() > compressedBuf.position()) 
             return false;
        
@@ -71,7 +70,7 @@ public class SnappyCompressor implements Compressor
 
     public synchronized boolean finished()
     {
-        // Check if all uncompressed data has been consumed        
+        // Check if all compressed data has been consumed        
         return (finish && finished);
     }
 

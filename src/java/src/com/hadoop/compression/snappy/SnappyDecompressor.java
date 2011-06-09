@@ -57,7 +57,7 @@ public class SnappyDecompressor implements Decompressor
 
     public synchronized boolean needsInput()
     {      
-       
+        //needs input if the uncompressed data was consumed
         if (uncompressedBuf.position() > 0 && uncompressedBuf.limit() > uncompressedBuf.position())
             return false;
               
@@ -87,6 +87,7 @@ public class SnappyDecompressor implements Decompressor
             throw new ArrayIndexOutOfBoundsException();
         }
         
+        //nothing to decompress
         if ((outBuf.position() == 0 && uncompressedBuf.position() == 0)   || finished)
         {
             reset();
@@ -95,6 +96,7 @@ public class SnappyDecompressor implements Decompressor
             return 0;
         }
             
+        //only needs to do this once per input
         if(uncompressedBuf.position() == 0)
         {          
             try
