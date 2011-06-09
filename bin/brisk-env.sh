@@ -39,6 +39,10 @@ for jar in $BRISK_HOME/lib/brisk*.jar; do
     export CLASSPATH=$CLASSPATH:$jar
 done
 
+for jar in $BRISK_HOME/resources/brisk/lib/*.jar; do
+    export CLASSPATH=$CLASSPATH:$jar
+done
+
 #
 #Add hive cassandra driver
 #

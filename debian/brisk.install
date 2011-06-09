@@ -3,3 +3,4 @@ bin/brisktool usr/bin
 packaging-common/brisk-env.sh etc/brisk
 packaging-common/brisk.in.sh usr/share/brisk
 packaging-common/overcommit.conf etc/sysctl.d
+resources/brisk/lib/* usr/share/brisk/common
