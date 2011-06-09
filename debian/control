@@ -55,11 +55,33 @@ Architecture: all
 Depends: sun-java6-jre | java6-runtime-headless
 Recommends: sun-java6-jre (>= 6.24-1~squeeze1)
 Homepage: http://www.datastax.com/products/brisk
-Description: realtime analytics and distributed database (cassandra libraries)
+Description: realtime analytics and distributed database (hive libraries)
  Brisk is a realtime analytics system marrying the distributed database
  Cassandra and the mapreduce system Hadoop together.
  .
  This package contains the Brisk Hive libraries.
+
+Package: brisk-pig
+Architecture: all
+Depends: sun-java6-jre | java6-runtime-headless, brisk (=${binary:Version}), brisk-libpig(=${binary:Version})
+Recommends: sun-java6-jre (>= 6.24-1~squeeze1)
+Homepage: http://www.datastax.com/products/brisk
+Description: realtime analytics and distributed database (pig)
+ Brisk is a realtime analytics system marrying the distributed database
+ Cassandra and the mapreduce system Hadoop together.
+ .
+ This package contains the Brisk Pig application.
+
+Package: brisk-libpig
+Architecture: all
+Depends: sun-java6-jre | java6-runtime-headless
+Recommends: sun-java6-jre (>= 6.24-1~squeeze1)
+Homepage: http://www.datastax.com/products/brisk
+Description: realtime analytics and distributed database (pig libraries)
+ Brisk is a realtime analytics system marrying the distributed database
+ Cassandra and the mapreduce system Hadoop together.
+ .
+ This package contains the Brisk Pig libraries.
 
 Package: brisk-demos
 Architecture: all
@@ -73,7 +95,7 @@ Description: realtime analytics and distributed database (cassandra libraries)
 
 Package: brisk-full
 Architecture: all
-Depends: brisk (=${binary:Version}), brisk-hive (=${binary:Version}), brisk-demos (=${binary:Version})
+Depends: brisk (=${binary:Version}), brisk-hive (=${binary:Version}), brisk-pig (=${binary:Version}), brisk-demos (=${binary:Version})
 Homepage: http://www.datastax.com/products/brisk
 Description: realtime analytics and distributed database (cassandra libraries)
  Brisk is a realtime analytics system marrying the distributed database
