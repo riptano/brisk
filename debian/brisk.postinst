@@ -39,6 +39,7 @@ case "$1" in
             chown -R cassandra: /var/log/cassandra
             chown -R cassandra: /var/log/hadoop
             chown -R cassandra: /var/log/hive
+            chown -R cassandra: /var/log/pig
         fi
 
         # enable overcommit

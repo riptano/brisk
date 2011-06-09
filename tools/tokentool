@@ -103,7 +103,7 @@ def noDuplicateTokens(offsetdc=-1, offset=0):
 
 
 def sweepAndFind(dc, otherdc, iteration):
-    global zoom
+    global zoom, dcOffsets
     theseTokens = originalTokens[dc].values()
     otherTokens = originalTokens[otherdc].values()
     
@@ -218,7 +218,7 @@ def calculateTokens():
 
         for node in originalTokens[dc].keys():
             originalTokens[dc][node] = sortedTokens[node]
-    return calculateTokens
+    return originalTokens
 
 def printResults():
     # Calculate the shifted tokens
@@ -238,4 +238,5 @@ def run():
     focus()
     printResults()
 
-run()
+if __name__ == '__main__':
+    run()

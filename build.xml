@@ -211,13 +211,16 @@
 			     cacheDependencyRefs="true" 
 			     dependencyRefsBuildFile="${build.dir}/build-hadoop-dependencies.xml">
 
-			<dependency groupId="org.apache.hadoop" artifactId="hadoop-core" version="${hadoop-core.build.version}"/>
+			<dependency groupId="org.apache.hadoop" artifactId="hadoop-core" version="${hadoop-core.build.version}">
+				<exclusion groupId="commons-logging" artifactId="commons-logging"/>
+			</dependency>
 			<dependency groupId="org.apache.hadoop" artifactId="hadoop-streaming" version="${hadoop.build.version}"/>
 			<dependency groupId="org.apache.hadoop" artifactId="hadoop-tools" version="${hadoop.build.version}"/>
 			<dependency groupId="org.apache.hadoop" artifactId="hadoop-examples" version="${hadoop.build.version}"/>
 			<dependency groupId="org.apache.hadoop" artifactId="hadoop-test" version="${hadoop.build.version}"/>
 			<dependency groupId="org.apache.hadoop" artifactId="hadoop-fairscheduler" version="0.20.203.1-brisk1"/>
 			<dependency groupId="org.slf4j" artifactId="slf4j-log4j12" version="1.6.1"/>
+			<dependency groupId="commons-logging" artifactId="commons-logging" version="1.0.4"/>
 
 			<remoteRepository refid="datastax-snapshot"/>
 			<remoteRepository refid="datastax-release"/>
