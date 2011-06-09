@@ -14,6 +14,24 @@
   </description>                                                                                                      
 </property>
 
+
+<!-- performance defaults (not required) -->
+<property>
+    <name>mapred.job.reuse.jvm.num.tasks</name>
+    <value>24</value>
+</property>
+
+<!-- Compress intermediate files for better performance -->
+<property>
+    <name>mapred.compress.map.output</name>
+    <value>true</value>
+</property>
+
+<property>
+  <name>mapred.map.output.compression.codec</name>
+  <value>com.hadoop.compression.snappy.SnappyCodec</value>
+</property>
+
 <property>
   <name>mapred.child.java.opts</name>
   <value>-Xmx256m</value>
@@ -22,6 +40,7 @@
     Also see documentation from jvm vendor.
   </description>
 </property>
+
 
 <!-- Enable Hue plugins -->
 <property>
@@ -34,6 +53,8 @@
   <name>jobtracker.thrift.address</name>
   <value>0.0.0.0:9290</value>
 </property>
+
+
 <!-- FairScheduler is included. Uncomment to enable. -->
 <!-- 
 <property> 
