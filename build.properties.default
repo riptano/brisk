@@ -4,6 +4,7 @@ artifact.remoteRepository.java.net2:   http://download.java.net/maven/2
 artifact.remoteRepository.apache:      https://repository.apache.org/content/repositories/releases
 artifact.remoteRepository.jclouds:     http://jclouds.googlecode.com/svn/repo
 artifact.remoteRepository.oauth:       http://oauth.googlecode.com/svn/code/maven
+artifact.remoteRepository.xerial:       http://maven.xerial.org/repository/snapshot
 artifact.remoteRepository.datanucleus: http://www.datanucleus.org/downloads/maven2
 artifact.remoteRepository.datastax-snapshot:    http://mvn.riptano.com/content/repositories/snapshots
 artifact.remoteRepository.datastax-deps:    http://mvn.riptano.com/content/repositories/public
