@@ -18,7 +18,6 @@
 package org.apache.cassandra.hadoop.fs;
 
 import java.io.*;
-import java.net.InetAddress;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
@@ -34,7 +33,6 @@ import org.apache.cassandra.hadoop.CassandraProxyClient.ConnectionStrategy;
 import org.apache.cassandra.hadoop.trackers.CassandraJobConf;
 import org.apache.cassandra.io.util.FileUtils;
 import org.apache.cassandra.locator.BriskSimpleSnitch;
-import org.apache.cassandra.service.StorageService;
 import org.apache.cassandra.thrift.*;
 import org.apache.cassandra.utils.ByteBufferUtil;
 import org.apache.cassandra.utils.FBUtilities;
@@ -44,6 +42,8 @@ import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Logger;
 import org.apache.thrift.TException;
+import org.xerial.snappy.Snappy;
+import org.xerial.snappy.SnappyException;
 
 /**
  * 
@@ -97,6 +97,9 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
     // This values can be overridden if the archive mode is set.
     private ColumnPath     inodeDataPath = null;
     private ColumnPath     sblockDataPath = null;
+    
+    private ByteBuffer     compressedData = null;
+    private ByteBuffer     uncompressedData = null;
     
     private StorageType storageTypeInUse  = StorageType.CFS_REGULAR;
 
@@ -379,7 +382,7 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
         try
         {
             blockData = ((Brisk.Iface) client).get_cfs_sblock(FBUtilities.getLocalAddress().getHostName(), 
-            		blockId, subBlockId, (int) byteRangeStart, storageTypeInUse);
+            		blockId, subBlockId, (int) 0, storageTypeInUse);
         }
         catch (Exception e)
         {
@@ -391,14 +394,63 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
 
         InputStream is = null;
         if (blockData.remote_block != null)
-            is = ByteBufferUtil.inputStream(blockData.remote_block);
+            is = getInputStream(blockData.remote_block);
         else
             is = readLocalBlock(blockData.getLocal_block());
-
+        
+        if(byteRangeStart > 0)
+            is.skip(byteRangeStart);
+        
         return is;
     }
 
-	private InputStream readLocalBlock(LocalBlock blockInfo)
+    private synchronized InputStream getInputStream(ByteBuffer bb) throws IOException
+    {       
+        
+        ByteBuffer output = null;
+        
+        try
+        {   
+            if(compressedData == null || compressedData.capacity() < bb.remaining())
+                compressedData = ByteBuffer.allocateDirect(bb.remaining());
+                    
+            compressedData.limit(compressedData.capacity());
+            compressedData.rewind();
+            compressedData.put(bb.duplicate());
+            compressedData.limit(compressedData.position());
+            compressedData.rewind();
+            
+            if(Snappy.isValidCompressedBuffer(compressedData))
+            {
+                
+                int uncompressedLength = Snappy.uncompressedLength(compressedData);
+                
+                if(uncompressedData == null || uncompressedData.capacity() < uncompressedLength)
+                {
+                    uncompressedData = ByteBuffer.allocateDirect(uncompressedLength);
+                }
+                            
+                int len = Snappy.uncompress(compressedData, uncompressedData);
+                
+                uncompressedData.limit(len);
+                uncompressedData.rewind();   
+                
+                output = uncompressedData;
+            }
+            else
+            {
+                output = compressedData;
+            }
+        }
+        catch (SnappyException e)
+        {
+            throw new IOException(e);
+        }
+        
+        return ByteBufferUtil.inputStream(output);
+    }
+    
+	private InputStream readLocalBlock(LocalBlock blockInfo) throws IOException
     {
 
         if (blockInfo.file == null)
@@ -417,9 +469,9 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
 
             MappedByteBuffer bb = raf.getChannel().map(FileChannel.MapMode.READ_ONLY, blockInfo.offset,
                     blockInfo.length);
-
-            return new ByteBufferUtil().inputStream(bb);
-
+                        
+            return getInputStream(bb);
+           
         }
         catch (FileNotFoundException e)
         {
@@ -480,14 +532,34 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
 	/**
      * {@inheritDoc}
      */
-    public void storeSubBlock(UUID parentBlockUUID, SubBlock sblock, ByteArrayOutputStream os) throws IOException
+    public synchronized void storeSubBlock(UUID parentBlockUUID, SubBlock sblock, ByteBuffer data) throws IOException
     {
     	assert parentBlockUUID != null;
     	
     	// Row key is the Block id to which this SubBLock belongs to.
         ByteBuffer parentBlockId = uuidToByteBuffer(parentBlockUUID);
 
-        ByteBuffer data = ByteBuffer.wrap(os.toByteArray());
+        //Prepare the buffer to hold the compressed data
+        int maxCapacity = Snappy.maxCompressedLength(data.capacity());
+        if(compressedData == null || compressedData.capacity() < maxCapacity)
+        {
+            compressedData = ByteBuffer.allocateDirect(maxCapacity);
+        }
+        
+        compressedData.limit(compressedData.capacity());
+        compressedData.rewind();
+        
+        //compress
+        try
+        {
+            int len = Snappy.compress(data, compressedData);
+            compressedData.limit(len);
+            compressedData.rewind();
+        }
+        catch (SnappyException e1)
+        {
+           throw new IOException(e1);
+        }
         
         if (logger.isDebugEnabled()) {
         	logger.debug("Storing " + sblock);
@@ -502,7 +574,7 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
             client.insert(
                 parentBlockId, 
                 sblockParent, 
-                new Column().setName(uuidToByteBuffer(sblock.id)).setValue(data).setTimestamp(System.currentTimeMillis()), 
+                new Column().setName(uuidToByteBuffer(sblock.id)).setValue(compressedData).setTimestamp(System.currentTimeMillis()), 
                 consistencyLevelWrite);
         }
         catch (Exception e)

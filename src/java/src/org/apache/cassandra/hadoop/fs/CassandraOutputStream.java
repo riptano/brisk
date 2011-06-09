@@ -20,6 +20,7 @@ package org.apache.cassandra.hadoop.fs;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -46,7 +47,7 @@ public class CassandraOutputStream extends OutputStream
     
     private long                     subBlockSize;
 
-    private ByteArrayOutputStream    backupStream;
+    private ByteBuffer               backupStream;
 
     private boolean                  closed;
 
@@ -86,7 +87,7 @@ public class CassandraOutputStream extends OutputStream
         this.path = path;
         this.blockSize = blockSize;
         this.subBlockSize = subBlockSize;
-        this.backupStream = new ByteArrayOutputStream((int) subBlockSize);
+        this.backupStream = ByteBuffer.allocateDirect((int) subBlockSize);
         this.bufferSize = buffersize;
         this.progress = progress;
         this.outBuf = new byte[bufferSize];
@@ -229,7 +230,7 @@ public class CassandraOutputStream extends OutputStream
         if (workingPos > 0)
         {
             // To the local block backup, write just the bytes
-            backupStream.write(outBuf, 0, workingPos);
+            backupStream.put(outBuf, 0, workingPos);
 
             // Track position
             bytesWrittenToBlock += workingPos;
@@ -266,10 +267,14 @@ public class CassandraOutputStream extends OutputStream
     	
     	nextSubBlockOutputStream();
     	
+    	backupStream.limit(backupStream.position());
+    	backupStream.rewind();
+    	
     	store.storeSubBlock(currentBlockUUID, nextSubBlock, backupStream);
     	
     	// Get the stream ready for next subBlock
-    	backupStream.reset();
+    	backupStream.limit(backupStream.capacity());
+    	backupStream.rewind();
     	
     	// Reset counter for subBlock as this subBlock is full.
     	bytesWrittenToSubBlock = 0;
@@ -336,8 +341,6 @@ public class CassandraOutputStream extends OutputStream
         
         // Save the INode to the DB after ending the subBlocks and Blocks.
         internalClose();
-
-        backupStream.close();
         super.close();
 
         closed = true;

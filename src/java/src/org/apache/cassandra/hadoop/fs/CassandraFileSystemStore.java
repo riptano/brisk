@@ -17,10 +17,10 @@
  */
 package org.apache.cassandra.hadoop.fs;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -46,10 +46,10 @@ public interface CassandraFileSystemStore
      * 
      * @param currentBlockUUID parent UUID used as row key for the subBlock row.
      * @param subBlock sub Block to be written 
-     * @param file content of the subBLock
+     * @param data content of the subBLock
      * @throws IOException if an error occur
      */
-    void storeSubBlock(UUID currentBlockUUID, SubBlock subBlock, ByteArrayOutputStream file) throws IOException;
+    void storeSubBlock(UUID currentBlockUUID, SubBlock subBlock, ByteBuffer data) throws IOException;
 
     INode retrieveINode(Path path) throws IOException;
 
