@@ -271,7 +271,9 @@
 			<dependency groupId="org.apache.hive" artifactId="hive-jdbc" version="${hive.build.version}"/>
 			<dependency groupId="org.apache.hive" artifactId="hive-hwi" version="${hive.build.version}" type="jar" classifier="compile"/>
 			<dependency groupId="org.apache.hive" artifactId="hive-hwi" version="${hive.build.version}" type="war" classifier="compile"/>
-			<dependency groupId="org.apache.hive" artifactId="hive-metastore" version="${hive.build.version}"/>
+			<dependency groupId="org.apache.hive" artifactId="hive-metastore" version="${hive.build.version}">
+	            <exclusion groupId="org.slf4j" artifactId="slf4j-log4j12"/>
+            </dependency>
 			<dependency groupId="org.apache.hive" artifactId="hive-cassandra-handler" version="${hive.build.version}"/>
 
 			<dependency groupId="org.apache.hive" artifactId="hive-deps" version="${hive.build.version}" classifier="derby"/>

@@ -71,10 +71,10 @@ case "$1" in
         #we need to remove the conflicting antlr jar
         case `uname` in
             Darwin)
-                export CLASSPATH=`echo $CLASSPATH | sed -E "s/antlr|slf4j/dne/g"`
+                export CLASSPATH=`echo $CLASSPATH | sed -E "s/antlr/dne/g"`
             ;;
             *)
-                export CLASSPATH=`echo $CLASSPATH | sed -r "s/antlr|slf4j/dne/g"`
+                export CLASSPATH=`echo $CLASSPATH | sed -r "s/antlr/dne/g"`
         esac
         export HADOOP_CLASSPATH=$CLASSPATH
 
