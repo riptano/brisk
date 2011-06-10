@@ -228,7 +228,10 @@
 			<dependency groupId="org.apache.hadoop" artifactId="hadoop-streaming" version="${hadoop.build.version}"/>
 			<dependency groupId="org.apache.hadoop" artifactId="hadoop-tools" version="${hadoop.build.version}"/>
 			<dependency groupId="org.apache.hadoop" artifactId="hadoop-examples" version="${hadoop.build.version}"/>
-			<dependency groupId="org.apache.hadoop" artifactId="hadoop-test" version="${hadoop.build.version}"/>
+			<dependency groupId="org.apache.hadoop" artifactId="hadoop-test" version="${hadoop.build.version}">
+				<exclusion groupId="org.slf4j" artifactId="slf4j-api"/>
+	        </dependency>
+	
 			<dependency groupId="org.apache.hadoop" artifactId="hadoop-fairscheduler" version="0.20.203.1-brisk1"/>
 			<dependency groupId="commons-logging" artifactId="commons-logging" version="1.0.4"/>
 
