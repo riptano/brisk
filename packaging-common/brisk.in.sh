@@ -13,6 +13,12 @@ export CASSANDRA_BIN=/usr/sbin
 export CLASSPATH=$CLASSPATH:/usr/share/brisk/brisk.jar
 
 #
+# Add common jars
+#
+for jar in /usr/share/brisk/common/*.jar; do
+    export CLASSPATH=$CLASSPATH:$jar
+done
+#
 # Source cassandra env
 #
 if [ "x$CASSANDRA_INCLUDE" = "x" ]; then

@@ -8,3 +8,4 @@ var/log/hadoop
 var/log/hive
 var/log/pig
 usr/share/cassandra
+usr/share/brisk/common

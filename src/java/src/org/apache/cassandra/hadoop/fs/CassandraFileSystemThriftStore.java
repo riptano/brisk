@@ -158,7 +158,6 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
      * Set to different set of Column Families is the archive location is selected.
      */
     private void initCFNames(URI uri) {
-    	logger.info("Using storage:" + uri.getScheme());
     	
 		if (isArchive(uri)) {
 			// cfs-archive:///

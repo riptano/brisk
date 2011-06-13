@@ -46,11 +46,12 @@ mkdir -p %{buildroot}/usr/bin/
 mkdir -p %{buildroot}/etc/brisk
 mkdir -p %{buildroot}/etc/init.d/
 mkdir -p %{buildroot}/etc/default/
-mkdir -p %{buildroot}/usr/share/brisk
+mkdir -p %{buildroot}/usr/share/brisk/common
 
 cp -p packaging-common/brisk-env.sh %{buildroot}/etc/brisk/
 cp -p packaging-common/brisk.in.sh %{buildroot}/usr/share/brisk/
 cp -p packaging-common/brisk.default %{buildroot}/etc/default/brisk
+cp -p resources/brisk/lib/*.jar %{buildroot}/usr/share/brisk/common
 cp -p redhat/brisk %{buildroot}/etc/init.d/
 cp -p bin/brisk %{buildroot}/usr/bin/
 cp -p bin/brisktool %{buildroot}/usr/bin/
