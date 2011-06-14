@@ -125,27 +125,7 @@ public class BriskSchema {
             return;
         }
 
-        String host;
-        if (DatabaseDescriptor.getRpcAddress() != null)
-            host = DatabaseDescriptor.getRpcAddress().getHostName();
-        else
-            host = FBUtilities.getLocalAddress().getHostName();
-        int port = DatabaseDescriptor.getRpcPort(); // default
-
-        while (true) {
-            try {
-                client = CassandraProxyClient.newProxyConnection(host, port, true, ConnectionStrategy.STICKY);
-                break;
-            } catch (IOException e) {
-                logger.info("Thrift RPC not ready. Sleeping 5 seconds...");
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException e1) {
-                    logger.warn("Thread interrupted when waiting for RPC to start. Aborting....");
-                    break;
-                }
-            }
-        }
+        client = new BriskInternalServer();
     }
 
 }

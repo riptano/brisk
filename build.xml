@@ -54,10 +54,11 @@
 	<property name="hadoop.dir" value="${basedir}/resources/hadoop"/>
 	<property name="hadoop.dir.lib" value="${hadoop.dir}/lib"/>
 	<property name="cassandra.dir" value="${basedir}/resources/cassandra"/>
-	<property name="cassandra.dir.lib" value="${cassandra.dir}/lib"/>
+	<property name="cassandra.dir.lib" value="${cassandra.dir}/lib"/>	
 	<property name="hive.dir" value="${basedir}/resources/hive"/>
 	<property name="hive.dir.lib" value="${hive.dir}/lib"/>
-
+	<property name="brisk-common.dir" value="${basedir}/resources/brisk"/>
+    <property name="brisk-common.dir.lib" value="${brisk-common.dir}/lib"/>
 	<property name="base.version" value="0.0.1"/>
 	<condition property="version" value="${base.version}">
 		<isset property="release"/>
@@ -110,6 +111,9 @@
 		<fileset dir="${cassandra.dir.lib}">
 			<include name="**/*.jar" />
 		</fileset>
+		<fileset dir="${brisk-common.dir.lib}">
+			<include name="**/*.jar" />
+		</fileset>
 		<fileset dir="${hadoop.dir}">
 			<include name="*.jar" />
 		</fileset>
@@ -142,6 +146,7 @@
 		<delete dir="${cobertura.classes.dir}" />
 		<delete dir="${build.src.gen-java}" />
 		<delete dir="${cassandra.dir.lib}" />
+		<delete dir="${brisk-common.dir.lib}" />
 		<delete dir="${hadoop.dir.lib}" />
 		<delete dir="${hadoop.dir}" >
 			<include name="**/*.jar"/>
@@ -201,11 +206,17 @@
 			<dependency groupId="junit" artifactId="junit" version="4.6" />
 			<dependency groupId="commons-cli" artifactId="commons-cli" version="1.2" />
 			<dependency groupId="net.java.dev.jna" artifactId="jna" version="3.2.7"/>
-			<dependency groupId="junitx" artifactId="junitx" version="1.4" />
+			<dependency groupId="junitx" artifactId="junitx" version="1.4" />			
 			<remoteRepository refid="datastax-release"/>
 			<remoteRepository refid="central"/>
 			<remoteRepository refid="java.net2"/>
 			<remoteRepository refid="apache"/>
+		</artifact:dependencies>
+	    <artifact:dependencies filesetId="brisk-common-jars"
+				     cacheDependencyRefs="true" 
+				     dependencyRefsBuildFile="${build.dir}/build-brisk-dependencies.xml">
+	    	<dependency groupId="org.slf4j" artifactId="slf4j-log4j12" version="1.6.1"/>
+	    	<remoteRepository refid="central"/>
 		</artifact:dependencies>
 		<artifact:dependencies filesetId="hadoop-jars"
 			     cacheDependencyRefs="true" 
@@ -217,9 +228,11 @@
 			<dependency groupId="org.apache.hadoop" artifactId="hadoop-streaming" version="${hadoop.build.version}"/>
 			<dependency groupId="org.apache.hadoop" artifactId="hadoop-tools" version="${hadoop.build.version}"/>
 			<dependency groupId="org.apache.hadoop" artifactId="hadoop-examples" version="${hadoop.build.version}"/>
-			<dependency groupId="org.apache.hadoop" artifactId="hadoop-test" version="${hadoop.build.version}"/>
+			<dependency groupId="org.apache.hadoop" artifactId="hadoop-test" version="${hadoop.build.version}">
+				<exclusion groupId="org.slf4j" artifactId="slf4j-api"/>
+	        </dependency>
+	
 			<dependency groupId="org.apache.hadoop" artifactId="hadoop-fairscheduler" version="0.20.203.1-brisk1"/>
-			<dependency groupId="org.slf4j" artifactId="slf4j-log4j12" version="1.6.1"/>
 			<dependency groupId="commons-logging" artifactId="commons-logging" version="1.0.4"/>
 
 			<remoteRepository refid="datastax-snapshot"/>
@@ -230,9 +243,7 @@
 		</artifact:dependencies>
 		<artifact:dependencies filesetId="cassandra-jars"
 			     cacheDependencyRefs="true" 
-                             dependencyRefsBuildFile="${build.dir}/build-cassandra-dependencies.xml">
-
-			<dependency groupId="org.slf4j" artifactId="slf4j-log4j12" version="1.6.1"/>
+                             dependencyRefsBuildFile="${build.dir}/build-cassandra-dependencies.xml">			
 			<dependency groupId="org.apache.cassandra" artifactId="apache-cassandra" version="${cassandra.build.version}"/>
 			<dependency groupId="org.apache.cassandra" artifactId="apache-cassandra-thrift" version="${cassandra-thrift.build.version}"/>
 			<dependency groupId="org.apache.cassandra" artifactId="apache-cassandra-cql" version="${cassandra-cql.build.version}"/>
@@ -262,7 +273,9 @@
 			<dependency groupId="org.apache.hive" artifactId="hive-jdbc" version="${hive.build.version}"/>
 			<dependency groupId="org.apache.hive" artifactId="hive-hwi" version="${hive.build.version}" type="jar" classifier="compile"/>
 			<dependency groupId="org.apache.hive" artifactId="hive-hwi" version="${hive.build.version}" type="war" classifier="compile"/>
-			<dependency groupId="org.apache.hive" artifactId="hive-metastore" version="${hive.build.version}"/>
+			<dependency groupId="org.apache.hive" artifactId="hive-metastore" version="${hive.build.version}">
+	            <exclusion groupId="org.slf4j" artifactId="slf4j-log4j12"/>
+            </dependency>
 			<dependency groupId="org.apache.hive" artifactId="hive-cassandra-handler" version="${hive.build.version}"/>
 
 			<dependency groupId="org.apache.hive" artifactId="hive-deps" version="${hive.build.version}" classifier="derby"/>
@@ -322,6 +335,11 @@
 			<fileset refid="cassandra-jars"/>
 			<mapper type="flatten"/>
 		</copy>
+	
+		<copy todir="${brisk-common.dir.lib}">
+	        <fileset refid="brisk-common-jars"/>
+			<mapper type="flatten"/>
+	    </copy>
 
 		<copy todir="${hive.dir.lib}">
 			<fileset refid="hive-jars"/>
@@ -378,7 +396,6 @@
 	    <echo file=".classpath"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
 	<classpath>
 	  <classpathentry kind="src" path="src/java/src"/>
-	  <classpathentry kind="src" path="src/gen-java"/>
 	  <classpathentry kind="src" path="interface/thrift/gen-java"/>  
 	  <classpathentry kind="src" path="test/unit"/>
 	  <classpathentry kind="src" path="test/integration"/>
@@ -399,6 +416,9 @@
 	     <fileset dir="${cassandra.dir.lib}">
 	       <include name="**/*.jar" />
 	     </fileset>
+         <fileset dir="${brisk-common.dir.lib}">
+           <include name="**/*.jar" />
+         </fileset>	    	
 	     <fileset dir="${hive.dir.lib}">
 	       <include name="**/*.jar" />
 	     </fileset>
@@ -501,6 +521,9 @@
   	 <fileset dir="${cassandra.dir.lib}">
   	    <include name="**/*.jar" />
      </fileset>
+  	 <fileset dir="${brisk-common.dir.lib}">
+  	    <include name="**/*.jar" />
+     </fileset>	
   	 <fileset dir="${hive.dir.lib}">
   	    <include name="**/*.jar" />
      </fileset>

@@ -36,6 +36,10 @@ case "$1" in
         fi
         if [ "$HADOOP_ENABLED" = "0" ]; then
     		echo "Brisk daemon starting with Hadoop disabled (edit /etc/default/brisk to enable)"
+    		# source in common libs by hand
+    		for jar in /usr/share/brisk/common/*.jar; do
+    			export CLASSPATH=$CLASSPATH:$jar
+			done
 		else
 			# load brisk env
 			[ -e /etc/brisk/brisk-env.sh ] || exit 0
