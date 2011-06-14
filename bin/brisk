@@ -91,8 +91,31 @@ case "$1" in
         $HIVE_BIN/hive "$@"
         exit $?
         ;;
+    pig)
+        shift
+        export PIG_OPTS=$PIG_OPTS" -Dudf.import.list=org.apache.cassandra.hadoop.pig"
+        JOBTRACKER=`$BIN/brisktool jobtracker`;
+        if [ "x$JOBTRACKER" != "x" ]; then
+            PIG_OPTS="$PIG_OPTS -Dmapred.job.tracker=$JOBTRACKER"
+        else
+            echo "Unable to start job: jobtracker not found"
+            exit 2
+        fi
+        if [ -z "$PIG_INITIAL_ADDRESS" ]; then
+            export PIG_INITIAL_ADDRESS=`echo $JOBTRACKER | sed s/:.*//`
+        fi
+        if [ -z "$PIG_PARTITIONER" ]; then
+            export PIG_PARTITIONER="org.apache.cassandra.dht.RandomPartitioner"
+        fi
+        if [ -z "$PIG_RPC_PORT" ]; then
+            export PIG_RPC_PORT="9160"
+        fi
+
+        $PIG_HOME/bin/pig $*
+        exit $?
+        ;;
     *)
-        echo "$0: cassandra [options] | hadoop [options] | hive [options]"
+        echo "$0: cassandra [options] | hadoop [options] | hive [options] | pig [options]"
         exit 1
 esac
 

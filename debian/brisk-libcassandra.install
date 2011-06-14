@@ -2,7 +2,7 @@ resources/cassandra/conf/* etc/brisk/cassandra
 packaging-common/cassandra.in.sh usr/share/cassandra
 packaging-common/cassandra.conf etc/security/limits.d
 resources/cassandra/lib/* usr/share/brisk/cassandra/lib
-resources/cassandra/bin/cassandra usr/bin
+resources/cassandra/bin/cassandra usr/sbin
 resources/cassandra/bin/cassandra-cli usr/bin
 resources/cassandra/bin/nodetool usr/bin
 resources/cassandra/bin/clustertool usr/bin

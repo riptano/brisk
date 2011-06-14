@@ -51,6 +51,20 @@ for jar in $HIVE_HOME/lib/hive-cassandra*.jar; do
     export CLASSPATH=$CLASSPATH:$jar
 done
 
+#
+# Initialize Pig env
+#
+export PIG_HOME=/usr/share/brisk/pig
+export PIG_CONF_DIR=/etc/brisk/pig
+if [ -z "$PIG_LOG_DIR" ]; then
+    if [ -w /var/log/pig ]; then
+        export PIG_LOG_DIR=/var/log/pig
+    else
+        export PIG_LOG_DIR=$HOME
+    fi
+fi
+# PIG_CLASSPATH needs to be set last
+
 #hadoop requires absolute home
 export HADOOP_HOME=/usr/share/brisk/hadoop
 export HADOOP_CONF_DIR=/etc/brisk/hadoop
@@ -84,7 +98,8 @@ for jar in $HADOOP_HOME/*.jar $HADOOP_HOME/lib/*.jar; do
 done
 
 export HADOOP_CLASSPATH=$CLASSPATH
-
+# pig script overrides the cp, so set this last
+export PIG_CLASSPATH=$CLASSPATH
 
 #make the hadoop command accessible
 export PATH=$HADOOP_BIN:$PATH

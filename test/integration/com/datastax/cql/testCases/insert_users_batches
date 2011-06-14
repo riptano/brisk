@@ -1,0 +1,76 @@
+use cqldb;
+
+TRUNCATE users;
+
+-- Single Row Insert
+INSERT INTO users (KEY, password) VALUES ('user1', 'ch@nge');
+
+-- Batch Insert and Verification  
+BEGIN BATCH
+INSERT INTO users (KEY, password) VALUES ('user1', 'ch@ngem3a');
+INSERT INTO users (KEY, password) VALUES ('user1', 'ch@ngem3a');
+INSERT INTO users (KEY, password, gender, state, birth_year) VALUES ('user1', 'ch@ngem3', 'f', 'TX', '1968');
+APPLY BATCH
+
+SELECT * FROM users;
+
+-- Batch Insert and Verification  
+BEGIN BATCH USING CONSISTENCY ANY
+INSERT INTO users (KEY, password) VALUES ('user2', 'ch@ngem3b');
+INSERT INTO users (KEY, password) VALUES ('user3', 'ch@ngem3c');
+APPLY BATCH
+
+SELECT * FROM users;
+
+-- Batch Insert and Verification  
+BEGIN BATCH USING CONSISTENCY ONE
+INSERT INTO users (KEY, password) VALUES ('user4', 'ch@ngem3d');
+INSERT INTO users (KEY, password) VALUES ('user5', 'ch@ngem3e');
+APPLY BATCH
+
+SELECT * FROM users;
+
+-- Batch Insert and Verification  
+BEGIN BATCH USING CONSISTENCY QUORUM
+INSERT INTO users (KEY, password) VALUES ('user6', 'ch@ngem3f');
+INSERT INTO users (KEY, password) VALUES ('user7', 'ch@ngem3g');
+APPLY BATCH
+
+SELECT * FROM users;
+
+-- Batch Insert and Verification
+BEGIN BATCH USING CONSISTENCY ALL
+INSERT INTO users (KEY, password) VALUES ('user8', 'ch@ngem3h');
+INSERT INTO users (KEY, password) VALUES ('user9', 'ch@ngem3i');
+APPLY BATCH
+
+SELECT * FROM users;
+
+-- Batch Insert and Verification
+BEGIN BATCH USING CONSISTENCY LOCAL_QUORUM
+INSERT INTO users (KEY, password) VALUES ('user10', 'ch@ngem3c');
+INSERT INTO users (KEY, password) VALUES ('user11', 'ch@ngem3d');
+APPLY BATCH
+
+SELECT * FROM users;
+
+-- Batch Insert and Verification
+BEGIN BATCH USING CONSISTENCY EACHQUORUM
+INSERT INTO users (KEY, password) VALUES ('user12', 'ch@ngem3e');
+INSERT INTO users (KEY, password) VALUES ('user13', 'ch@ngem3f');
+INSERT INTO users (KEY, password) VALUES ('user14', 'ch@ngem3g');
+APPLY BATCH
+
+SELECT * FROM users;
+
+-- ERROR BATCHES
+BEGIN BATCH
+UPDATE XXXX SET state = 'CA' WHERE KEY = 'user2';
+APPLY BATCH
+
+BEGIN BATCH
+UPDATE XXXX SET state = 'CA' WHERE gender = 'F';
+APPLY BATCH
+
+
+
