@@ -23,6 +23,7 @@ BuildRequires: ant-nodeps
 Requires:      brisk-libcassandra
 Requires:      brisk-libhadoop
 Requires:      brisk-libhive
+Requires:      brisk-libpig
 
 BuildArch:     noarch
 
