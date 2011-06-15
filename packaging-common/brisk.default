@@ -9,3 +9,8 @@
 # enable this start also start Hadoop's JobTracker and/or TaskTrackers on this
 # machine.  If left disabled, this will act as a regular Cassandra node.
 HADOOP_ENABLED=0
+
+# enable this to set the replication factor for CFS.  Note that this will only
+# have an effect the first time a cluster is started with HADOOP_ENABLED=1 and
+# after that will be a no-op. Defaults to 1.
+#CFS_REPLICATION_FACTOR=1
