@@ -351,7 +351,7 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
                 .setName(keySpace)
                 .setStrategy_class("org.apache.cassandra.locator.NetworkTopologyStrategy")
                 .setStrategy_options(stratOpts)
-                .setDurable_writes(false)
+                .setDurable_writes(System.getProperty("cfs.replication","1").equals("1") ? true : false)
                 .setCf_defs(cfs);
 
             client.system_add_keyspace(cfsKs);
