@@ -6,7 +6,7 @@
 
 Name:           brisk-libhive
 Version:        0.7.0
-Release:        1
+Release:        1.0~beta2
 Summary:        Repackaging of Apache Hive libraries for inclusion in Brisk
 
 Group:          Development/Libraries

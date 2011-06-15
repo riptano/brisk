@@ -4,8 +4,8 @@
 %define briskname brisk
 
 Name:           brisk-demos
-Version:        1.0~beta1
-Release:        1
+Version:        1.0
+Release:        1.0~beta2
 Summary:        Demo applicatio for Brisk platform
 
 Group:          Development/Libraries
