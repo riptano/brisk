@@ -6,7 +6,7 @@
 
 Name:           brisk-libhadoop
 Version:        0.20.203
-Release:        1
+Release:        1.0~beta2
 Summary:        Repackaging of Apache Hadoop libraries for inclusion in Brisk
 
 Group:          Development/Libraries

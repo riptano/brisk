@@ -5,8 +5,8 @@
 %define briskname brisk
 
 Name:           brisk-full
-Version:        1.0~beta1
-Release:        1
+Version:        1.0
+Release:        1.0~beta2
 Summary:        Meta RPM for full installation of the DataStax Brisk platform
 
 Group:          Development/Libraries
@@ -41,6 +41,7 @@ Homepage: http://www.datastax.com/products/brisk
 %setup -q -n brisk
 
 %build
+ant clean jar -Drelease=true
 
 %install
 mkdir -p %{buildroot}/usr/bin/
@@ -65,6 +66,7 @@ cp -p bin/brisktool %{buildroot}/usr/bin/
 %attr(755,root,root) %config /etc/brisk
 %attr(755,root,root) %config /etc/default/brisk
 %attr(755,root,root) /etc/init.d/brisk
+%attr(755,root,root) /usr/share/brisk/common
 %attr(755,root,root) %{_bindir}/brisk
 %attr(755,root,root) %{_bindir}/brisktool
 

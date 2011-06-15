@@ -6,7 +6,7 @@
 
 Name:           brisk-libpig
 Version:        0.8.3
-Release:        beta2
+Release:        1.0~beta2
 Summary:        Repackaging of Apache Pig libraries for inclusion in Brisk
 
 Group:          Development/Libraries
