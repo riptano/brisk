@@ -10,9 +10,9 @@ artifact.remoteRepository.datastax-snapshot:    http://mvn.riptano.com/content/r
 artifact.remoteRepository.datastax-deps:    http://mvn.riptano.com/content/repositories/public
 artifact.remoteRepository.datastax-release:    http://mvn.riptano.com/content/repositories/releases
 
-hadoop-core.build.version:		       0.20.203.1-SNAPSHOT
-hadoop.build.version:		       0.20.203.1-SNAPSHOT
-hive.build.version:		       0.7.0-SNAPSHOT
+hadoop-core.build.version:		       0.20.203.1-brisk1-beta2
+hadoop.build.version:		       0.20.203.1-brisk1-beta2
+hive.build.version:		       0.7.0-brisk1-beta2
 pig.build.version:		       0.8.3
 cassandra.build.version:	       0.8.0-beta2-SNAPSHOT
 cassandra-thrift.build.version:	       0.8.0-beta2-SNAPSHOT
