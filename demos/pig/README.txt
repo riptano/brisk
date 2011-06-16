@@ -1,5 +1,5 @@
 About the Pig Demo 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 
+------------------------ 
 
 This pig demo consists of a data file (example.txt) containing tuples 
 of usernames and scores. There are three use case files containing
@@ -23,7 +23,7 @@ family in Cassandra.
 
 
 Loading the Demo Data Into CFS
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 
+--------------------------------- 
 
 The demo data file is located in ./files/example.txt.
 
@@ -37,7 +37,8 @@ or in a binary distribution:
 
 
 Creating the PigDemo Keyspace in Cassandra
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------------------------
+
 In order for Pig to access data in Cassandra, the target keyspace and
 column family must already exist (Pig can read and write data from/to a
 column family in Cassandra, but it will not create the column family if 
