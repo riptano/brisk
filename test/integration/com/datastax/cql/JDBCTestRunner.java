@@ -5,6 +5,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.lang.InterruptedException;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -13,7 +15,7 @@ import java.sql.Connection;
 
 import com.datastax.TestUtils;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 public class JDBCTestRunner {
 	
@@ -32,7 +34,9 @@ public class JDBCTestRunner {
 
 	// This method is used to pass a SQL Statement and execute it.  
 	// Assumes if you passed a scriptName then you want to write actual output, otherwise it prints to the screen
-    public static void executeCQL(String scriptName, String cqlstmt, Connection conn) throws Exception {
+    public static void executeCQL(String scriptName, String cqlstmt, Connection conn) 
+        throws IOException, InterruptedException, SQLException 
+    {
         ResultSet res = null;
         PreparedStatement stmt = null;
         
@@ -41,26 +45,34 @@ public class JDBCTestRunner {
         
         //Run Query
         try {
-            if (!cqlstmt.equals("")) {
-                System.out.println("---> SQL Statement: " + cqlstmt);
-
+            if (!cqlstmt.equals("")) 
+            {
                 stmt = conn.prepareStatement(cqlstmt);
-                res = stmt.executeQuery();   
+                res = stmt.executeQuery();
+                
+                if (cqlstmt.startsWith("CREATE") || cqlstmt.startsWith("DROP")) 
+                {
+                    Thread.sleep(5000);
+                }
+                
             } else {
                 sqlerr = true;
-            }
-            
-        } catch (SQLException e) {
+            }           
+        } catch (SQLException e) 
+        {
             sqlerr = true;
             // We don't have a "DROP CF/KS ... IF EXISTS", so this acts as a work around.
             // The existing test cases will run CREATE/DROP/USE/CREATE to verify if a drop happened correctly
-            if (e.getMessage().startsWith("CF is not defined")) {
+            if (e.getMessage().startsWith("CF is not defined")) 
+            {
                 System.out.println("---> IGNORING DROP CF ERROR: " + cqlstmt);
             } 
-            else if (e.getMessage().contains("Keyspace does not exist")) {
+            else if (e.getMessage().contains("Keyspace does not exist")) 
+            {
                 System.out.println("---> IGNORING DROP KS ERROR: " + cqlstmt);
             } 
-            else if (e.getMessage().startsWith("schema does not match across nodes")) {
+            else if (e.getMessage().startsWith("schema does not match across nodes")) 
+            {
                 // Pause for 10 seconds when a schema disagreement occurs and retry statement
                 System.out.println("---> WARN: Schema Disagreement Occurred. Sleeping 10 Seconds:" + cqlstmt);
                 Thread.sleep(10000);
@@ -78,7 +90,11 @@ public class JDBCTestRunner {
                     }
                 }
             }
-            else {
+            else 
+            {
+                // There is a real issue here ... 
+                //fail("Unexpected SQLException Running Query: " + cqlstmt);
+
                 if (!scriptName.equals("")) {
                     results.write(e.toString());                  
                     results.newLine(); 
@@ -91,7 +107,6 @@ public class JDBCTestRunner {
     // Not Supported: colCount = res.getMetaData().getColumnCount();
     // Workaround: Iterate thru columns until exception reached.
     //int colCount = res.getMetaData().getColumnCount();
-     try {
         while (sqlerr == false && res.next()) {
 
             for (int j=1; j<=colCount; j++) {
@@ -100,7 +115,6 @@ public class JDBCTestRunner {
                     if (res.getMetaData().getColumnTypeName(j).startsWith("UTF8Type")) {                     
                         if (!scriptName.equals("")) {
                             results.write(res.getString(j) + ", "); 
-                            System.out.print(res.getString(j) + ", ");       
                         } else {
                             System.out.print(res.getString(j) + ", ");       
                         }                        
@@ -108,7 +122,6 @@ public class JDBCTestRunner {
                     } else if (res.getMetaData().getColumnTypeName(j).startsWith("Long")) {
                         if (!scriptName.equals("")) {
                             results.write(res.getLong(j) + ", ");
-                            System.out.print(res.getLong(j) + ", ");
                         } else {
                             System.out.print(res.getLong(j) + ", ");  
                         }
@@ -116,7 +129,6 @@ public class JDBCTestRunner {
                     } else if (res.getMetaData().getColumnTypeName(j).startsWith("Int")) {
                         if (!scriptName.equals("")) {
                             results.write(res.getInt(j) + ", ");
-                            System.out.print(res.getInt(j) + ", ");
                         } else {
                             System.out.print(res.getInt(j) + ", ");       
                         }
@@ -124,7 +136,6 @@ public class JDBCTestRunner {
                     } else if (res.getMetaData().getColumnTypeName(j).startsWith("Object")) {                  
                         if (!scriptName.equals("")) {
                             results.write(res.getObject(j).toString() + ", ");
-                            System.out.print(res.getObject(j).toString() + ", ");
                         } else {
                             System.out.print(res.getObject(j).toString() + ", ");       
                         }
@@ -151,41 +162,37 @@ public class JDBCTestRunner {
                             // Print all other errors for running negative tests and capturing actual output
                             results.write(e.toString());
                             results.newLine(); 
+                            fail("Unexpected SQLException Parsing Results: " + cqlstmt);
+
                         } else {
-                            System.out.println(e.toString());       
+                            fail("Unexpected SQLException Parsing Results: " + cqlstmt);
                         }                      
                     }
                 }  
             }
-            System.out.println();       
 
             if (!scriptName.equals(null)) {
                 results.newLine();
             }
         }
-    } 
-    catch (Exception e) 
-    {
-          e.printStackTrace();
-          fail("General Exception - execCQL: "+ e.getMessage());
-    }
   }
 
     // Use this method to parse a file, run queries and diff results
-    public static void runQueries(String keyspace, String testScript) throws Exception  
-    {   
+    public static void runQueries(String keyspace, String testScript) 
+    {
         /* Due to CASSANDRA-2734 we must re-establish the connection after running DDL in order to do operations*/   
         script = testDir + testScript;
         actualOutput = resultsDir + testScript + ".jdbc.out";
         expectedOutput = resultsDir + testScript + ".jdbc.exp";
         
-    	String s = new String(); 
-    	String origQuery = new String(); 
+        String s = new String(); 
+        String origQuery = new String(); 
         String newQuery = new String();  
         StringBuffer sb = new StringBuffer(); 
         Connection conn = null;
         
-        try { 
+        try {
+            
             File outFile = new File(actualOutput);
             if (outFile.exists() == true) {
                 outFile.delete();
@@ -207,7 +214,7 @@ public class JDBCTestRunner {
 
             // Use ";" as a delimiter for each request 
             String[] inst = sb.toString().split(";");  
-  
+
             for(int i = 0; i<inst.length; i++)  
             {
                 // De-tokenize SQL files for file paths
@@ -226,17 +233,16 @@ public class JDBCTestRunner {
                     executeCQL(testScript, newQuery, conn);
                 } 
             }
-            
+        
             // Close DB conn after running test
             conn.close();
             results.close();
-        } 
-        catch (Exception e) {
-              e.printStackTrace();
-              fail("General Exception: "+ e.getMessage());
+            
+            // Diff Results and PASS/FAIL the test case
+            TestUtils.diffFiles(actualOutput, expectedOutput);
+            
+        } catch (Exception e) {            
+            fail(e.getMessage());
         }
-        
-        // Diff Results and PASS/FAIL the test case
-        TestUtils.diffFiles(actualOutput, expectedOutput);
     }
 }
