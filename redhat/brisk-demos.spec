@@ -43,7 +43,7 @@ ant
 
 %install
 mkdir -p %{buildroot}/usr/share/brisk-demos/portfolio_manager
-mkdir -p %{buildroot}/usr/share/brisk-demos/pig
+mkdir -p %{buildroot}/usr/share/brisk-demos/pig/files
 
 cp -p demos/portfolio_manager/portfolio.jar %{buildroot}/usr/share/brisk-demos/portfolio_manager
 cp -rp demos/portfolio_manager/bin %{buildroot}/usr/share/brisk-demos/portfolio_manager/
@@ -52,10 +52,11 @@ cp -rp demos/portfolio_manager/thrift %{buildroot}/usr/share/brisk-demos/portfol
 cp -rp demos/portfolio_manager/website %{buildroot}/usr/share/brisk-demos/portfolio_manager/
 cp -p demos/portfolio_manager/README.txt %{buildroot}/usr/share/brisk-demos/portfolio_manager
 cp -p demos/portfolio_manager/10_day_loss.q %{buildroot}/usr/share/brisk-demos/portfolio_manager
-cp -p demos/pig/files/example.txt %{buildroot}/usr/share/brisk-demos/pig
-cp -p demos/pig/push-to-cf.pig %{buildroot}/usr/share/brisk-demos/pig
-cp -p demos/pig/sort-by-total-cfs.pig %{buildroot}/usr/share/brisk-demos/pig
-cp -p demos/pig/sort-by-total-cs.pig %{buildroot}/usr/share/brisk-demos/pig
+cp -p demos/pig/files/example.txt %{buildroot}/usr/share/brisk-demos/pig/files
+cp -p demos/pig/001_sort-by-total-cfs.pig %{buildroot}/usr/share/brisk-demos/pig
+cp -p demos/pig/002_push-data-to-cassandra.pig %{buildroot}/usr/share/brisk-demos/pig
+cp -p demos/pig/003_sort-by-total-cs.pig %{buildroot}/usr/share/brisk-demos/pig
+cp -p demos/pig/README.txt %{buildroot}/usr/share/brisk-demos/pig
 
 #cp -pr demos/portfolio_manager %{buildroot}/usr/share/brisk-demos/
 #rm -rf %{buildroot}/usr/share/brisk-demos/portfolio_manager/build
