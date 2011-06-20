@@ -8,7 +8,7 @@
 
 Name:           brisk-libcassandra
 Version:        0.8.0
-Release:        beta2
+Release:        1.0~beta2
 Summary:        Cassandra is a highly scalable, eventually consistent, distributed, structured key-value store.
 
 Group:          Development/Libraries
