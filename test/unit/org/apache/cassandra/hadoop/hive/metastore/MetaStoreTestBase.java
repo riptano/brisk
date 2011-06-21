@@ -50,11 +50,16 @@ public abstract class MetaStoreTestBase extends CleanupHelper
      * @throws Exception
      */
     protected KsDef setupOtherKeyspace(Configuration configuration, String ksName, boolean addMetaData) throws Exception
+    {        
+        return setupOtherKeyspace(configuration, ksName, "UTF8Type", "UTF8Type", addMetaData);
+    }  
+    
+    protected KsDef setupOtherKeyspace(Configuration configuration, String ksName, String keyValidator, String comparator, boolean addMetaData) throws Exception
     {
         CfDef cf = new CfDef(ksName, 
                 "OtherCf1");
-        cf.setKey_validation_class("UTF8Type");
-        cf.setComparator_type("UTF8Type");
+        cf.setKey_validation_class(keyValidator);
+        cf.setComparator_type(comparator);
         if ( addMetaData )
         {
             cf.addToColumn_metadata(new ColumnDef(ByteBufferUtil.bytes("col_name_utf8"), UTF8Type.class.getName()));

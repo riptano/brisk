@@ -15,6 +15,7 @@ import org.apache.cassandra.config.KSMetaData;
 import org.apache.cassandra.db.ColumnFamilyType;
 import org.apache.cassandra.db.marshal.AbstractType;
 import org.apache.cassandra.db.marshal.TypeParser;
+import org.apache.cassandra.db.marshal.UTF8Type;
 import org.apache.cassandra.thrift.CfDef;
 import org.apache.cassandra.thrift.ColumnDef;
 import org.apache.cassandra.thrift.InvalidRequestException;
@@ -313,7 +314,11 @@ public class SchemaManagerService
         {
             for (ColumnDef column : cfDef.getColumn_metadata() )
             {
-                applyType(sd, column);
+                try {
+                    applyType(sd, column, TypeParser.parse(cfDef.comparator_type));
+                } catch (ConfigurationException ce) {
+                    throw new CassandraHiveMetaStoreException("Problem converting comparator type: " + cfDef.comparator_type, ce);
+                }
             }
         }        
         else
@@ -335,7 +340,7 @@ public class SchemaManagerService
      * @param sd
      * @param column
      */
-    private void applyType(StorageDescriptor sd, ColumnDef column)
+    private void applyType(StorageDescriptor sd, ColumnDef column, AbstractType comparator)
     {
         if ( log.isDebugEnabled() )
         {
@@ -344,30 +349,30 @@ public class SchemaManagerService
         try 
         {
             // assume its a FQ classname if we find a period. Built-in otherwise.
-            AbstractType<?> type = TypeParser.parse(column.getValidation_class());
+            AbstractType<?> validationType = TypeParser.parse(column.getValidation_class());
 
-            switch (type.getJdbcType())
+
+            switch (validationType.getJdbcType())
             {
             // UTF8Type
             case Types.VARCHAR:
-                sd.addToCols(new FieldSchema(ByteBufferUtil.string(column.name), "string", buildTypeComment(type)));                        
+                sd.addToCols(new FieldSchema(comparator.getString(column.name), "string", buildTypeComment(validationType)));                        
                 break;
+                // Should be hex
             case Types.BINARY:
-                // TODO not sure there is much we can do here outside of conversion to HEX
-                sd.addToCols(new FieldSchema(ByteBufferUtil.bytesToHex(column.name), "string", buildTypeComment(type)));
+                sd.addToCols(new FieldSchema(comparator.getString(column.name), "string", buildTypeComment(validationType)));
                 break;
                 // IntegerType
             case Types.BIGINT:
-                sd.addToCols(new FieldSchema(ByteBufferUtil.string(column.name), "bigint", buildTypeComment(type)));
+                sd.addToCols(new FieldSchema(comparator.getString(column.name), "bigint", buildTypeComment(validationType)));
                 break;                
                 // LongType
             case Types.INTEGER:
-                sd.addToCols(new FieldSchema(ByteBufferUtil.string(column.name), "int", buildTypeComment(type)));
+                sd.addToCols(new FieldSchema(comparator.getString(column.name), "int", buildTypeComment(validationType)));
                 break;
                 // UUIDType variants are all 'other'
             default:
-                // TODO same as binary, we'll just do a hex string for now
-                sd.addToCols(new FieldSchema(ByteBufferUtil.bytesToHex(column.name), "string", buildTypeComment(type)));
+                sd.addToCols(new FieldSchema(comparator.getString(column.name), "string", buildTypeComment(validationType)));
                 break;
             }
         }
