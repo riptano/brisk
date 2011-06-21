@@ -13,3 +13,9 @@ LOAD DATA LOCAL INPATH '[[DATA_DIR]]/u.data' OVERWRITE INTO TABLE u_data;
 CREATE TABLE u_data_new (userid INT, movieid INT, rating INT, weekday INT)
 ROW FORMAT DELIMITED
 FIELDS TERMINATED BY '\t';
+
+-- Query out data
+SELECT userid, count(*) 
+FROM u_data 
+GROUP BY userid 
+ORDER BY userid;

@@ -11,8 +11,7 @@ import java.sql.Statement;
 import java.sql.Connection;
 
 import com.datastax.TestUtils;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 public class HiveJDBCRunner {
 	
@@ -39,86 +38,86 @@ public class HiveJDBCRunner {
     	String script = testDir + testScript;
     	String actualOutput = resultsDir + testScript + ".jdbc.out";
     	String expectedOutput = resultsDir + testScript + ".jdbc.exp";
-    	    	
-        try {
-            File outFile = new File(actualOutput);
-            if (outFile.exists() == true) {
-                outFile.delete();
-            }
-            
-            FileReader fr = new FileReader(new File(script));                      
-            BufferedReader br = new BufferedReader(fr);  
-            
-            FileWriter fstream = new FileWriter(actualOutput);
-            BufferedWriter results = new BufferedWriter(fstream);
-              
-            while((s = br.readLine()) != null)  {
-                // Ignore empty lines ands comments (starting with "--")
-                if(!s.trim().equals("") && !s.startsWith("--")) 
-                {
-                	sb.append(s.trim() + " ");  
-            	}
-            }
-            br.close();  
-  
-            // Use ";" as a delimiter for each request 
-            String[] inst = sb.toString().split(";");  
-            
-            // Run each SQL Statement
-            for(int i = 0; i<inst.length; i++)  
-            {
-            	orig_query = inst[i].trim();
-            	
-            	// De-tokenize SQL files
-                if(!orig_query.equals("") && !orig_query.startsWith("--")) 
-                {
-                   	new_query = orig_query.replace("[[DATA_DIR]]", dataDir);
-                	new_query = new_query.replace("[[EXAMPLES]]", examplesDir);
- 
-                	results.write("-- Statement: " + orig_query);
-                	results.newLine();
-                    
-                	//Run Query
-                	try {
-                        res = stmt.executeQuery(new_query);  
-                	} catch (SQLException e) {
-                        results.write(e.toString()); 
-                	}
 
-                	// Not Supported: colCount = res.getMetaData().getColumnCount();
-                	// Workaround: Iterate thru columns until exception reached.
-                	while (res.next()) {
-                		for (int j=1; j<=colCount; j++) {
-                			try {
-                				results.write(res.getString(j) + ", ");    
-                			} catch (SQLException e) {
-                				if (e.getMessage().startsWith("Invalid columnIndex")) {
-                					break;
-                				} else {
-                                    // Unexpected Failure Parsing Results
-                                    System.out.print(e.toString()); 
-                					results.write(e.toString()); 
-                				}
-                			}   
-                		}
-                		results.newLine();                     
-                	}
+
+        File outFile = new File(actualOutput);
+        if (outFile.exists() == true) 
+        {
+            outFile.delete();
+        }
+        
+        FileReader fr = new FileReader(new File(script));                      
+        BufferedReader br = new BufferedReader(fr);  
+        
+        FileWriter fstream = new FileWriter(actualOutput);
+        BufferedWriter results = new BufferedWriter(fstream);
+          
+        while((s = br.readLine()) != null)  
+        {
+            // Ignore empty lines ands comments (starting with "--")
+            if(!s.trim().equals("") && !s.startsWith("--")) 
+            {
+                sb.append(s.trim() + " ");  
+            }
+        }
+        br.close();  
+
+        // Use ";" as a delimiter for each request 
+        String[] inst = sb.toString().split(";");  
+        
+        // Run each SQL Statement
+        for(int i = 0; i<inst.length; i++)  
+        {
+            orig_query = inst[i].trim();
+            
+            // De-tokenize SQL files
+            if(!orig_query.equals("") && !orig_query.startsWith("--")) 
+            {
+                new_query = orig_query.replace("[[DATA_DIR]]", dataDir);
+                new_query = new_query.replace("[[EXAMPLES]]", examplesDir);
+
+                results.write("-- Statement: " + orig_query);
+                results.newLine();
+                
+                //Run Query
+                try {
+                    res = stmt.executeQuery(new_query);  
+                } catch (SQLException e) {
+                    results.write(e.toString()); 
+                }
+
+                // Not Supported: colCount = res.getMetaData().getColumnCount();
+                // Workaround: Iterate thru columns until exception reached.
+                while (res.next()) 
+                {
+                    for (int j=1; j<=colCount; j++) 
+                    {
+                        try {
+                            results.write(res.getString(j) + ", ");    
+                        } catch (SQLException e) {
+                            if (e.getMessage().startsWith("Invalid columnIndex")) 
+                            {
+                                break;
+                            } else {
+                                // Unexpected Failure Parsing Results
+                                fail(new_query); 
+                                System.out.print(e.toString()); 
+                                results.write(e.toString()); 
+                            }
+                        }   
+                    }
+                    results.newLine();                     
                 }
             }
-            
-            // Close files after running test
-            br.close();
-            fr.close();
-            results.close();
-            fstream.close();
-            
-            // Diff Results and PASS/FAIL the test case
-            TestUtils.diffFiles(actualOutput, expectedOutput);
-            
-        } 
-        catch (Exception e) {
-     		  e.printStackTrace();
-              fail(e.getMessage());
         }
+        
+        // Close files after running test
+        br.close();
+        fr.close();
+        results.close();
+        fstream.close();
+        
+        // Diff Results and PASS/FAIL the test case
+        TestUtils.diffFiles(actualOutput, expectedOutput);
     }
 }

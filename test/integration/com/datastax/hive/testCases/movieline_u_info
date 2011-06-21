@@ -2,12 +2,23 @@ DROP TABLE IF EXISTS u_info;
 
 CREATE TABLE u_info (users INT, items INT, ratings INT)
 ROW FORMAT DELIMITED
-FIELDS TERMINATED BY '\t'
+FIELDS TERMINATED BY '|'
 STORED AS TEXTFILE;
 
--- TODO: transfor the key/values into a single row to insert.
+SELECT * FROM u_genre ORDER BY genre;
+
+
+INSERT INTO u_genre (users, items, ratings) VALUES 
+(
+SELECT count(*) from u_users
+SELECT count(*) from u_items
+SELECT count(ratings) from u_items
+);
+
+
 -- LOAD DATA LOCAL INPATH '[[DATA_DIR]]/u.info' OVERWRITE INTO TABLE u_info;
 
+-- TODO: transfor the key/values into a single row to insert.
 -- File Contents:
 -- 943 users
 -- 1682 items

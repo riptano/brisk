@@ -40,7 +40,6 @@ public class runJDBCSmokeTest {
 		JDBCTestRunner.runQueries(keySpace, "insert_users_sri");
     }    
 	
-	//@Ignore
     @Test
     /* cql_jdbc_users_crud: Create Table, Load Data and Drop */   
     public void CQL_jdbc_all_options_table() throws Exception {
@@ -48,7 +47,6 @@ public class runJDBCSmokeTest {
         JDBCTestRunner.runQueries(keySpace, "insert_all_options_table");
     }  
     
-	@Ignore
     @Test
     /* cql_jdbc_keyspace_syntax_check */   
     public void cql_jdbc_keyspace_syntax_check() throws Exception {

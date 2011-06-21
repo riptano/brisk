@@ -1,3 +1,25 @@
 -- Statement: DROP TABLE IF EXISTS u_occupation
--- Statement: CREATE TABLE u_occupation (occupation STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t' STORED AS TEXTFILE
+-- Statement: CREATE TABLE u_occupation (occupation STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE
 -- Statement: LOAD DATA LOCAL INPATH '[[DATA_DIR]]/u.occupation' OVERWRITE INTO TABLE u_occupation
+-- Statement: SELECT * FROM u_occupation ORDER BY occupation
+administrator, 
+artist, 
+doctor, 
+educator, 
+engineer, 
+entertainment, 
+executive, 
+healthcare, 
+homemaker, 
+lawyer, 
+librarian, 
+marketing, 
+none, 
+other, 
+programmer, 
+retired, 
+salesman, 
+scientist, 
+student, 
+technician, 
+writer, 

@@ -13,3 +13,8 @@ FROM u_data;
 
 -- Query Data out of Target
 SELECT weekday, COUNT(*) FROM u_data_new GROUP BY weekday;
+
+-- Query Data out of Source
+SELECT * FROM u_data WHERE userid > 100 and userid < 200 ORDER BY userid, movieid, rating limit 100;
+SELECT * FROM u_data ORDER BY userid, movieid, rating limit 100;
+SELECT userid, movieid, rating FROM u_data ORDER BY userid, movieid, rating limit 100;
