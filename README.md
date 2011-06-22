@@ -29,26 +29,27 @@ Getting Started
 To try it out run:
 
 1. compile and download all dependencies
-   
-    ant
+
+        ant
 
 2. start cassandra with built in job/task trackers
 
-    ./bin/brisk cassandra -t  
+        ./bin/brisk cassandra -t
 
 3. view jobtracker
-   
-    http://localhost:50030
+
+        http://localhost:50030
 
 4. examine CassandraFS
 
-    ./bin/brisk hadoop fs -lsr cfs:///
+        ./bin/brisk hadoop fs -lsr cfs:///
 
 5. start hive shell or webUI
-   
-   ./bin/brisk hive
+
+        ./bin/brisk hive
 
    or
- 
-   ./bin/brisk hive --service hwi
-   open web browser to http://localhost:9999/hwi
+
+        ./bin/brisk hive --service hwi
+
+open web browser to http://localhost:9999/hwi
