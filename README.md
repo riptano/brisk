@@ -10,7 +10,7 @@ hive meta-store implementation.
 Hadoop jobs and Hive are setup to work with MR cluster.
 
 For detailed docs please see: 
-    http://www.datastax.com/docs/0.8/brisk/index
+    [http://www.datastax.com/docs/0.8/brisk/index](http://www.datastax.com/docs/0.8/brisk/index)
 
 You can also discuss Brisk on freenode #datastax-brisk
 
@@ -29,26 +29,27 @@ Getting Started
 To try it out run:
 
 1. compile and download all dependencies
-   
-    ant
-
+  <pre>
+      ant
+  </pre>
 2. start cassandra with built in job/task trackers
-
-    ./bin/brisk cassandra -t  
-
+  <pre>
+      ./bin/brisk cassandra -t
+  </pre>
 3. view jobtracker
-   
-    http://localhost:50030
-
+  <pre>
+      http://localhost:50030
+  </pre>
 4. examine CassandraFS
-
-    ./bin/brisk hadoop fs -lsr cfs:///
-
+  <pre>
+      ./bin/brisk hadoop fs -lsr cfs:///
+  </pre>
 5. start hive shell or webUI
-   
-   ./bin/brisk hive
-
+  <pre>
+     ./bin/brisk hive
+  </pre>
    or
- 
-   ./bin/brisk hive --service hwi
-   open web browser to http://localhost:9999/hwi
+  <pre>
+     ./bin/brisk hive --service hwi
+  </pre>
+open web browser to http://localhost:9999/hwi
