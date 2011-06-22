@@ -10,7 +10,7 @@ hive meta-store implementation.
 Hadoop jobs and Hive are setup to work with MR cluster.
 
 For detailed docs please see: 
-    [http://www.datastax.com/docs/0.8/brisk/index](http://www.datastax.com/docs/0.8/brisk/index)
+    http://www.datastax.com/docs/0.8/brisk/index
 
 You can also discuss Brisk on freenode #datastax-brisk
 
