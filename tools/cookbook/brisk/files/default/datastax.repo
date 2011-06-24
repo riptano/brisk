@@ -1,0 +1,5 @@
+[datastax]
+name= DataStax Repo for Apache Cassandra
+baseurl=http://rpm.datastax.com/EL/$releasever
+enabled=1
+gpgcheck=0
