@@ -1,5 +1,6 @@
 package org.apache.cassandra.hadoop.hive.metastore;
 
+import java.nio.ByteBuffer;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,6 +15,11 @@ import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.config.KSMetaData;
 import org.apache.cassandra.db.ColumnFamilyType;
 import org.apache.cassandra.db.marshal.AbstractType;
+import org.apache.cassandra.db.marshal.AbstractUUIDType;
+import org.apache.cassandra.db.marshal.AsciiType;
+import org.apache.cassandra.db.marshal.BytesType;
+import org.apache.cassandra.db.marshal.IntegerType;
+import org.apache.cassandra.db.marshal.LongType;
 import org.apache.cassandra.db.marshal.TypeParser;
 import org.apache.cassandra.db.marshal.UTF8Type;
 import org.apache.cassandra.thrift.CfDef;
@@ -309,26 +315,28 @@ public class SchemaManagerService
         serde.setSerializationLib("org.apache.hadoop.hive.cassandra.serde.StandardColumnSerDe");
         serde.putToParameters("serialization.format", "1");
         sd.setSerdeInfo(serde);
-        
-        if ( cfDef.getColumn_metadataSize() > 0 )
-        {
-            for (ColumnDef column : cfDef.getColumn_metadata() )
+               
+        try {
+            AbstractType keyValidator = cfDef.key_validation_class != null ? TypeParser.parse(cfDef.key_validation_class) : BytesType.instance;
+            addTypeToStorageDescriptor(sd, ByteBufferUtil.bytes("row_key"), keyValidator, keyValidator);
+            if ( cfDef.getColumn_metadataSize() > 0 )
             {
-                try {
-                    applyType(sd, column, TypeParser.parse(cfDef.comparator_type));
-                } catch (ConfigurationException ce) {
-                    throw new CassandraHiveMetaStoreException("Problem converting comparator type: " + cfDef.comparator_type, ce);
+                for (ColumnDef column : cfDef.getColumn_metadata() )
+                {
+                    addTypeToStorageDescriptor(sd, column.name, TypeParser.parse(cfDef.comparator_type),  TypeParser.parse(column.getValidation_class()));     
                 }
+            }        
+            else
+            {   
+                // create default transposition columns 
+                sd.addToCols(new FieldSchema("row_key", "string", "Auto-created default column."));
+                sd.addToCols(new FieldSchema("column_name", "string", "Auto-created default column."));
+                sd.addToCols(new FieldSchema("value", "string", "Auto-created default column."));
+                if ( cfDef.getColumn_type().equals(ColumnFamilyType.Super.toString()) )
+                    sd.addToCols(new FieldSchema("sub_column_name", "string", "Auto-created default column."));
             }
-        }        
-        else
-        {   
-            // create default transposition columns 
-            sd.addToCols(new FieldSchema("row_key", "string", "Auto-created default column."));
-            sd.addToCols(new FieldSchema("column_name", "string", "Auto-created default column."));
-            sd.addToCols(new FieldSchema("value", "string", "Auto-created default column."));
-            if ( cfDef.getColumn_type().equals(ColumnFamilyType.Super.toString()) )
-                sd.addToCols(new FieldSchema("sub_column_name", "string", "Auto-created default column."));
+        } catch (ConfigurationException ce) {
+            throw new CassandraHiveMetaStoreException("Problem converting comparator type: " + cfDef.comparator_type, ce);
         }
         table.setSd(sd);
         return table;
@@ -340,45 +348,29 @@ public class SchemaManagerService
      * @param sd
      * @param column
      */
-    private void applyType(StorageDescriptor sd, ColumnDef column, AbstractType comparator)
+    private void addTypeToStorageDescriptor(StorageDescriptor sd,
+            ByteBuffer columnName, AbstractType comparator,
+            AbstractType<?> validationType)
     {
-        if ( log.isDebugEnabled() )
+        if ( validationType instanceof BytesType )
         {
-            log.debug("Applying type information for column: {}", column.toString());
-        }
-        try 
+            sd.addToCols(new FieldSchema(comparator.getString(columnName), "string", buildTypeComment(validationType)));
+            
+        } else if ( validationType instanceof UTF8Type || validationType instanceof AsciiType ) 
         {
-            // assume its a FQ classname if we find a period. Built-in otherwise.
-            AbstractType<?> validationType = TypeParser.parse(column.getValidation_class());
-
-
-            switch (validationType.getJdbcType())
-            {
-            // UTF8Type
-            case Types.VARCHAR:
-                sd.addToCols(new FieldSchema(comparator.getString(column.name), "string", buildTypeComment(validationType)));                        
-                break;
-                // Should be hex
-            case Types.BINARY:
-                sd.addToCols(new FieldSchema(comparator.getString(column.name), "string", buildTypeComment(validationType)));
-                break;
-                // IntegerType
-            case Types.BIGINT:
-                sd.addToCols(new FieldSchema(comparator.getString(column.name), "bigint", buildTypeComment(validationType)));
-                break;                
-                // LongType
-            case Types.INTEGER:
-                sd.addToCols(new FieldSchema(comparator.getString(column.name), "int", buildTypeComment(validationType)));
-                break;
-                // UUIDType variants are all 'other'
-            default:
-                sd.addToCols(new FieldSchema(comparator.getString(column.name), "string", buildTypeComment(validationType)));
-                break;
-            }
-        }
-        catch (Exception e) 
+            sd.addToCols(new FieldSchema(comparator.getString(columnName), "string", buildTypeComment(validationType)));   
+        } else if ( validationType instanceof LongType )
         {
-            throw new CassandraHiveMetaStoreException("There was a problem determining type information while creating schemas",e);
+            sd.addToCols(new FieldSchema(comparator.getString(columnName), "int", buildTypeComment(validationType)));
+        } else if ( validationType instanceof AbstractUUIDType )
+        {
+            sd.addToCols(new FieldSchema(comparator.getString(columnName), "string", buildTypeComment(validationType)));
+        } else if ( validationType instanceof IntegerType )
+        {
+            sd.addToCols(new FieldSchema(comparator.getString(columnName), "bigint", buildTypeComment(validationType)));                
+        } else {
+            // assume bytes
+            sd.addToCols(new FieldSchema(comparator.getString(columnName), "string", buildTypeComment(validationType)));
         }
     }
     
