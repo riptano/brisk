@@ -1,8 +1,115 @@
 = DESCRIPTION:
 
+This script launches a DataStax' Brisk cluster of a predetermined size. Also included in this script is OpsCenter installation and configuration support.
+
 = REQUIREMENTS:
+
+Download and place the apt recipe in your cookbooks folder. The apt recipe can be found here:
+    http://community.opscode.com/cookbooks/apt
+
+Then run:
+    knife cookbook upload -a -o cookbooks/
 
 = ATTRIBUTES:
 
+The main attributes to look at are:
+
+    default[:setup][:vanilla_nodes] = 2
+    default[:setup][:cluster_size] = 4
+    default[:setup][:current_role] = "brisk"
+
+    default[:brisk][:cluster_name] = "Brisk Cluster"
+
+    default[:opscenter][:user] = false
+    default[:opscenter][:pass] = false
+    default[:opscenter][:free] = false
+
+The first set are highly mandatory. These will configure a ring of set size with the included number of vanilla Cassandra nodes (nodes that are not running task trackers). The splitting of the ring will go based on the number of nodes that it finds that also match the :current_role. So make sure to create new roles and update this attribute between cluster launches.
+
+The attribute for :cluster_name is set to prevent clusters from merging into themselves. This attribute doesn't require change but will greatly uncomplicate certain scenarios.
+
+The last set of attributes are for OpsCenter installation. Just provide the username and password that you received during registration and mark whether this is a free installation or not. To obtain a free OpsCenter, please visit: http://www.datastax.com/opscenter.
+
 = USAGE:
+
+Configure cloud access
+----------------------
+
+After following the instructions here:
+    http://wiki.opscode.com/display/chef/Quick+Start
+
+proceed to configure your cloud access by adding these following lines to your ~/.chef/knife.rb file.
+
+    # Information found at: https://manage.rackspacecloud.com/APIAccess.do
+    knife[:rackspace_api_username] = "USER"
+    knife[:rackspace_api_key]  = "KEY"
+
+    # Information fount at: https://aws-portal.amazon.com/gp/aws/developer/account?ie=UTF8&action=access-key
+    knife[:aws_access_key_id]     = "ID"
+    knife[:aws_secret_access_key] = "KEY"
+
+Configure roles
+---------------
+
+Run this line from your default chef folder:
+    knife role create brisk
+
+and edit the file to look very similar to this:
+
+    {
+      "name": "brisk",
+      "default_attributes": {
+      },
+      "json_class": "Chef::Role",
+      "env_run_lists": {
+      },
+      "run_list": [
+        "recipe[brisk]"
+      ],
+      "description": "",
+      "chef_type": "role",
+      "override_attributes": {
+      }
+    }
+
+Starting up a cluster
+---------------------
+
+An Ubuntu 10.10 cloud in Rackspace:
+    knife rackspace server create -r "role[brisk]" -i 69 -f 6 -S Server01 -N Server01
+    knife rackspace server create -r "role[brisk]" -i 69 -f 6 -S Server02 -N Server02
+    knife rackspace server create -r "role[brisk]" -i 69 -f 6 -S Server03 -N Server03
+    knife rackspace server create -r "role[brisk]" -i 69 -f 6 -S Server04 -N Server04
+
+An Ubuntu 10.10 cloud in EC2:
+    pemname=<pemFileName>  # do not include ".pem"
+    group=<securityGroupName>
+    knife ec2 server create -r "role[brisk]" -I ami-08f40561 --flavor m1.large -S $pemname -G $group -x ubuntu -N Server01
+    knife ec2 server create -r "role[brisk]" -I ami-08f40561 --flavor m1.large -S $pemname -G $group -x ubuntu -N Server02
+    knife ec2 server create -r "role[brisk]" -I ami-08f40561 --flavor m1.large -S $pemname -G $group -x ubuntu -N Server03
+    knife ec2 server create -r "role[brisk]" -I ami-08f40561 --flavor m1.large -S $pemname -G $group -x ubuntu -N Server04
+
+A CentOS 5.5 cloud in Rackspace:
+    knife rackspace server create -r "role[brisk]" -i 51 -f 6 -d centos5-gems -S $servername -N Server01
+    knife rackspace server create -r "role[brisk]" -i 51 -f 6 -d centos5-gems -S $servername -N Server02
+    knife rackspace server create -r "role[brisk]" -i 51 -f 6 -d centos5-gems -S $servername -N Server03
+    knife rackspace server create -r "role[brisk]" -i 51 -f 6 -d centos5-gems -S $servername -N Server04
+
+Bootstrapping Commands
+----------------------
+
+For an Ubuntu Machine:
+    knife bootstrap -r recipe['brisk'] --sudo -x ubuntu <publicDNS>
+For an CentOS Machine:
+    knife bootstrap -r "recipe['brisk']" --sudo -x root -d centos5-gems <publicDNS>
+For an RedHat Machine:
+    wget http://goo.gl/0k8mV -O- > ~/.chef/bootstrap/rhel5-rbel.erb
+    knife bootstrap --sudo -x root -d rhel5-rbel <publicDNS>
+    knife bootstrap -r recipe['brisk'] --sudo -x root -d rhel5-rbel <publicDNS>
+
+
+Other Useful Debugging Commands
+-------------------------------
+
+knife node show server04 --format json
 
