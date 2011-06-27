@@ -102,10 +102,7 @@ public class SnappyCompressor implements Compressor
                 outBuf.rewind();
                                 
                 int lim = Snappy.compress(outBuf, compressedBuf);
-                
-                logger.info("outBuf = "+outBuf.limit()+" compressed to"+len);
-
-                
+                                
                 compressedBuf.limit(lim);
                 compressedBuf.rewind();
             }

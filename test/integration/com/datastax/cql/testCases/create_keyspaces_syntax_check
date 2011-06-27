@@ -8,43 +8,45 @@ use testcql1;
 use default;
 DROP KEYSPACE testcql1;  
  
--- Pass: Create with NetworkTopologyStrategy and verify with use and drop
-DROP KEYSPACE testcql2;  
-
-CREATE KEYSPACE testcql2 with strategy_class =  'org.apache.cassandra.locator.NetworkTopologyStrategy' 
-and strategy_options:replication_factor=1
-and strategy_options:DC1=2
-and strategy_options:DC2=2;
-
-use testcql2;
-use default;
-DROP KEYSPACE testcql2;  
-  
--- Pass: Create / Drop / Create and verify with use and drop
-DROP KEYSPACE testcql3;
-
-CREATE KEYSPACE testcql3 with strategy_class = 'org.apache.cassandra.locator.OldNetworkTopologyStrategy' 
-and strategy_options:replication_factor=1
-and strategy_options:DC1=2
-and strategy_options:DC2=2;
-  
-DROP KEYSPACE testcql3;
-
-CREATE KEYSPACE testcql3 with strategy_class =  'org.apache.cassandra.locator.SimpleStrategy' 
+CREATE KEYSPACE testcql1 with strategy_class =  'org.apache.cassandra.locator.SimpleStrategy' 
 and strategy_options:replication_factor=1;
 
 use testcql1;
 use default;
-DROP KEYSPACE testcql3;  
-use testcql1;
-
--- Error: strategy options not specified
-CREATE KEYSPACE testcql0;
 
 -- Error: attempt to create duplicate
 CREATE KEYSPACE testcql1 with 
 strategy_class =  'org.apache.cassandra.locator.SimpleStrategy' 
 and strategy_options:replication_factor=1;
+
+use default;
+DROP KEYSPACE testcql1;  
+use testcql1;
+ 
+-- Pass: Create with NetworkTopologyStrategy and verify with use and drop
+-- DROP KEYSPACE testcql2;  
+
+-- CREATE KEYSPACE testcql2 with strategy_class =  'org.apache.cassandra.locator.NetworkTopologyStrategy' 
+-- and strategy_options:replication_factor=1
+-- and strategy_options:DC1=2
+-- and strategy_options:DC2=2;
+
+-- use testcql2;
+-- use default;
+-- DROP KEYSPACE testcql2;  
+  
+-- Pass: Create / Drop / Create and verify with use and drop
+-- DROP KEYSPACE testcql3;
+
+-- CREATE KEYSPACE testcql3 with strategy_class = 'org.apache.cassandra.locator.OldNetworkTopologyStrategy' 
+-- and strategy_options:replication_factor=1
+-- and strategy_options:DC1=2
+-- and strategy_options:DC2=2;
+  
+-- DROP KEYSPACE testcql3;
+
+-- Error: strategy options not specified
+CREATE KEYSPACE testcql0;
 
 -- Error: old syntax strategy options not specified
 CREATE KEYSPACE ks-error with replication_factor = 1 and strategy_class = 'org.apache.cassandra.locator.SimpleStrategy';

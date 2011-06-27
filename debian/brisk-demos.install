@@ -5,7 +5,8 @@ demos/portfolio_manager/thrift usr/share/brisk-demos/portfolio_manager
 demos/portfolio_manager/website usr/share/brisk-demos/portfolio_manager
 demos/portfolio_manager/README.txt usr/share/brisk-demos/portfolio_manager
 demos/portfolio_manager/10_day_loss.q usr/share/brisk-demos/portfolio_manager
-demos/pig/files/example.txt
-demos/pig/push-to-cf.pig
-demos/pig/sort-by-total-cfs.pig
-demos/pig/sort-by-total-cs.pig
+demos/pig/files/example.txt usr/share/brisk-demos/pig/files
+demos/pig/001_sort-by-total-cfs.pig usr/share/brisk-demos/pig
+demos/pig/002_push-data-to-cassandra.pig usr/share/brisk-demos/pig
+demos/pig/003_sort-by-total-cs.pig usr/share/brisk-demos/pig
+demos/pig/README.txt usr/share/brisk-demos/pig

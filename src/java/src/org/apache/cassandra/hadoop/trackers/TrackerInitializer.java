@@ -62,9 +62,21 @@ public class TrackerInitializer {
 
         checkCreateSystemSchema();
 
-        // Are we a JobTracker?
-        InetAddress jobTrackerAddr = CassandraJobConf.getJobTrackerNode();
-        lastKnowJobTracker = jobTrackerAddr;
+        // Let's try until the JT location is available.
+        do 
+        {
+            try 
+            {
+                InetAddress jobTrackerAddr = CassandraJobConf.getJobTrackerNode();
+                lastKnowJobTracker = jobTrackerAddr;
+            } catch (Exception e)
+            {
+                logger.info("JobTracker location not available. Retrying in 5 secs...");
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e1) {}
+            }
+        } while (lastKnowJobTracker == null);
 
         launchTrackers();
 

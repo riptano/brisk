@@ -4,22 +4,16 @@
 -- Statement: use testcql1
 -- Statement: use default
 -- Statement: DROP KEYSPACE testcql1
--- Statement: DROP KEYSPACE testcql2
--- Statement: CREATE KEYSPACE testcql2 with strategy_class =  'org.apache.cassandra.locator.NetworkTopologyStrategy' and strategy_options:replication_factor=1 and strategy_options:DC1=2 and strategy_options:DC2=2
--- Statement: use testcql2
--- Statement: use default
--- Statement: DROP KEYSPACE testcql2
--- Statement: DROP KEYSPACE testcql3
--- Statement: CREATE KEYSPACE testcql3 with strategy_class = 'org.apache.cassandra.locator.OldNetworkTopologyStrategy' and strategy_options:replication_factor=1 and strategy_options:DC1=2 and strategy_options:DC2=2
--- Statement: DROP KEYSPACE testcql3
--- Statement: CREATE KEYSPACE testcql3 with strategy_class =  'org.apache.cassandra.locator.SimpleStrategy' and strategy_options:replication_factor=1
+-- Statement: CREATE KEYSPACE testcql1 with strategy_class =  'org.apache.cassandra.locator.SimpleStrategy' and strategy_options:replication_factor=1
 -- Statement: use testcql1
 -- Statement: use default
--- Statement: DROP KEYSPACE testcql3
+-- Statement: CREATE KEYSPACE testcql1 with strategy_class =  'org.apache.cassandra.locator.SimpleStrategy' and strategy_options:replication_factor=1
+java.sql.SQLException: Keyspace already exists.
+-- Statement: use default
+-- Statement: DROP KEYSPACE testcql1
 -- Statement: use testcql1
 -- Statement: CREATE KEYSPACE testcql0
 java.sql.SQLException: line 0:-1 mismatched input '<EOF>' expecting K_WITH
--- Statement: CREATE KEYSPACE testcql1 with strategy_class =  'org.apache.cassandra.locator.SimpleStrategy' and strategy_options:replication_factor=1
 -- Statement: CREATE KEYSPACE ks-error with replication_factor = 1 and strategy_class = 'org.apache.cassandra.locator.SimpleStrategy'
 java.sql.SQLException: line 1:18 mismatched input '-' expecting K_WITH
 -- Statement: CREATE KEYSPACE bad-chars.~!^@| with strategy_class =  'org.apache.cassandra.locator.SimpleStrategy' and strategy_options:replication_factor=1

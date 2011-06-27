@@ -20,12 +20,7 @@ public class runCassHandlerCreateObjTest {
 	    String ks = "fresh_ks";
 	    String cf  = "fresh_cf_ext";
 
-        //Test Database Connection
-	    try {
-	        connection = TestUtils.getHiveConnection();    	
-	       } catch (SQLException e) {
-               fail("Hive JDBC Login Error: " + e.getMessage());
-           }
+        connection = TestUtils.getHiveConnection();
 	      	       
         // Use JDBC to clean up existing the KEYSPACE
         try {   

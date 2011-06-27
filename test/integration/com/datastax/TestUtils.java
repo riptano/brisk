@@ -13,6 +13,8 @@ import java.util.Properties;
 
 import java.sql.DriverManager;
 import java.sql.Connection;
+import java.sql.SQLException;
+
 import org.apache.cassandra.cql.jdbc.DriverResolverException;
 
 import static org.junit.Assert.*;
@@ -21,7 +23,7 @@ public  class TestUtils {
     
     private static String propFile = System.getProperty("user.dir") + "/test/integration/com/datastax/test.properties";
     
-    public static void diffFiles(String actualOutput, String expectedOutput) throws Exception  
+    public static void diffFiles(String actualOutput, String expectedOutput)
     {        
         try {
             BufferedReader abr = new BufferedReader(new InputStreamReader(new FileInputStream(new File(actualOutput))));
@@ -52,12 +54,11 @@ public  class TestUtils {
             assertTrue("Diff Found: " + actualOutput, expList.equals(actList));
         } 
         catch (Exception e) {
-              e.printStackTrace();
               fail(e.getMessage());
         }        
     }
  
-    public static String getLocalHost() throws Exception {
+    public static String getLocalHost() {
         String hostname = null;
         
         try {
@@ -65,12 +66,13 @@ public  class TestUtils {
 
             // Get hostname
             hostname = addr.getHostName();
-        } catch (UnknownHostException e) {
+        } catch (Exception e) {
+            fail(e.getMessage());
         }
         return hostname;
     }
     
-    public static String getLocalIP() throws Exception {
+    public static String getLocalIP() {
         String ip = null;
         
         try {
@@ -78,12 +80,13 @@ public  class TestUtils {
             
             // Get IP Address
             ip = addr.getHostAddress();            
-        } catch (UnknownHostException e) {
+        } catch (Exception e) {
+            fail(e.getMessage());
         }
         return ip;
     }
     
-    public static String getCqlshPrompt() throws Exception  
+    public static String getCqlshPrompt()  
     {  
         String cqlsh = null;
         
@@ -107,14 +110,14 @@ public  class TestUtils {
                 cqlsh = "cqlsh " + cServer + " " + cServerPort + " -u " + cUser + " -p " + cPassword;  
             }
         } catch (Exception e) {
-            e.printStackTrace();
             fail(e.getMessage());
         }
         
         return cqlsh;
     }
     
-    public static Connection getJDBCConnection(String keyspace) throws Exception  
+    public static Connection getJDBCConnection(String keyspace)
+    
     {  
         String cServer = null;
         String cServerPort = null;
@@ -141,59 +144,73 @@ public  class TestUtils {
             Class.forName("org.apache.cassandra.cql.jdbc.CassandraDriver");
             jdbcConn = DriverManager.getConnection(connectionString);
 
-        } catch (DriverResolverException ce) 
-          {
+        } 
+        catch (DriverResolverException ce) 
+        {
             // Retry the connection below
-              if (cServer.equals("localhost")) {
-                  retryConnectionWithIP=true;
-              } else {
-                  ce.printStackTrace();
-                  fail(ce.getMessage()); 
-              }
-          }       
-          catch (Exception e) 
-          {
-              e.printStackTrace();
-              fail(e.getMessage());
-          }
-          
-          // Try substituting the IP Address for localhost and retrying the connection
-          if (retryConnectionWithIP == true) {
-              try {
-                  cServer = getLocalIP();
-                  
-                  connectionString = "jdbc:cassandra:" + cUser +"/" + cPassword + "@" +
-                  cServer + ":" + cServerPort + "/" + keyspace;
-                  
-                  System.out.println("Retrying Connection String: " + connectionString);            
+            if (cServer.equals("localhost")) {
+                retryConnectionWithIP=true;
+            } else {
+                fail(ce.getMessage()); 
+            }
+        } 
+        catch (SQLException e) 
+        {
+            fail(e.getMessage());
+        }
+        catch (Exception e) 
+        {
+            fail(e.getMessage());
+        }
+        
+        // Try substituting the IP Address for localhost and retrying the connection
+        if (retryConnectionWithIP == true) {
+            try {
+                cServer = getLocalIP();
+                
+                connectionString = "jdbc:cassandra:" + cUser +"/" + cPassword + "@" +
+                cServer + ":" + cServerPort + "/" + keyspace;
+                
+                System.out.println("Retrying Connection String: " + connectionString);            
 
-                  jdbcConn = DriverManager.getConnection(connectionString);
-              } catch (DriverResolverException e) {
-                  retryConnectionWithHostName = true;
-              } 
-          }
-          
-          // Try substituting the hostname for localhost and retrying the connection
-          if (retryConnectionWithHostName == true) {
-              try {
-                  cServer = getLocalHost();
+                jdbcConn = DriverManager.getConnection(connectionString);
+            } 
+            catch (DriverResolverException e) 
+            {
+                retryConnectionWithHostName = true;
+            } 
+            catch (SQLException e) 
+            {
+                fail(e.getMessage());
+            }
 
-                  connectionString = "jdbc:cassandra:" + cUser +"/" + cPassword + "@" +
-                  cServer + ":" + cServerPort + "/" + keyspace;
-                  
-                  System.out.println("Retrying Connection String: " + connectionString);            
+        }
+        
+        // Try substituting the hostname for localhost and retrying the connection
+        if (retryConnectionWithHostName == true) 
+        {
+            try 
+            {
+                cServer = getLocalHost();
+                connectionString = "jdbc:cassandra:" + cUser +"/" + cPassword + "@" + cServer + ":" + cServerPort + "/" + keyspace;                
+                System.out.println("Retrying Connection String: " + connectionString);            
+                jdbcConn = DriverManager.getConnection(connectionString);
+            } 
+            catch (DriverResolverException e) 
+            {
+                fail(e.getMessage());
+            } 
+            catch (SQLException e) 
+            {
+                fail(e.getMessage());
+            }
 
-                  jdbcConn = DriverManager.getConnection(connectionString);
-              } catch (DriverResolverException e) {
-                  e.printStackTrace();
-                  fail(e.getMessage());
-              } 
-          }
-    
-        return jdbcConn;
+        }
+  
+      return jdbcConn;
     }
     
-    public static Connection getHiveConnection() throws Exception
+    public static Connection getHiveConnection()
     {  
         Connection hiveConn = null;
         
@@ -216,7 +233,6 @@ public  class TestUtils {
             hiveConn = DriverManager.getConnection(connectionString);
          
         } catch (Exception e) {
-            e.printStackTrace();
             fail(e.getMessage());
         }
         return hiveConn;

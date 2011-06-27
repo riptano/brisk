@@ -6,7 +6,9 @@ CREATE TABLE u_item (movie_id INT, movie_title STRING, release_date STRING, vide
               film_noir INT, horror INT, musical INT, mystery INT, romance INT, sci_fi INT, 
               thriller INT, war INT, western INT)
 ROW FORMAT DELIMITED
-FIELDS TERMINATED BY '\t'
+FIELDS TERMINATED BY '|'
 STORED AS TEXTFILE;              
               
 LOAD DATA LOCAL INPATH '[[DATA_DIR]]/u.item' OVERWRITE INTO TABLE u_item;
+
+SELECT * FROM u_item ORDER BY movie_id;
