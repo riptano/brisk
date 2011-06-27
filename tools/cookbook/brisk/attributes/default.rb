@@ -19,5 +19,5 @@ default[:brisk][:seed] = false
 default[:brisk][:rpc_address] = "0.0.0.0"
 default[:brisk][:endpoint_snitch] = "org.apache.cassandra.locator.BriskSimpleSnitch"
 
-default[:opscenter][:port] = 8080
+default[:opscenter][:port] = 7199
 default[:opscenter][:interface] = "0.0.0.0"
