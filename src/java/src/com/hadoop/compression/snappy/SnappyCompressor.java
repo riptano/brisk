@@ -15,21 +15,21 @@ public class SnappyCompressor implements Compressor
 {
     private static final Log logger                     = LogFactory.getLog(SnappyCompressor.class.getName());
 
-    
+
     private boolean          finish, finished;
     private ByteBuffer       outBuf;
     private ByteBuffer       compressedBuf;
- 
+
     private long             bytesRead                  = 0L;
     private long             bytesWritten               = 0L;
 
-   
+
     public SnappyCompressor(int bufferSize)
     {
-       outBuf = ByteBuffer.allocateDirect(bufferSize); 
-       compressedBuf = ByteBuffer.allocateDirect(Snappy.maxCompressedLength(bufferSize)); 
-       
-       reset();  
+       outBuf = ByteBuffer.allocateDirect(bufferSize);
+       compressedBuf = ByteBuffer.allocateDirect(Snappy.maxCompressedLength(bufferSize));
+
+       reset();
     }
 
     public synchronized void setInput(byte[] b, int off, int len)
@@ -43,11 +43,11 @@ public class SnappyCompressor implements Compressor
             throw new ArrayIndexOutOfBoundsException();
         }
         finished = false;
-                        
+
         outBuf.put(b, off, len);
-        
+
         bytesRead += len;
-    }   
+    }
 
     public synchronized void setDictionary(byte[] b, int off, int len)
     {
@@ -55,12 +55,12 @@ public class SnappyCompressor implements Compressor
     }
 
     public synchronized boolean needsInput()
-    {       
+    {
         // needs input if compressed data was consumed
-        if (compressedBuf.position() > 0 && compressedBuf.limit() > compressedBuf.position()) 
+        if (compressedBuf.position() > 0 && compressedBuf.limit() > compressedBuf.position())
             return false;
-       
-        return true;        
+
+        return true;
     }
 
     public synchronized void finish()
@@ -70,13 +70,13 @@ public class SnappyCompressor implements Compressor
 
     public synchronized boolean finished()
     {
-        // Check if all compressed data has been consumed        
+        // Check if all compressed data has been consumed
         return (finish && finished);
     }
 
     public synchronized int compress(byte[] b, int off, int len) throws IOException
     {
-        
+
         if (b == null)
         {
             throw new NullPointerException();
@@ -85,58 +85,50 @@ public class SnappyCompressor implements Compressor
         {
             throw new ArrayIndexOutOfBoundsException();
         }
-     
+
         if(finished || outBuf.position() == 0)
         {
             finished = true;
             return 0;
         }
-            
-         
+
+
         //Only need todo this once
         if(compressedBuf.position() == 0)
         {
-            try
-            {            
-                outBuf.limit(outBuf.position());
-                outBuf.rewind();
-                                
-                int lim = Snappy.compress(outBuf, compressedBuf);
-                                
-                compressedBuf.limit(lim);
-                compressedBuf.rewind();
-            }
-            catch (SnappyException e)
-            {
-                throw new IOException(e);              
-            }
+            outBuf.limit(outBuf.position());
+            outBuf.rewind();
+
+            int lim = Snappy.compress(outBuf, compressedBuf);
+
+            compressedBuf.limit(lim);
+            compressedBuf.rewind();
         }
-             
-               
-        int n = (compressedBuf.limit() - compressedBuf.position()) > len ? len : (compressedBuf.limit() - compressedBuf.position());     
-       
+
+
+        int n = (compressedBuf.limit() - compressedBuf.position()) > len ? len : (compressedBuf.limit() - compressedBuf.position());
+
         if(n == 0)
         {
             finished = true;
             return 0;
         }
-                
+
         compressedBuf.get(b, off, n);
-        
+
         bytesWritten += n;
-        
-        // Set 'finished' if snappy has consumed all user-data               
+
+        // Set 'finished' if snappy has consumed all user-data
         if (compressedBuf.position() == compressedBuf.limit())
         {
             finished = true;
-            
+
             outBuf.limit(outBuf.capacity());
             outBuf.rewind();
-            
+
             compressedBuf.limit(compressedBuf.capacity());
             compressedBuf.rewind();
-            
-        } 
+        }
 
         return n;
     }
@@ -145,13 +137,13 @@ public class SnappyCompressor implements Compressor
     {
         finish = false;
         finished = false;
-        
+
         outBuf.limit(outBuf.capacity());
         outBuf.rewind();
-        
+
         compressedBuf.limit(compressedBuf.capacity());
         compressedBuf.rewind();
-        
+
         bytesRead = bytesWritten = 0L;
     }
 

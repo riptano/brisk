@@ -46,18 +46,18 @@ import org.xerial.snappy.Snappy;
 import org.xerial.snappy.SnappyException;
 
 /**
- * 
+ *
  * CFs schema:
- * 
+ *
  * Column Families:
  * - inode
  * - sblocks
- * 
+ *
  * -------------------
  * |      inode       |
  * -------------------
  *  {key : [<path>: <  > ], [<sentinel>: <   >], [ <datacol> : < all blocks with its subBlocks serialized>] }
- *  
+ *
  *  ------------------
  * |     sblocks      |
  *  ------------------
@@ -68,11 +68,11 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
     private final static Logger         logger        = Logger.getLogger(CassandraFileSystemThriftStore.class);
 
     private static final String         keySpace      = "cfs";
-    
+
     // Cfs for normal use. They can be overridden if the archive mode is set.
     private static String         inodeDefaultCf       = "inode";
     private static String         sblockDefaultCf       = "sblocks";
-    
+
     // Cfs for archive kind of storage
     private static final String         inodeArchiveCf       = "inode_archive";
     private static final String         sblockArchiveCf       = "sblocks_archive";
@@ -97,10 +97,10 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
     // This values can be overridden if the archive mode is set.
     private ColumnPath     inodeDataPath = null;
     private ColumnPath     sblockDataPath = null;
-    
+
     private ByteBuffer     compressedData = null;
     private ByteBuffer     uncompressedData = null;
-    
+
     private StorageType storageTypeInUse  = StorageType.CFS_REGULAR;
 
     private static final SlicePredicate pathPredicate = new SlicePredicate().setColumn_names(Arrays.asList(pathCol));
@@ -158,30 +158,30 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
      * Set to different set of Column Families is the archive location is selected.
      */
     private void initCFNames(URI uri) {
-    	
+
 		if (isArchive(uri)) {
 			// cfs-archive:///
 			inodeCfInUse = inodeArchiveCf;
 			sblockCfInUse = sblockArchiveCf;
-			
+
 			storageTypeInUse = StorageType.CFS_ARCHIVE;
 		} else {
 			// cfs:///
 			inodeCfInUse = inodeDefaultCf;
 			sblockCfInUse = sblockDefaultCf;
 		}
-		
+
 		// Create the remaining paths and parents base on the CfInUse.
-		
+
 		sblockPath     = new ColumnPath(sblockCfInUse);
 		sblockParent   = new ColumnParent(sblockCfInUse);
-		
+
 		inodePath     = new ColumnPath(inodeCfInUse);
 		inodeParent   = new ColumnParent(inodeCfInUse);
-		
+
 		inodeDataPath = new ColumnPath(inodeCfInUse).setColumn(dataCol);
 		sblockDataPath = new ColumnPath(sblockCfInUse).setColumn(dataCol);
-		
+
 	}
 
     /**
@@ -193,7 +193,7 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
 
 	/**
      * Initialize the consistency levels for reads and writes.
-     * 
+     *
      * @param ks
      *            Keyspace definition
      */
@@ -261,15 +261,15 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
             cf.setComment("Stores file meta data");
             cf.setKeyspace(keySpace);
 
-            // this is a workaround until 
+            // this is a workaround until
             // http://issues.apache.org/jira/browse/CASSANDRA-1278
             cf.setMemtable_flush_after_mins(1);
             cf.setMemtable_throughput_in_mb(128);
-            
+
             cf.setColumn_metadata(
                     Arrays.asList(new ColumnDef(pathCol, "BytesType").
                                       setIndex_type(IndexType.KEYS).
-                                      setIndex_name("path"), 
+                                      setIndex_name("path"),
                                   new ColumnDef(sentCol, "BytesType").
                                       setIndex_type(IndexType.KEYS).
                                       setIndex_name("sentinel"),
@@ -294,9 +294,9 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
 
             cf.setMin_compaction_threshold(16);
             cf.setMax_compaction_threshold(64);
-            
+
             cfs.add(cf);
-            
+
             // CFs for archive
             cf = new CfDef();
             cf.setName(inodeArchiveCf);
@@ -307,15 +307,15 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
             cf.setComment("Stores file meta data");
             cf.setKeyspace(keySpace);
 
-            // this is a workaround until 
+            // this is a workaround until
             // http://issues.apache.org/jira/browse/CASSANDRA-1278
             cf.setMemtable_flush_after_mins(1);
             cf.setMemtable_throughput_in_mb(128);
-            
+
             cf.setColumn_metadata(
                     Arrays.asList(new ColumnDef(pathCol, "BytesType").
                                       setIndex_type(IndexType.KEYS).
-                                      setIndex_name("path"), 
+                                      setIndex_name("path"),
                                   new ColumnDef(sentCol, "BytesType").
                                       setIndex_type(IndexType.KEYS).
                                       setIndex_name("sentinel"),
@@ -340,9 +340,9 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
             // Disable compaction for archive.
             cf.setMin_compaction_threshold(0);
             cf.setMax_compaction_threshold(0);
-            
+
             cfs.add(cf);
-            
+
             Map<String,String> stratOpts = new HashMap<String,String>();
             stratOpts.put(BriskSimpleSnitch.BRISK_DC, System.getProperty("cfs.replication","1"));
             stratOpts.put(BriskSimpleSnitch.CASSANDRA_DC, "0");
@@ -370,7 +370,7 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
     {
     	return new CassandraSubBlockInputStream(this, block, byteRangeStart);
     }
-    
+
     public InputStream retrieveSubBlock(Block block, SubBlock subBlock, long byteRangeStart) throws IOException
     {
     	ByteBuffer blockId = uuidToByteBuffer(block.id);
@@ -380,7 +380,7 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
 
         try
         {
-            blockData = ((Brisk.Iface) client).get_cfs_sblock(FBUtilities.getLocalAddress().getHostName(), 
+            blockData = ((Brisk.Iface) client).get_cfs_sblock(FBUtilities.getLocalAddress().getHostName(),
             		blockId, subBlockId, (int) 0, storageTypeInUse);
         }
         catch (Exception e)
@@ -396,59 +396,52 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
             is = getInputStream(blockData.remote_block);
         else
             is = readLocalBlock(blockData.getLocal_block());
-        
+
         if(byteRangeStart > 0)
             is.skip(byteRangeStart);
-        
+
         return is;
     }
 
     private synchronized InputStream getInputStream(ByteBuffer bb) throws IOException
-    {       
-        
+    {
+
         ByteBuffer output = null;
-        
-        try
-        {   
-            if(compressedData == null || compressedData.capacity() < bb.remaining())
-                compressedData = ByteBuffer.allocateDirect(bb.remaining());
-                    
-            compressedData.limit(compressedData.capacity());
-            compressedData.rewind();
-            compressedData.put(bb.duplicate());
-            compressedData.limit(compressedData.position());
-            compressedData.rewind();
-            
-            if(Snappy.isValidCompressedBuffer(compressedData))
-            {
-                
-                int uncompressedLength = Snappy.uncompressedLength(compressedData);
-                
-                if(uncompressedData == null || uncompressedData.capacity() < uncompressedLength)
-                {
-                    uncompressedData = ByteBuffer.allocateDirect(uncompressedLength);
-                }
-                            
-                int len = Snappy.uncompress(compressedData, uncompressedData);
-                
-                uncompressedData.limit(len);
-                uncompressedData.rewind();   
-                
-                output = uncompressedData;
-            }
-            else
-            {
-                output = compressedData;
-            }
-        }
-        catch (SnappyException e)
+
+        if(compressedData == null || compressedData.capacity() < bb.remaining())
+            compressedData = ByteBuffer.allocateDirect(bb.remaining());
+
+        compressedData.limit(compressedData.capacity());
+        compressedData.rewind();
+        compressedData.put(bb.duplicate());
+        compressedData.limit(compressedData.position());
+        compressedData.rewind();
+
+        if(Snappy.isValidCompressedBuffer(compressedData))
         {
-            throw new IOException(e);
+
+            int uncompressedLength = Snappy.uncompressedLength(compressedData);
+
+            if(uncompressedData == null || uncompressedData.capacity() < uncompressedLength)
+            {
+                uncompressedData = ByteBuffer.allocateDirect(uncompressedLength);
+            }
+
+            int len = Snappy.uncompress(compressedData, uncompressedData);
+
+            uncompressedData.limit(len);
+            uncompressedData.rewind();
+
+            output = uncompressedData;
         }
-        
+        else
+        {
+            output = compressedData;
+        }
+
         return ByteBufferUtil.inputStream(output);
     }
-    
+
 	private InputStream readLocalBlock(LocalBlock blockInfo) throws IOException
     {
 
@@ -468,9 +461,9 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
 
             MappedByteBuffer bb = raf.getChannel().map(FileChannel.MapMode.READ_ONLY, blockInfo.offset,
                     blockInfo.length);
-                        
+
             return getInputStream(bb);
-           
+
         }
         catch (FileNotFoundException e)
         {
@@ -494,11 +487,11 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
         ColumnOrSuperColumn pathInfo;
 
         pathInfo = performGet(pathKey, inodeDataPath, consistencyLevelRead);
-        
+
         // If not found and I already tried with CL= ONE, retry with higher CL.
         if (pathInfo == null && consistencyLevelRead.equals(ConsistencyLevel.ONE))
         {
-        	pathInfo = performGet(pathKey, inodeDataPath, ConsistencyLevel.QUORUM);          
+        	pathInfo = performGet(pathKey, inodeDataPath, ConsistencyLevel.QUORUM);
         }
 
         if (pathInfo == null)
@@ -506,13 +499,13 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
             // Now give up and return null.
             return null;
         }
-        
+
         return INode.deserialize(ByteBufferUtil.inputStream(pathInfo.column.value), pathInfo.column.getTimestamp());
     }
 
 	private ColumnOrSuperColumn performGet(ByteBuffer key, ColumnPath cp, ConsistencyLevel cl) throws IOException {
         ColumnOrSuperColumn result;
-        try 
+        try
         {
             result = client.get(key, cp, cl);
         }
@@ -524,7 +517,7 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
         {
             throw new IOException(e);
         }
-        
+
         return result;
 	}
 
@@ -534,7 +527,7 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
     public synchronized void storeSubBlock(UUID parentBlockUUID, SubBlock sblock, ByteBuffer data) throws IOException
     {
     	assert parentBlockUUID != null;
-    	
+
     	// Row key is the Block id to which this SubBLock belongs to.
         ByteBuffer parentBlockId = uuidToByteBuffer(parentBlockUUID);
 
@@ -544,26 +537,19 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
         {
             compressedData = ByteBuffer.allocateDirect(maxCapacity);
         }
-        
+
         compressedData.limit(compressedData.capacity());
         compressedData.rewind();
-        
+
         //compress
-        try
-        {
-            int len = Snappy.compress(data, compressedData);
-            compressedData.limit(len);
-            compressedData.rewind();
-        }
-        catch (SnappyException e1)
-        {
-           throw new IOException(e1);
-        }
-        
+        int len = Snappy.compress(data, compressedData);
+        compressedData.limit(len);
+        compressedData.rewind();
+
         if (logger.isDebugEnabled()) {
         	logger.debug("Storing " + sblock);
         }
-        
+
         // Row Key: UUID of SubBLock Block parent
         // Column name: Sub Block UUID
         // Column value: Sub Block Data.
@@ -571,9 +557,9 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
         try
         {
             client.insert(
-                parentBlockId, 
-                sblockParent, 
-                new Column().setName(uuidToByteBuffer(sblock.id)).setValue(compressedData).setTimestamp(System.currentTimeMillis()), 
+                parentBlockId,
+                sblockParent,
+                new Column().setName(uuidToByteBuffer(sblock.id)).setValue(compressedData).setTimestamp(System.currentTimeMillis()),
                 consistencyLevelWrite);
         }
         catch (Exception e)
@@ -584,7 +570,7 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
 
     public void storeINode(Path path, INode inode) throws IOException
     {
-                
+
         if (logger.isDebugEnabled() && inode.getBlocks() != null) {
             logger.debug("Writing inode to: " + path);
         	printBlocksDebug(inode.getBlocks());
@@ -629,16 +615,16 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
 
     /**
      * @param path a Path
-     * @return the parent to the <code>path</code> or null if the <code>path</code> represents the root. 
+     * @return the parent to the <code>path</code> or null if the <code>path</code> represents the root.
      */
     private String getParentForIndex(Path path) {
         Path parent = path.getParent();
-        
+
         if (parent == null)
         {
             return "null";
         }
-        
+
         return parent.toUri().getPath();
     }
 
@@ -700,7 +686,7 @@ public class CassandraFileSystemThriftStore implements CassandraFileSystemStore
             throw new IOException(e);
         }
     }
-    
+
     /**
      * Retrieves a list of UUIDs
      * @param blocks list of blocks
