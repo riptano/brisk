@@ -226,7 +226,7 @@ public  class TestUtils {
             }
             
             String connectionString = "jdbc:hive://" + hiveServer + ":" + hiveServerPort + "/default";
-            System.out.println("Connection String: " + connectionString);
+            //System.out.println("Connection String: " + connectionString);
 
             Class.forName("org.apache.hadoop.hive.jdbc.HiveDriver");
 

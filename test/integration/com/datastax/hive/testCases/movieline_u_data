@@ -15,7 +15,4 @@ ROW FORMAT DELIMITED
 FIELDS TERMINATED BY '\t';
 
 -- Query out data
-SELECT userid, count(*) 
-FROM u_data 
-GROUP BY userid 
-ORDER BY userid;
+SELECT userid, count(*) FROM u_data GROUP BY userid ORDER BY userid;

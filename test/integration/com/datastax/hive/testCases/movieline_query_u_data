@@ -15,6 +15,15 @@ FROM u_data;
 SELECT weekday, COUNT(*) FROM u_data_new GROUP BY weekday;
 
 -- Query Data out of Source
-SELECT * FROM u_data WHERE userid > 100 and userid < 200 ORDER BY userid, movieid, rating limit 100;
-SELECT * FROM u_data ORDER BY userid, movieid, rating limit 100;
-SELECT userid, movieid, rating FROM u_data ORDER BY userid, movieid, rating limit 100;
+SELECT userid, count(*)  FROM u_data 
+WHERE userid > 100 and userid < 150 
+GROUP BY userid 
+ORDER BY userid;
+
+SELECT * FROM u_data 
+ORDER BY userid, movieid, rating 
+LIMIT 20;
+
+SELECT userid, movieid, rating FROM u_data 
+ORDER BY userid, movieid, rating 
+LIMIT 20;
