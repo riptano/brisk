@@ -4,7 +4,25 @@ This script launches a DataStax' Brisk cluster of a predetermined size. It also 
 
 This has been tested in Ubuntu 10.10 and CentOS 5.5, but should support your version of Ubuntu, CentOS, and RedHat.
 
+This script will be developed and housed at: https://github.com/riptano/chef. On every Brisk release, however, expect https://github.com/riptano/brisk to contain the newest version.
+
 = REQUIREMENTS:
+
+Follow the instructions as listed here: http://wiki.opscode.com/display/chef/Quick+Start.
+
+== Configure cloud access
+
+Proceed to configure your cloud access by adding these following lines to your ~/.chef/knife.rb file.
+
+    # Information can be found at: https://manage.rackspacecloud.com/APIAccess.do
+    knife[:rackspace_api_username] = "USER"
+    knife[:rackspace_api_key]      = "KEY"
+
+    # Information can be found at: https://aws-portal.amazon.com/gp/aws/developer/account?ie=UTF8&action=access-key
+    knife[:aws_access_key_id]     = "ID"
+    knife[:aws_secret_access_key] = "KEY"
+
+Place this 'brisk/cookbooks/brisk' directory into your cookbooks folder.
 
 Download and place the apt recipe in your cookbooks folder. The apt recipe can be found here: http://community.opscode.com/cookbooks/apt
 
@@ -12,9 +30,16 @@ Then run:
 
     knife cookbook upload -a -o cookbooks/
 
+You should see something similar to:
+
+    Uploading apt                     [1.1.2]
+    Uploading brisk                   [0.1.4]
+    Uploading chef-client             [0.99.5]
+    upload complete
+
 = ATTRIBUTES:
 
-The main attributes to look can be found at $CHEF_HOME/attributes/default.rb and are:
+The main attributes to look can be found at $CHEF_HOME/cookbooks/brisk/attributes/default.rb and are:
 
     default[:setup][:vanilla_nodes] = 2
     default[:setup][:cluster_size] = 4
@@ -30,27 +55,15 @@ The first set are highly mandatory. These will configure a ring of set size with
 
 The attribute for :cluster_name is set to prevent clusters from merging into themselves. This attribute doesn't require change to work, but will greatly uncomplicate certain scenarios.
 
-The last set of attributes are for OpsCenter installation. Just provide the username and password that you received during registration and mark whether this is a free installation or not. To obtain a free OpsCenter, please visit: http://www.datastax.com/opscenter.
+The last set of attributes are for OpsCenter installation. Just provide the username and password that you received during registration and mark whether this is a free installation or not. To obtain a free OpsCenter license, please visit: http://www.datastax.com/opscenter.
+
+After properly configuring the attributes, upload the cookbook files again by running:
+
+    knife cookbook upload -a -o cookbooks/
 
 = USAGE:
 
-== Configure cloud access
--------------------------
-
-After following the instructions here: http://wiki.opscode.com/display/chef/Quick+Start.
-
-proceed to configure your cloud access by adding these following lines to your ~/.chef/knife.rb file.
-
-    # Information can be found at: https://manage.rackspacecloud.com/APIAccess.do
-    knife[:rackspace_api_username] = "USER"
-    knife[:rackspace_api_key]      = "KEY"
-
-    # Information can be found at: https://aws-portal.amazon.com/gp/aws/developer/account?ie=UTF8&action=access-key
-    knife[:aws_access_key_id]     = "ID"
-    knife[:aws_secret_access_key] = "KEY"
-
 == Configure roles
-------------------
 
 Run this line from your default chef folder:
 
@@ -75,7 +88,6 @@ where <role> is the value declared as default[:setup][:current_role]. Edit the f
     }
 
 == Starting up a cluster
-------------------------
 
 An Ubuntu 10.10 cloud in Rackspace:
 
@@ -100,10 +112,11 @@ A CentOS 5.5 cloud in Rackspace:
     knife rackspace server create -r "role[brisk]" -i 51 -f 6 -d centos5-gems -S $servername -N Server03
     knife rackspace server create -r "role[brisk]" -i 51 -f 6 -d centos5-gems -S $servername -N Server04
 
-NOTE: You can run these lines more times as long as the attributes are set properly. Also, these lines should be run consecutively and never parallel.
+NOTE: You can run these lines more times as long as the attributes are set properly. Also, these lines should be run consecutively and never in parallel.
 
 == Bootstrapping Commands
--------------------------
+
+In order to run bootstrapping commands, you must be able to complete a passwordless SSH login. Typically, by copying your ~/.ssh/id_rsa.pub key into the target machine's ~/.ssh/authorized_keys file, passwordless SSH should work. Search google for more information.
 
 For an Ubuntu Machine:
 
@@ -123,7 +136,6 @@ NOTE: The user for the Ubuntu machine's script is 'ubuntu' based on EC2's curren
 
 
 == Other Useful Debugging Commands
-----------------------------------
 
 This commands shows the json for a chosen machine that is accessible through the Chef script:
 
