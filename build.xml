@@ -49,7 +49,6 @@
 	<property name="test.name" value="*Test"/>
 	<property name="test.unit.src" value="${test.dir}/unit"/>
 	<property name="dist.dir" value="${build.dir}/dist"/>
-	<property name="test.integration.src" value="${test.dir}/integration"/>
 
 	<property name="hadoop.dir" value="${basedir}/resources/hadoop"/>
 	<property name="hadoop.dir.lib" value="${hadoop.dir}/lib"/>
@@ -398,7 +397,6 @@
 	  <classpathentry kind="src" path="src/java/src"/>
 	  <classpathentry kind="src" path="interface/thrift/gen-java"/>  
 	  <classpathentry kind="src" path="test/unit"/>
-	  <classpathentry kind="src" path="test/integration"/>
 	  <classpathentry kind="src" path="demos/portfolio_manager/src"/>  
 	  <classpathentry kind="src" path="demos/portfolio_manager/thrift/gen-java"/>  
 	  <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
@@ -831,17 +829,6 @@
 		</javac>
 	</target>
 
-	<target name="build-test-integration" depends="build" description="Compile test classes">
-		<javac
-  	  debug="true"
-  	  debuglevel="${debuglevel}"
-  	  destdir="${test.classes}">
-			<classpath refid="cassandra.classpath"/>
-			<src path="${test.integration.src}"/>
-		</javac>
-	</target>
-
-
 	<macrodef name="testmacro">
 		<attribute name="suitename" />
 		<attribute name="inputdir" />
@@ -893,12 +880,6 @@
 
 	<target name="test" depends="build-test" description="Execute unit tests">
 		<testmacro suitename="unit" inputdir="${test.unit.src}" timeout="120000">
-
-		</testmacro>
-	</target>
-
-	<target name="test-integration" depends="build-test-integration" description="Execute unit tests">
-		<testmacro suitename="integration" inputdir="${test.integration.src}" timeout="480000">
 
 		</testmacro>
 	</target>

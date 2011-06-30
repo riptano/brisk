@@ -1,3 +1,0 @@
--- Statement: use cqldb
--- Statement: DROP COLUMNFAMILY all_options_cf
--- Statement: CREATE COLUMNFAMILY all_options_cf ( KEY varchar PRIMARY KEY, ascii_col1 ascii, byte_col bytea, uuid_col uuid, int_col varint, long_col bigint, utf8_col1 text, utf8_col2 varchar) WITH comparator = UTF8Type AND default_validation = UTF8Type AND comment = 'CF created with lots of options' AND gc_grace_seconds = 432000 AND key_cache_size = 100000 AND row_cache_size = 2 AND row_cache_save_period_in_seconds = 0 AND memtable_flush_after_mins=50 AND memtable_operations_in_millions=36 AND memtable_throughput_in_mb=364 AND read_repair_chance=0.9 AND max_compaction_threshold = 20 AND min_compaction_threshold = 2 AND replicate_on_write = true AND key_cache_save_period_in_seconds = 124000
