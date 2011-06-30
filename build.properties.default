@@ -12,7 +12,7 @@ artifact.remoteRepository.datastax-release:    http://mvn.riptano.com/content/re
 
 hadoop-core.build.version:		       0.20.203.1-brisk1-beta2
 hadoop.build.version:		       0.20.203.1-brisk1-beta2
-hive.build.version:		       0.7.0-brisk1-beta2
+hive.build.version:		       0.7.0-brisk1-SNAPSHOT
 pig.build.version:		       0.8.3
 cassandra.build.version:	       0.8.1-brisk1-beta2
 cassandra-thrift.build.version:	       0.8.1-brisk1-beta2
