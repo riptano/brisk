@@ -288,8 +288,38 @@ execute 'echo "* hard nofile 32768" | sudo tee -a /etc/security/limits.conf'
 # Open ports for communications in Rackspace.
 # This is HORRIBLE security. 
 # Make sure to properly configure your cluster here.
-if node[:cloud][:provider] == "rackspace"
-  execute 'sudo service iptables stop'
+if node[:cloud][:provider] == "rackspace" and node[:platform] == "centos"
+  execute 'sudo service iptables stop' do
+    ignore_failure true
+  end
+end
+
+
+###################################################
+# 
+# Calculate the Token
+# 
+###################################################
+
+cookbook_file "/tmp/tokentool.py" do
+  source "tokentool.py"
+  mode "0755"
+end
+
+execute "/tmp/tokentool.py #{node[:setup][:vanilla_nodes]} #{node[:setup][:cluster_size] - node[:setup][:vanilla_nodes]} > /tmp/tokens" do
+  creates "/tmp/tokens"
+end
+
+ruby_block "ReadTokens" do
+ block do
+  results = []
+  open("/tmp/tokens").each do |line|
+    results << line.split(':')[1].strip if line.include? 'Node'
+  end
+
+  Chef::Log.info results
+  node[:brisk][:initial_token] = results[brisk_nodes.count] unless node[:brisk][:initial_token] > 0
+ end
 end
 
 
@@ -299,14 +329,7 @@ end
 # 
 ###################################################
 
-# Helper method for generating tokens
-def gen_token node_num
-  Chef::Log.info "There's #{node_num+1} brisk nodes."
-  node_num * (2 ** 127) / node[:setup][:cluster_size]
-end
-
 seeds = []
-node[:brisk][:initial_token] = gen_token(brisk_nodes.count - 0) unless node[:brisk][:initial_token] > 0
 
 # Pull the seeds from the chef db
 if brisk_nodes.count == 0
