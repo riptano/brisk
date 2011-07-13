@@ -247,8 +247,13 @@ public class SchemaManagerService
         {
             try 
             {
-                if ( cassandraHiveMetaStore.getTable(cfDef.keyspace, cfDef.name) == null)
-                    cassandraHiveMetaStore.createTable(buildTable(cfDef));
+                if ( cassandraHiveMetaStore.getTable(cfDef.keyspace, cfDef.name) == null) 
+                {
+                    if ( cfDef.getColumn_metadataSize() > 0 )
+                    {
+                        cassandraHiveMetaStore.createTable(buildTable(cfDef));
+                    }
+                }
             }
             catch (InvalidObjectException ioe) 
             {            
@@ -318,29 +323,12 @@ public class SchemaManagerService
             
             AbstractType keyValidator = cfDef.key_validation_class != null ? TypeParser.parse(cfDef.key_validation_class) : BytesType.instance;
             addTypeToStorageDescriptor(sd, ByteBufferUtil.bytes("row_key"), keyValidator, keyValidator);
-            if ( cfDef.getColumn_metadataSize() > 0 )
+
+            for (ColumnDef column : cfDef.getColumn_metadata() )
             {
-                for (ColumnDef column : cfDef.getColumn_metadata() )
-                {
-                    addTypeToStorageDescriptor(sd, column.name, TypeParser.parse(cfDef.comparator_type),  TypeParser.parse(column.getValidation_class()));   
-                }
-            }        
-            else
-            {                                   
-                // create default transposition columns 
-                sd.addToCols(new FieldSchema("column_name", "string", "Auto-created default column."));
-                sd.addToCols(new FieldSchema("value", "string", "Auto-created default column."));
-                if ( cfDef.getColumn_type().equals(ColumnFamilyType.Super.toString()) ) 
-                {
-                    serde.putToParameters("cassandra.cf.validatorType", createMappingArray(cfDef));
-                    sd.addToCols(new FieldSchema("sub_column_name", "string", "Auto-created default column."));
-                    serde.putToParameters("cassandra.columns.mappings", ":key,:column,:subcolumn,:value");
-                } else
-                {
-                    serde.putToParameters("cassandra.cf.validatorType", createMappingArray(cfDef));
-                    serde.putToParameters("cassandra.columns.mappings", ":key,:column,:value");
-                }
+                addTypeToStorageDescriptor(sd, column.name, TypeParser.parse(cfDef.comparator_type),  TypeParser.parse(column.getValidation_class()));   
             }
+
             sd.setSerdeInfo(serde);
         } catch (ConfigurationException ce) {
             throw new CassandraHiveMetaStoreException("Problem converting comparator type: " + cfDef.comparator_type, ce);
