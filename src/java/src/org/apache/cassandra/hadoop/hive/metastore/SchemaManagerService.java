@@ -1,17 +1,14 @@
 package org.apache.cassandra.hadoop.hive.metastore;
 
 import java.nio.ByteBuffer;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 
 import org.apache.cassandra.config.CFMetaData;
 import org.apache.cassandra.config.ConfigurationException;
-import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.config.KSMetaData;
 import org.apache.cassandra.db.ColumnFamilyType;
 import org.apache.cassandra.db.marshal.AbstractType;
@@ -298,9 +295,10 @@ public class SchemaManagerService
         table.putToParameters("EXTERNAL", "TRUE");
         table.putToParameters("cassandra.ks.name", cfDef.keyspace);
         table.putToParameters("cassandra.cf.name", cfDef.name);
+        table.putToParameters("cassandra.slice.predicate.size", "100");
         table.putToParameters("storage_handler", "org.apache.hadoop.hive.cassandra.CassandraStorageHandler");
         table.setPartitionKeys(new ArrayList<FieldSchema>());
-
+        // cassandra.column.mapping
         
         StorageDescriptor sd = new StorageDescriptor();
         sd.setInputFormat("org.apache.hadoop.hive.cassandra.input.HiveCassandraStandardColumnInputFormat");
@@ -312,34 +310,60 @@ public class SchemaManagerService
             log.error("could not build path information correctly",me);
         }
         SerDeInfo serde = new SerDeInfo();
-        serde.setSerializationLib("org.apache.hadoop.hive.cassandra.serde.StandardColumnSerDe");
+        serde.setSerializationLib("org.apache.hadoop.hive.cassandra.serde.CassandraColumnSerDe");
         serde.putToParameters("serialization.format", "1");
-        sd.setSerdeInfo(serde);
-               
+        
         try {
+            CFMetaData cfm = CFMetaData.fromThrift(cfDef);
+            
             AbstractType keyValidator = cfDef.key_validation_class != null ? TypeParser.parse(cfDef.key_validation_class) : BytesType.instance;
             addTypeToStorageDescriptor(sd, ByteBufferUtil.bytes("row_key"), keyValidator, keyValidator);
             if ( cfDef.getColumn_metadataSize() > 0 )
             {
                 for (ColumnDef column : cfDef.getColumn_metadata() )
                 {
-                    addTypeToStorageDescriptor(sd, column.name, TypeParser.parse(cfDef.comparator_type),  TypeParser.parse(column.getValidation_class()));     
+                    addTypeToStorageDescriptor(sd, column.name, TypeParser.parse(cfDef.comparator_type),  TypeParser.parse(column.getValidation_class()));   
                 }
             }        
             else
-            {   
+            {                                   
                 // create default transposition columns 
-                sd.addToCols(new FieldSchema("row_key", "string", "Auto-created default column."));
                 sd.addToCols(new FieldSchema("column_name", "string", "Auto-created default column."));
                 sd.addToCols(new FieldSchema("value", "string", "Auto-created default column."));
-                if ( cfDef.getColumn_type().equals(ColumnFamilyType.Super.toString()) )
+                if ( cfDef.getColumn_type().equals(ColumnFamilyType.Super.toString()) ) 
+                {
+                    serde.putToParameters("cassandra.cf.validatorType", createMappingArray(cfDef));
                     sd.addToCols(new FieldSchema("sub_column_name", "string", "Auto-created default column."));
+                    serde.putToParameters("cassandra.columns.mappings", ":key,:column,:subcolumn,:value");
+                } else
+                {
+                    serde.putToParameters("cassandra.cf.validatorType", createMappingArray(cfDef));
+                    serde.putToParameters("cassandra.columns.mappings", ":key,:column,:value");
+                }
             }
+            sd.setSerdeInfo(serde);
         } catch (ConfigurationException ce) {
             throw new CassandraHiveMetaStoreException("Problem converting comparator type: " + cfDef.comparator_type, ce);
+        } catch (InvalidRequestException ire) {
+            throw new CassandraHiveMetaStoreException("Problem parsing CfDef: " + cfDef.name, ire);                        
         }
         table.setSd(sd);
+        if ( log.isDebugEnabled() )
+            log.debug("constructed table for CF:{} {}", cfDef.name, table.toString());
         return table;
+    }
+    
+    private static String createMappingArray(CfDef cfDef)
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.append(cfDef.getKey_validation_class() != null ? cfDef.getKey_validation_class() : "BytesType")
+        .append(",")
+        .append(cfDef.getSubcomparator_type() != null ? cfDef.getSubcomparator_type() : "")
+        .append(",")
+        .append(cfDef.getComparator_type())
+        .append(",")
+        .append(cfDef.getDefault_validation_class() != null ? cfDef.getDefault_validation_class() : "");                        
+        return sb.toString();
     }
 
     /**
