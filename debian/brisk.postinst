@@ -34,7 +34,7 @@ case "$1" in
                 cassandra
         fi
 
-        if [ -n "$2" ]; then
+        if [ -z "$2" ]; then
             chown -R cassandra: /var/lib/cassandra
             chown -R cassandra: /var/log/cassandra
             chown -R cassandra: /var/log/hadoop

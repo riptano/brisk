@@ -19,6 +19,7 @@ CONFDIR=/etc/brisk/cassandra
 JSVC=/usr/bin/jsvc
 WAIT_FOR_START=10
 HADOOP_ENABLED=0
+CFS_REPLICATION_FACTOR=1
 EXTRA_FLAGS=""
 
 # The first existing directory is used for JAVA_HOME if needed.
@@ -125,7 +126,7 @@ do_start()
     if [ "$HADOOP_ENABLED" = "0" ]; then
         echo "$DESC starting with Hadoop disabled (edit /etc/default/brisk to enable)"
     else
-        EXTRA_FLAGS="$EXTRA_FLAGS -Dhadoop-trackers=true -Dhadoop.log.dir=$HADOOP_LOG_DIR -Djava.library.path=$JAVA_LIBRARY_PATH"
+        EXTRA_FLAGS="$EXTRA_FLAGS -Dhadoop-trackers=true -Dhadoop.log.dir=$HADOOP_LOG_DIR -Djava.library.path=$JAVA_LIBRARY_PATH -Dcfs.replication=$CFS_REPLICATION_FACTOR"
         echo "$DESC starting with Hadoop enabled (edit /etc/default/brisk to disable)"
     fi
 

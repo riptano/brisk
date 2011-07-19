@@ -28,6 +28,7 @@
       <pathelement location="${build.test.classes}" />
 
       <fileset dir="${brisk.base}">
+	<exclude name="logs/**"/>
         <include name="**/*.jar" />
       </fileset>
     </path>
@@ -62,15 +63,18 @@
               <exclude name="servlet-api*.jar" />
               <exclude name="easymock.jar" />
             </lib>
-        <lib dir="${brisk.base}/build">
+	    <lib dir="${brisk.base}/build">
               <include name="*.jar" />
             </lib>
-        <fileset dir="${autogen.thrift.dir}/gen-js">
-          <include name="**/*.js" />
-        </fileset>
-        <fileset dir="resources">
-          <include name="**/*" />
-        </fileset>
+	    <lib dir="${brisk.base}/resources/brisk/lib">
+              <include name="*.jar" />
+            </lib>
+	    <fileset dir="${autogen.thrift.dir}/gen-js">
+	      <include name="**/*.js" />
+	    </fileset>
+	    <fileset dir="resources">
+	      <include name="**/*" />
+	    </fileset>
             <lib file="portfolio.jar"/>
           </war>
         </target>

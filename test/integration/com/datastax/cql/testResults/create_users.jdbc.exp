@@ -1,6 +1,0 @@
--- Statement: use cqldb
--- Statement: DROP COLUMNFAMILY users
--- Statement: CREATE COLUMNFAMILY users ( KEY varchar PRIMARY KEY, password varchar, gender varchar, session_token varchar, state varchar, birth_year bigint)
--- Statement: CREATE INDEX gender_key ON users (gender)
--- Statement: CREATE INDEX state_key ON users (state)
--- Statement: CREATE INDEX birth_year_key ON users (birth_year)
