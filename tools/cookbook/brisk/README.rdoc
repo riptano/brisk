@@ -1,8 +1,143 @@
 = DESCRIPTION:
 
+This script launches a DataStax' Brisk cluster of a predetermined size. It also includes OpsCenter installation and Configuration support.
+
+This has been tested in Ubuntu 10.10 and CentOS 5.5, but should support your version of Ubuntu, CentOS, and RedHat.
+
+This script will be developed and housed at: https://github.com/riptano/chef. On every Brisk release, however, expect https://github.com/riptano/brisk to contain the newest version.
+
 = REQUIREMENTS:
+
+Follow the instructions as listed here: http://wiki.opscode.com/display/chef/Quick+Start.
+
+== Configure cloud access
+
+Proceed to configure your cloud access by adding these following lines to your ~/.chef/knife.rb file.
+
+    # Information can be found at: https://manage.rackspacecloud.com/APIAccess.do
+    knife[:rackspace_api_username] = "USER"
+    knife[:rackspace_api_key]      = "KEY"
+
+    # Information can be found at: https://aws-portal.amazon.com/gp/aws/developer/account?ie=UTF8&action=access-key
+    knife[:aws_access_key_id]     = "ID"
+    knife[:aws_secret_access_key] = "KEY"
+
+Place this 'brisk/cookbooks/brisk' directory into your cookbooks folder.
+
+Download and place the apt recipe in your cookbooks folder. The apt recipe can be found here: http://community.opscode.com/cookbooks/apt
+
+Then run:
+
+    knife cookbook upload -a -o cookbooks/
+
+You should see something similar to:
+
+    Uploading apt                     [1.1.2]
+    Uploading brisk                   [0.1.4]
+    Uploading chef-client             [0.99.5]
+    upload complete
 
 = ATTRIBUTES:
 
+The main attributes to look can be found at $CHEF_HOME/cookbooks/brisk/attributes/default.rb and are:
+
+    default[:setup][:vanilla_nodes] = 2
+    default[:setup][:cluster_size] = 4
+    default[:setup][:current_role] = "brisk"
+
+    default[:brisk][:cluster_name] = "Brisk Cluster"
+
+    default[:opscenter][:user] = false
+    default[:opscenter][:pass] = false
+    default[:opscenter][:free] = false
+
+The first set are highly mandatory. These will configure a ring of set size with the included number of vanilla Cassandra nodes (nodes that are not running task trackers). The splitting of the ring will go based on the number of nodes that it finds that also match the :current_role. So make sure to create new roles and update this attribute between launching your cluster.
+
+The attribute for :cluster_name is set to prevent clusters from merging into themselves. This attribute doesn't require change to work, but will greatly uncomplicate certain scenarios.
+
+The last set of attributes are for OpsCenter installation. Just provide the username and password that you received during registration and mark whether this is a free installation or not. To obtain a free OpsCenter license, please visit: http://www.datastax.com/opscenter.
+
+After properly configuring the attributes, upload the cookbook files again by running:
+
+    knife cookbook upload -a -o cookbooks/
+
 = USAGE:
+
+== Configure roles
+
+Run this line from your default chef folder:
+
+    knife role create <role>
+
+where <role> is the value declared as default[:setup][:current_role]. Edit the file to look very similar to this:
+
+    {
+      "name": "brisk",
+      "default_attributes": {
+      },
+      "json_class": "Chef::Role",
+      "env_run_lists": {
+      },
+      "run_list": [
+        "recipe[brisk]"  # This is the line of importance
+      ],
+      "description": "",
+      "chef_type": "role",
+      "override_attributes": {
+      }
+    }
+
+== Starting up a cluster
+
+An Ubuntu 10.10 cloud in Rackspace:
+
+    knife rackspace server create -r "role[brisk]" -i 69 -f 6 -S Server01 -N Server01
+    knife rackspace server create -r "role[brisk]" -i 69 -f 6 -S Server02 -N Server02
+    knife rackspace server create -r "role[brisk]" -i 69 -f 6 -S Server03 -N Server03
+    knife rackspace server create -r "role[brisk]" -i 69 -f 6 -S Server04 -N Server04
+
+An Ubuntu 10.10 cloud in EC2:
+
+    pemname=<pemFileName>  # do not include ".pem"
+    group=<securityGroupName>
+    knife ec2 server create -r "role[brisk]" -I ami-08f40561 --flavor m1.large -S $pemname -G $group -x ubuntu -N Server01
+    knife ec2 server create -r "role[brisk]" -I ami-08f40561 --flavor m1.large -S $pemname -G $group -x ubuntu -N Server02
+    knife ec2 server create -r "role[brisk]" -I ami-08f40561 --flavor m1.large -S $pemname -G $group -x ubuntu -N Server03
+    knife ec2 server create -r "role[brisk]" -I ami-08f40561 --flavor m1.large -S $pemname -G $group -x ubuntu -N Server04
+
+A CentOS 5.5 cloud in Rackspace:
+
+    knife rackspace server create -r "role[brisk]" -i 51 -f 6 -d centos5-gems -S $servername -N Server01
+    knife rackspace server create -r "role[brisk]" -i 51 -f 6 -d centos5-gems -S $servername -N Server02
+    knife rackspace server create -r "role[brisk]" -i 51 -f 6 -d centos5-gems -S $servername -N Server03
+    knife rackspace server create -r "role[brisk]" -i 51 -f 6 -d centos5-gems -S $servername -N Server04
+
+NOTE: You can run these lines more times as long as the attributes are set properly. Also, these lines should be run consecutively and never in parallel.
+
+== Bootstrapping Commands
+
+In order to run bootstrapping commands, you must be able to complete a passwordless SSH login. Typically, by copying your ~/.ssh/id_rsa.pub key into the target machine's ~/.ssh/authorized_keys file, passwordless SSH should work. Search google for more information.
+
+For an Ubuntu Machine:
+
+    knife bootstrap -r recipe['brisk'] --sudo -x ubuntu <publicDNS>
+
+For an CentOS Machine:
+
+    knife bootstrap -r "recipe['brisk']" --sudo -x root -d centos5-gems <publicDNS>
+
+For an RedHat Machine:
+
+    wget http://goo.gl/0k8mV -O- > ~/.chef/bootstrap/rhel5-rbel.erb
+    knife bootstrap --sudo -x root -d rhel5-rbel <publicDNS>
+    knife bootstrap -r recipe['brisk'] --sudo -x root -d rhel5-rbel <publicDNS>
+
+NOTE: The user for the Ubuntu machine's script is 'ubuntu' based on EC2's current configurations.
+
+
+== Other Useful Debugging Commands
+
+This commands shows the json for a chosen machine that is accessible through the Chef script:
+
+    knife node show server01 --format json
 

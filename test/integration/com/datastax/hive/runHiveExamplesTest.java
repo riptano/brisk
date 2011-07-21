@@ -27,7 +27,6 @@ public class runHiveExamplesTest {
    /* movieline_u_data: load and query u_data from movie line demo */
     public void movieline_u_data() throws Exception {
 		HiveJDBCRunner.runQueries(connection, "movieline_u_data"); 
-		HiveJDBCRunner.runQueries(connection, "movieline_query_u_data"); 
     }   
  
    //@Ignore
@@ -36,7 +35,6 @@ public class runHiveExamplesTest {
     public void movieline_u_user() throws Exception {
 		HiveJDBCRunner.runQueries(connection, "movieline_u_occupation"); 
 		HiveJDBCRunner.runQueries(connection, "movieline_u_user"); 
-		//HiveJDBCRunner.runQueries(connection, "movieline_query_u_user"); 
     }   
 
    //@Ignore
@@ -45,7 +43,6 @@ public class runHiveExamplesTest {
     public void movieline_u_item() throws Exception {
 		HiveJDBCRunner.runQueries(connection, "movieline_u_genre"); 
 		HiveJDBCRunner.runQueries(connection, "movieline_u_item"); 
-		//HiveJDBCRunner.runQueries(connection, "movieline_query_u_item"); 
     }  
    
    @Ignore

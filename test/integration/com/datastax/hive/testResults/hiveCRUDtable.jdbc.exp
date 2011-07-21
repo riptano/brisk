@@ -1,8 +1,0 @@
--- Statement: DROP TABLE IF EXISTS table_a
--- Statement: CREATE TABLE table_a (foo INT, bar STRING) COMMENT 'table to test DDL ops' PARTITIONED BY (ds STRING) STORED AS TEXTFILE
--- Statement: LOAD DATA LOCAL INPATH '[[EXAMPLES]]/kv1.txt' OVERWRITE INTO TABLE table_a PARTITION (ds='2008-08-15')
--- Statement: LOAD DATA LOCAL INPATH '[[EXAMPLES]]/kv2.txt' OVERWRITE INTO TABLE table_a PARTITION (ds='2008-08-08')
--- Statement: SELECT ds, COUNT(*) FROM table_a GROUP BY ds
-2008-08-08, 500, 
-2008-08-15, 500, 
--- Statement: DROP TABLE IF EXISTS table_a

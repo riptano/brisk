@@ -165,7 +165,9 @@ public class TrackerInitializer {
     public static void stopTaskTracker() throws InterruptedException, IOException {
         MBeans.unregister(taskTrackerMBean);
         taskTrackerThread.interrupt();
-        taskTracker.shutdown();
+        if (taskTracker != null) {
+            taskTracker.shutdown();
+        }
         taskTrackerThread.join(60000);
     }
 
@@ -254,8 +256,10 @@ public class TrackerInitializer {
                         // Shutdown the Task Tracker
                         if (t instanceof InterruptedException) {
                             try {
-                                taskTracker.shutdown();
-                                logger.info("Task tracker was shutdown");
+                                if (taskTracker != null) {
+                                    taskTracker.shutdown();
+                                    logger.info("Task tracker was shutdown");
+                                }
                             } catch (Exception e) {
                                 logger.warn("Interruption when shutting down the task tracker");
                             }
