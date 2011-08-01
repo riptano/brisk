@@ -1,6 +1,7 @@
 package org.apache.cassandra.hadoop.hive.metastore;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -41,10 +42,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Service encapsulating schema managment of the Brisk platform. This service deals 
- * with both the Hive meta store schema as well as maintaining the mappings of 
+ * Service encapsulating schema managment of the Brisk platform. This service deals
+ * with both the Hive meta store schema as well as maintaining the mappings of
  * column family and keyspace objects to meta store tables and databases respectively.
- * 
+ *
  * @author zznate
  */
 public class SchemaManagerService
@@ -55,7 +56,7 @@ public class SchemaManagerService
     private Configuration configuration;
     private CassandraHiveMetaStore cassandraHiveMetaStore;
     private Warehouse warehouse;
-    
+
     public SchemaManagerService(CassandraHiveMetaStore cassandraHiveMetaStore, Configuration conf)
     {
         this.cassandraHiveMetaStore = cassandraHiveMetaStore;
@@ -67,80 +68,80 @@ public class SchemaManagerService
             throw new CassandraHiveMetaStoreException("Could not start schemaManagerService.", me);
         }
     }
-    
+
     /**
      * Create the meta store keyspace if it does not already exist.
-     * @return true if the keyspace did no exist and the creation was successful. False if the 
-     * keyspace already existed. 
+     * @return true if the keyspace did no exist and the creation was successful. False if the
+     * keyspace already existed.
      * @throws {@link CassandraHiveMetaStoreException} wrapping the underlying exception if we
      * failed to create the keyspace.
      */
-    public boolean createMetaStoreIfNeeded() 
+    public boolean createMetaStoreIfNeeded()
     {
         if ( configuration.getBoolean("cassandra.skipMetaStoreCreate", false) )
             return false;
-        try 
+        try
         {
             cassandraClientHolder.applyKeyspace();
             return false;
         }
-        catch (CassandraHiveMetaStoreException chmse) 
+        catch (CassandraHiveMetaStoreException chmse)
         {
-            log.debug("Attempting to create meta store keyspace: First set_keyspace call failed. Sleeping.");                       
+            log.debug("Attempting to create meta store keyspace: First set_keyspace call failed. Sleeping.");
         }
-        
-        //Sleep a random amount of time to stagger ks creations on many nodes       
+
+        //Sleep a random amount of time to stagger ks creations on many nodes
         try
         {
             Thread.sleep(5000);
         }
         catch (InterruptedException e1)
         {
-          
+
         }
-                                
+
         //check again...
-        try 
+        try
         {
             cassandraClientHolder.applyKeyspace();
             return false;
-        }  
-        catch (CassandraHiveMetaStoreException chmse) 
+        }
+        catch (CassandraHiveMetaStoreException chmse)
         {
             log.debug("Attempting to create meta store keyspace after sleep.");
         }
-        
-        CfDef cf = new CfDef(cassandraClientHolder.getKeyspaceName(), 
+
+        CfDef cf = new CfDef(cassandraClientHolder.getKeyspaceName(),
                 cassandraClientHolder.getColumnFamily());
         cf.setKey_validation_class("UTF8Type");
         cf.setComparator_type("UTF8Type");
-        KsDef ks = new KsDef(cassandraClientHolder.getKeyspaceName(), 
-                "org.apache.cassandra.locator.SimpleStrategy",  
+        KsDef ks = new KsDef(cassandraClientHolder.getKeyspaceName(),
+                "org.apache.cassandra.locator.SimpleStrategy",
                 Arrays.asList(cf));
         ks.setStrategy_options(KSMetaData.optsWithRF(configuration.getInt(CassandraClientHolder.CONF_PARAM_REPLICATION_FACTOR, 1)));
-        try 
+        try
         {
             cassandraClientHolder.getClient().system_add_keyspace(ks);
             return true;
-        } 
-        catch (Exception e) 
+        }
+        catch (Exception e)
         {
             throw new CassandraHiveMetaStoreException("Could not create Hive MetaStore database: " + e.getMessage(), e);
-        }    
+        }
     }
-    
+
     /**
-     * Returns a List of Keyspace definitions that are not yet created as 'databases' 
+     * Returns a List of Keyspace definitions that are not yet created as 'databases'
      * in the Hive meta store. The list of keyspaces required for brisk operation are ignored.
      * @return
      */
-    public List<KsDef> findUnmappedKeyspaces() 
+    public List<KsDef> findUnmappedKeyspaces()
     {
         List<KsDef> defs;
-        try 
+        try
         {
             defs = cassandraClientHolder.getClient().describe_keyspaces();
-            
+
             for (Iterator<KsDef> iterator = defs.iterator(); iterator.hasNext();)
             {
                 KsDef ksDef = iterator.next();
@@ -155,56 +156,56 @@ public class SchemaManagerService
         }
         catch (Exception ex)
         {
-            throw new CassandraHiveMetaStoreException("Could not retrieve unmapped keyspaces",ex);            
+            throw new CassandraHiveMetaStoreException("Could not retrieve unmapped keyspaces",ex);
         }
         return defs;
     }
-    
+
     public KsDef getKeyspaceForDatabaseName(String databaseName)
-    {        
-        try 
+    {
+        try
         {
             return cassandraClientHolder.getClient().describe_keyspace(databaseName);
-        } 
-        catch (NotFoundException e) 
+        }
+        catch (NotFoundException e)
         {
             return null;
         }
         catch (Exception ex)
         {
             throw new CassandraHiveMetaStoreException("Problem finding Keyspace for databaseName " + databaseName, ex);
-        }        
+        }
     }
-            
-    
+
+
     /**
      * Returns true if this keyspaceName returns a Database via
      * {@link CassandraHiveMetaStore#getDatabase(String)}
      * @param keyspaceName
      * @return
      */
-    public boolean isKeyspaceMapped(String keyspaceName) 
+    public boolean isKeyspaceMapped(String keyspaceName)
     {
-        try 
+        try
         {
-            return cassandraHiveMetaStore.getDatabase(keyspaceName) != null;            
-        } 
-        catch (NoSuchObjectException e) 
+            return cassandraHiveMetaStore.getDatabase(keyspaceName) != null;
+        }
+        catch (NoSuchObjectException e)
         {
-            return false;    
-        }        
+            return false;
+        }
     }
-    
+
     /**
      * Creates the database based on the Keyspace's name. The tables
      * are created similarly based off the names of the column families.
      * Column family meta data will be used to define the table's fields.
-     *  
+     *
      * @param ksDef
      */
     public void createKeyspaceSchema(KsDef ksDef)
     {
-        try 
+        try
         {
             cassandraHiveMetaStore.createDatabase(buildDatabase(ksDef));
             for (CfDef cfDef : ksDef.cf_defs)
@@ -212,8 +213,8 @@ public class SchemaManagerService
                 cassandraHiveMetaStore.createTable(buildTable(cfDef));
             }
 
-        } 
-        catch (InvalidObjectException ioe) 
+        }
+        catch (InvalidObjectException ioe)
         {
             throw new CassandraHiveMetaStoreException("Could not create keyspace schema.", ioe);
         }
@@ -223,7 +224,7 @@ public class SchemaManagerService
         }
 
     }
-    
+
     public void createKeyspaceSchemasIfNeeded()
     {
         if ( getAutoCreateSchema() )
@@ -235,7 +236,7 @@ public class SchemaManagerService
             }
         }
     }
-    
+
     /**
      * Compares the column families in the keyspace with what we have in hive so far,
      * creating tables for any that do not exist as such already.
@@ -245,9 +246,9 @@ public class SchemaManagerService
     {
         for (CfDef cfDef : ksDef.cf_defs)
         {
-            try 
+            try
             {
-                if ( cassandraHiveMetaStore.getTable(cfDef.keyspace, cfDef.name) == null) 
+                if ( cassandraHiveMetaStore.getTable(cfDef.keyspace, cfDef.name) == null)
                 {
                     if ( cfDef.getColumn_metadataSize() > 0 )
                     {
@@ -255,8 +256,8 @@ public class SchemaManagerService
                     }
                 }
             }
-            catch (InvalidObjectException ioe) 
-            {            
+            catch (InvalidObjectException ioe)
+            {
                 throw new CassandraHiveMetaStoreException("Could not create table for CF: " + cfDef.name, ioe);
             }
             catch (MetaException me)
@@ -265,32 +266,32 @@ public class SchemaManagerService
             }
         }
     }
-    
+
     /**
      * Check to see if we are configured to auto create schema
-     * @return the value of 'cassandra.autoCreateHiveSchema' according to 
+     * @return the value of 'cassandra.autoCreateHiveSchema' according to
      * the configuration. False by default.
      */
     public boolean getAutoCreateSchema()
     {
-        return configuration.getBoolean("cassandra.autoCreateHiveSchema", false); 
+        return configuration.getBoolean("cassandra.autoCreateHiveSchema", false);
     }
-    
+
     private Database buildDatabase(KsDef ksDef)
     {
         Database database = new Database();
-        try 
+        try
         {
             database.setLocationUri(warehouse.getDefaultDatabasePath(ksDef.name).toString());
-        } 
-        catch (MetaException me) 
+        }
+        catch (MetaException me)
         {
             throw new CassandraHiveMetaStoreException("Could not determine storage URI of database", me);
         }
         database.setName(ksDef.name);
         return database;
     }
-    
+
     private Table buildTable(CfDef cfDef)
     {
         Table table = new Table();
@@ -304,7 +305,7 @@ public class SchemaManagerService
         table.putToParameters("storage_handler", "org.apache.hadoop.hive.cassandra.CassandraStorageHandler");
         table.setPartitionKeys(new ArrayList<FieldSchema>());
         // cassandra.column.mapping
-        
+
         StorageDescriptor sd = new StorageDescriptor();
         sd.setInputFormat("org.apache.hadoop.hive.cassandra.input.HiveCassandraStandardColumnInputFormat");
         sd.setOutputFormat("org.apache.hadoop.hive.cassandra.output.HiveCassandraOutputFormat");
@@ -317,30 +318,44 @@ public class SchemaManagerService
         SerDeInfo serde = new SerDeInfo();
         serde.setSerializationLib("org.apache.hadoop.hive.cassandra.serde.CassandraColumnSerDe");
         serde.putToParameters("serialization.format", "1");
-        
+        StringBuilder mapping = new StringBuilder();
+        StringBuilder validator = new StringBuilder();
         try {
             CFMetaData cfm = CFMetaData.fromThrift(cfDef);
-            
+
             AbstractType keyValidator = cfDef.key_validation_class != null ? TypeParser.parse(cfDef.key_validation_class) : BytesType.instance;
+
             addTypeToStorageDescriptor(sd, ByteBufferUtil.bytes("row_key"), keyValidator, keyValidator);
+            mapping.append(":key");
+            validator.append(keyValidator.toString());
 
             for (ColumnDef column : cfDef.getColumn_metadata() )
             {
-                addTypeToStorageDescriptor(sd, column.name, TypeParser.parse(cfDef.comparator_type),  TypeParser.parse(column.getValidation_class()));   
+                addTypeToStorageDescriptor(sd, column.name, TypeParser.parse(cfDef.comparator_type),  TypeParser.parse(column.getValidation_class()));
+                try {
+	                mapping.append(",");
+	                mapping.append(ByteBufferUtil.string(column.name));
+	                validator.append(",");
+	                validator.append(column.getValidation_class());
+                } catch (CharacterCodingException e) {
+                	log.error("could not build column mapping correctly", e);
+                }
             }
 
+            serde.putToParameters("cassandra.columns.mapping", mapping.toString());
+            serde.putToParameters("cassandra.cf.validatorType", validator.toString());
             sd.setSerdeInfo(serde);
         } catch (ConfigurationException ce) {
             throw new CassandraHiveMetaStoreException("Problem converting comparator type: " + cfDef.comparator_type, ce);
         } catch (InvalidRequestException ire) {
-            throw new CassandraHiveMetaStoreException("Problem parsing CfDef: " + cfDef.name, ire);                        
+            throw new CassandraHiveMetaStoreException("Problem parsing CfDef: " + cfDef.name, ire);
         }
         table.setSd(sd);
         if ( log.isDebugEnabled() )
             log.debug("constructed table for CF:{} {}", cfDef.name, table.toString());
         return table;
     }
-    
+
     private static String createMappingArray(CfDef cfDef)
     {
         StringBuilder sb = new StringBuilder();
@@ -350,7 +365,7 @@ public class SchemaManagerService
         .append(",")
         .append(cfDef.getComparator_type())
         .append(",")
-        .append(cfDef.getDefault_validation_class() != null ? cfDef.getDefault_validation_class() : "");                        
+        .append(cfDef.getDefault_validation_class() != null ? cfDef.getDefault_validation_class() : "");
         return sb.toString();
     }
 
@@ -367,10 +382,10 @@ public class SchemaManagerService
         if ( validationType instanceof BytesType )
         {
             sd.addToCols(new FieldSchema(comparator.getString(columnName), "string", buildTypeComment(validationType)));
-            
-        } else if ( validationType instanceof UTF8Type || validationType instanceof AsciiType ) 
+
+        } else if ( validationType instanceof UTF8Type || validationType instanceof AsciiType )
         {
-            sd.addToCols(new FieldSchema(comparator.getString(columnName), "string", buildTypeComment(validationType)));   
+            sd.addToCols(new FieldSchema(comparator.getString(columnName), "string", buildTypeComment(validationType)));
         } else if ( validationType instanceof LongType )
         {
             sd.addToCols(new FieldSchema(comparator.getString(columnName), "int", buildTypeComment(validationType)));
@@ -379,13 +394,13 @@ public class SchemaManagerService
             sd.addToCols(new FieldSchema(comparator.getString(columnName), "string", buildTypeComment(validationType)));
         } else if ( validationType instanceof IntegerType )
         {
-            sd.addToCols(new FieldSchema(comparator.getString(columnName), "bigint", buildTypeComment(validationType)));                
+            sd.addToCols(new FieldSchema(comparator.getString(columnName), "bigint", buildTypeComment(validationType)));
         } else {
             // assume bytes
             sd.addToCols(new FieldSchema(comparator.getString(columnName), "string", buildTypeComment(validationType)));
         }
     }
-    
+
     private static final String buildTypeComment(AbstractType type)
     {
         return String.format("Auto-created based on %s from Column Family meta data", type.getClass().getName());
@@ -393,10 +408,10 @@ public class SchemaManagerService
     /**
      * Contains 'system', as well as keyspace names for meta store, and Cassandra File System
      * FIXME: need to ref. the configuration value of the meta store keyspace. Should also coincide
-     * with BRISK-190 
+     * with BRISK-190
      */
     public static final String[] SYSTEM_KEYSPACES = new String[] {
         "system", CassandraClientHolder.DEF_META_STORE_KEYSPACE, "cfs"
     };
-    
+
 }
