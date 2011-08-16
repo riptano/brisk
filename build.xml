@@ -66,7 +66,11 @@
 	<property name="version.properties.dir"
         value="${build.classes}/com/datastax/brisk/" />
 	<property name="final.name" value="${ant.project.name}-${version}"/>
+	<condition property="maven-ant-tasks.localdir" value="${env.MAT_LOCAL_DIR}">
+		<isset property="env.MAT_LOCAL_DIR"/>
+	</condition>
 	<property name="maven-ant-tasks.version" value="2.1.1" />
+	<property name="maven-ant-tasks.jar" value="maven-ant-tasks-${maven-ant-tasks.version}.jar" />
 	<property name="maven-ant-tasks.url"
               value="http://repo2.maven.org/maven2/org/apache/maven/maven-ant-tasks" />
     <property name="pig.dir" value="${basedir}/resources/pig"/>
@@ -89,7 +93,11 @@
 	<property name="cobertura.datafile" value="${cobertura.build.dir}/cobertura.ser"/>
 
 	<condition property="maven-ant-tasks.jar.exists">
-		<available file="${build.dir}/maven-ant-tasks-${maven-ant-tasks.version}.jar" />
+		<available file="${build.dir}/${maven-ant-tasks.jar}" />
+	</condition>
+
+	<condition property="maven-ant-tasks.localjar.exists">
+		<available file="${maven-ant-tasks.localdir}/${maven-ant-tasks.jar}" />
 	</condition>
 
 	<condition property="is.source.artifact">
@@ -99,7 +107,7 @@
 	<!--
          Add all the dependencies.
     -->
-	<path id="maven-ant-tasks.classpath" path="${build.dir}/maven-ant-tasks-${maven-ant-tasks.version}.jar" />
+	<path id="maven-ant-tasks.classpath" path="${build.dir}/${maven-ant-tasks.jar}" />
 	<path id="cassandra.classpath">
 		<pathelement location="${cobertura.classes.dir}"/>
 		<pathelement location="${build.classes}" />
@@ -163,11 +171,17 @@
        These targets are intentionally free of dependencies so that they
        can be run stand-alone from a binary release artifact.
     -->
-	<target name="maven-ant-tasks-download" unless="maven-ant-tasks.jar.exists">
+	<target name="maven-ant-tasks-local" unless="maven-ant-tasks.jar.exists" if="maven-ant-tasks.localjar.exists">
+		<echo message="Copying ${maven-ant-tasks.jar}..." />
+		<copy file="${maven-ant-tasks.localdir}/${maven-ant-tasks.jar}" tofile="${build.dir}/${maven-ant-tasks.jar}" />
+		<property name="maven-ant-tasks.jar.exists" value="true"/>
+	</target>
+
+	<target name="maven-ant-tasks-download" depends="maven-ant-tasks-local" unless="maven-ant-tasks.jar.exists">
 		<echo>Downloading Maven ANT Tasks...</echo>
 		<mkdir dir="${build.dir}" />
-		<get src="${maven-ant-tasks.url}/${maven-ant-tasks.version}/maven-ant-tasks-${maven-ant-tasks.version}.jar"
-           dest="${build.dir}/maven-ant-tasks-${maven-ant-tasks.version}.jar" usetimestamp="true" />
+		<get src="${maven-ant-tasks.url}/${maven-ant-tasks.version}/${maven-ant-tasks.jar}"
+           dest="${build.dir}/${maven-ant-tasks.jar}" usetimestamp="true" />
 	</target>
 
 	<target name="maven-ant-tasks-init" depends="maven-ant-tasks-download" unless="maven-ant-tasks.initialized">
