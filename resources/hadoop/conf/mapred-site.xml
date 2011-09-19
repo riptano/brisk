@@ -16,7 +16,7 @@
 
 <property>
   <name>mapreduce.tasktracker.outofband.heartbeat</name>
-  <value>false</value>
+  <value>true</value>
   <description>Expert: Set this to true to let the tasktracker send an
   out-of-band heartbeat on task-completion for better latency.
   </description>
