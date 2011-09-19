@@ -11,9 +11,16 @@
   <value>${brisk.job.tracker}</value>
   <description>
     The address of the job tracker
-  </description>                                                                                                      
+  </description>
 </property>
 
+<property>
+  <name>mapreduce.tasktracker.outofband.heartbeat</name>
+  <value>false</value>
+  <description>Expert: Set this to true to let the tasktracker send an
+  out-of-band heartbeat on task-completion for better latency.
+  </description>
+</property>
 
 <!-- performance defaults (not required) -->
 <property>
@@ -36,7 +43,7 @@
   <name>mapred.child.java.opts</name>
   <value>-Xmx256m</value>
   <description>
-    Tune your mapred jvm arguments for best performance. 
+    Tune your mapred jvm arguments for best performance.
     Also see documentation from jvm vendor.
   </description>
 </property>
@@ -56,18 +63,18 @@
 
 
 <!-- FairScheduler is included. Uncomment to enable. -->
-<!-- 
-<property> 
-  <name>mapred.jobtracker.taskScheduler</name> 
-  <value>org.apache.hadoop.mapred.FairScheduler</value> 
+<!--
+<property>
+  <name>mapred.jobtracker.taskScheduler</name>
+  <value>org.apache.hadoop.mapred.FairScheduler</value>
 </property>
-<property> 
-  <name>mapred.fairscheduler.poolnameproperty</name> 
-  <value>mapred.job.queue.name</value> 
+<property>
+  <name>mapred.fairscheduler.poolnameproperty</name>
+  <value>mapred.job.queue.name</value>
 </property>
-<property> 
-  <name>mapred.fairscheduler.allocation.file</name> 
-  <value>resources/hadoop/conf/fairscheduler-allocations.xml</value> 
+<property>
+  <name>mapred.fairscheduler.allocation.file</name>
+  <value>resources/hadoop/conf/fairscheduler-allocations.xml</value>
 </property>
  -->
 </configuration>
