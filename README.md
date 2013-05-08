@@ -1,55 +1,6 @@
 DataStax Brisk
 ==============
 
-This package contains a HDFS compatable layer (CFS) and a CassandraJobConf
-which can be used to run MR jobs without HDFS or dedicated job/task trackers.
+Brisk was an early prototype of [Cassandra](http://cassandra.apache.org) and [Hadoop](http://hadoop.apache.org) integration.  It has been superceded by [DataStax Enterprise](http://www.datastax.com/what-we-offer/products-services/datastax-enterprise).  DataStax Enterprise adds [Solr integration](http://www.datastax.com/what-we-offer/products-services/datastax-enterprise/apache-solr), [security features](http://www.datastax.com/resources/whitepapers/whats-new-in-dse3), performance enhancements, and many bug fixes.  
 
-It also includes a hive-driver for accessing data in cassandra as well as a
-hive meta-store implementation.
-
-Hadoop jobs and Hive are setup to work with MR cluster.
-
-For detailed docs please see: 
-    http://www.datastax.com/docs/0.8/brisk/index
-
-You can also discuss Brisk on freenode #datastax-brisk
-
-Required Setup
-==============
-
-On linux systems, you need to run the following as root
-
-    echo 1 > /proc/sys/vm/overcommit_memory
-
-This is to avoid OOM errors when tasks are spawned.
-
-Getting Started
-===============
-
-To try it out run:
-
-1. compile and download all dependencies
-
-        ant
-
-2. start cassandra with built in job/task trackers
-
-        ./bin/brisk cassandra -t
-
-3. view jobtracker
-
-        http://localhost:50030
-
-4. examine CassandraFS
-
-        ./bin/brisk hadoop fs -lsr cfs:///
-
-5. start hive shell or webUI
-
-        ./bin/brisk hive
-
-   or
-
-        ./bin/brisk hive --service hwi
-
-open web browser to http://localhost:9999/hwi
+Brisk has not been updated since 2011 and will not be updated in the future.  The code here is provided for historical purposes only.  It is not suitable for production use.
