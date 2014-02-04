@@ -17,6 +17,7 @@
 package org.apache.cassandra.hadoop.pig;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.*;
 
@@ -32,6 +33,7 @@ import org.apache.cassandra.db.Column;
 import org.apache.cassandra.db.IColumn;
 import org.apache.cassandra.db.SuperColumn;
 import org.apache.cassandra.db.marshal.AbstractType;
+import org.apache.cassandra.db.marshal.IntegerType;
 import org.apache.cassandra.hadoop.*;
 import org.apache.cassandra.thrift.Mutation;
 import org.apache.cassandra.thrift.Deletion;
@@ -136,33 +138,50 @@ public class CassandraStorage extends LoadFunc implements StoreFuncInterface
         }
     }
 
-    private Tuple columnToTuple(ByteBuffer name, IColumn col, CfDef cfDef) throws IOException
+    private Tuple columnToTuple(ByteBuffer name, IColumn col, CfDef cfDef) throws IOException {
+      return columnToTuple(name,col,cfDef,0);
+    }
+
+    private Tuple columnToTuple(ByteBuffer name, IColumn col, CfDef cfDef, int level) throws IOException
     {
         Tuple pair = TupleFactory.getInstance().newTuple(2);
         List<AbstractType> marshallers = getDefaultMarshallers(cfDef);
         Map<ByteBuffer,AbstractType> validators = getValidatorMap(cfDef);
 
+        pair.set(0, marshallers.get(2*level).compose(name));
         if (col instanceof Column)
         {
             // standard
-            pair.set(0, marshallers.get(0).compose(name));
-            if (validators.get(name) == null)
+            if (validators.get(name) == null) {
                 // Have to special case BytesType because compose returns a ByteBuffer
-                if (marshallers.get(1) instanceof BytesType)
+                if (marshallers.get(1) instanceof BytesType) {
                     pair.set(1, new DataByteArray(ByteBufferUtil.getArray(col.value())));
-                else
+                } else if (marshallers.get(1) instanceof IntegerType) {
+                    // Handle IntegerType specially because Pig cannot handle BigIntegers
+                    BigInteger value = ((BigInteger)marshallers.get(1).compose(col.value()));
+                    if ( value.bitLength() < 32 ) {
+                      pair.set(1, value.intValue() );
+                    } else if ( value.bitLength() < 64 ) {
+                      pair.set(1,value.longValue());
+                    } else {
+                      pair.set(1, new DataByteArray(value.toByteArray()));
+                    }
+                } else {
                     pair.set(1, marshallers.get(1).compose(col.value()));
-            else
+                }
+            } else {
                 pair.set(1, validators.get(name).compose(col.value()));
-            return pair;
-        }
-
-        // super
-        ArrayList<Tuple> subcols = new ArrayList<Tuple>();
-        for (IColumn subcol : col.getSubColumns())
-            subcols.add(columnToTuple(subcol.name(), subcol, cfDef));
+            }
+        } else if ( col instanceof SuperColumn ) {
+            // super
+            ArrayList<Tuple> subcols = new ArrayList<Tuple>();
+            for (IColumn subcol : col.getSubColumns())
+                subcols.add(columnToTuple(subcol.name(), subcol, cfDef, 1));
         
-        pair.set(1, new DefaultDataBag(subcols));
+            pair.set(1, new DefaultDataBag(subcols));
+        } else {
+            throw new IOException("unknown column type: "+col.getClass().getName());
+        }
         return pair;
     }
 
@@ -177,10 +196,12 @@ public class CassandraStorage extends LoadFunc implements StoreFuncInterface
     {
         ArrayList<AbstractType> marshallers = new ArrayList<AbstractType>();
         AbstractType comparator = null;
+        AbstractType subcomparator = null;
         AbstractType default_validator = null;
         try
         {
             comparator = TypeParser.parse(cfDef.comparator_type);
+            subcomparator = TypeParser.parse(cfDef.subcomparator_type);
             default_validator = TypeParser.parse(cfDef.default_validation_class);
         }
         catch (ConfigurationException e)
@@ -190,6 +211,7 @@ public class CassandraStorage extends LoadFunc implements StoreFuncInterface
 
         marshallers.add(comparator);
         marshallers.add(default_validator);
+        marshallers.add(subcomparator);
         return marshallers;
     }
 
