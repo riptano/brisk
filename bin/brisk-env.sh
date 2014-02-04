@@ -5,7 +5,11 @@ if [ -x $JAVA_HOME/bin/java ]; then
     JAVA=$JAVA_HOME/bin/java
 else
     JAVA=`which java`
-    export JAVA_HOME=$(readlink -f $JAVA | sed "s:bin/java::")
+    if [ `uname -s` = 'Darwin' ]; then
+        export JAVA_HOME=`$(python -c 'import os,sys; print os.path.realpath(sys.argv[1]);' $JAVA)_home`
+    else
+        export JAVA_HOME=$(readlink -f $JAVA | sed "s:bin/java::")
+    fi
 fi
 
 if [ -z $BRISK_HOME ]; then
